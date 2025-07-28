@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'http://attendance.veritas.edu.ng/api';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -30,10 +30,6 @@ export async function apiCall<T = any>(
     credentials: 'include',
   };
 
-  // Fetch CSRF cookie before protected requests (POST, PUT, DELETE)
-//   if (['POST', 'PUT', 'DELETE'].includes((options.method || 'GET').toUpperCase())) {
-//     await fetch('http://localhost:8000/sanctum/csrf-cookie', { credentials: 'include' });
-//   }
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);

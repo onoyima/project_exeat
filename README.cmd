@@ -47,8 +47,10 @@ php artisan view:clear
 REM 2.6 Start backend server
 php artisan serve
 REM By default, runs at http://localhost:8000
+REM By default, runs at http://attendance.veritas.edu.ng/
 
 cd ..
+
 
 REM -----------
 REM 3. Frontend Setup
@@ -68,6 +70,7 @@ REM -----------
 REM 4. Usage
 REM -----------
 REM - Access the backend API at http://localhost:8000
+REM - Access the backend API at http://attendance.veritas.edu.ng/
 REM - Access the frontend at http://localhost:3000
 REM - Login as admin/staff/student using seeded credentials or register as needed
 
