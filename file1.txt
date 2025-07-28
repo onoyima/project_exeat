@@ -1,0 +1,191 @@
+# Requirements Document
+
+
+## Introduction
+
+
+The Veritas University Exeat System is a comprehensive digital platform designed to replace the traditional paper-based exeat application process. The system enables students to apply for permission to leave campus, facilitates multi-level approval workflows, ensures parental consent verification, and provides real-time tracking and monitoring capabilities. The frontend will serve seven distinct user roles with tailored interfaces and permissions, ensuring accountability, preventing protocol bypassing, and maintaining proper documentation throughout the entire exeat lifecycle.
+
+
+## Requirements
+
+
+### Requirement 1: User Authentication and Role-Based Access Control
+
+
+**User Story:** As a university stakeholder, I want secure authentication with role-based access control, so that only authorized personnel can access their respective system functions.
+
+
+#### Acceptance Criteria
+
+
+1. WHEN a user attempts to log in THEN the system SHALL authenticate using Single Sign-On (SSO) with university credentials
+2. WHEN authentication is successful THEN the system SHALL redirect users to their role-specific dashboard
+3. WHEN a user's role is determined THEN the system SHALL enforce role-based permissions (Student, CMD, Security, Hostel Admin, Deputy Dean, Dean, Admin)
+4. IF Multi-Factor Authentication is enabled THEN the system SHALL require additional verification before granting access
+5. WHEN a user session expires THEN the system SHALL redirect to login page and clear all session data
+
+
+### Requirement 2: Student Exeat Application Management
+
+
+**User Story:** As a student, I want to apply for exeats and track their status, so that I can manage my campus departure permissions efficiently.
+
+
+#### Acceptance Criteria
+
+
+1. WHEN a student accesses their dashboard THEN the system SHALL display analytics on previous and current exeat statuses
+2. WHEN a student creates a new exeat application THEN the system SHALL provide form fields for category (Medical, Holiday, Daily, Sleepover, Emergency), reason, location, departure date, return date, and preferred parent contact method
+3. WHEN a student submits an exeat application THEN the system SHALL provide real-time status tracking
+4. IF an exeat is rejected THEN the system SHALL display an appeal form option
+5. WHEN an exeat is approved THEN the system SHALL generate a downloadable permit with QR code
+6. WHEN viewing approved exeat THEN the system SHALL show complete approval timeline and status history
+
+
+### Requirement 3: CMD Medical Exeat Review Portal
+
+
+**User Story:** As a CMD officer, I want to review and approve medical exeat requests, so that I can ensure proper medical protocol compliance.
+
+
+#### Acceptance Criteria
+
+
+1. WHEN CMD accesses their dashboard THEN the system SHALL display all pending medical exeat requests
+2. WHEN CMD views an application THEN the system SHALL show complete application details and any attached medical documents
+3. WHEN CMD makes a decision THEN the system SHALL provide approve/reject options with mandatory comment section
+4. WHEN CMD rejects an application THEN the system SHALL automatically notify the student with rejection reasons
+5. WHEN CMD approves a medical exeat THEN the system SHALL forward the application to the next approval level
+
+
+### Requirement 4: Deputy Dean Verification and Approval Portal
+
+
+**User Story:** As a Deputy Dean, I want to verify student requests and obtain parental consent, so that I can ensure proper authorization before approving exeats.
+
+
+#### Acceptance Criteria
+
+
+1. WHEN Deputy Dean accesses dashboard THEN the system SHALL display all student requests assigned to their hostel
+2. WHEN reviewing an application THEN the system SHALL show student's reason, application history, and CMD approval status (if medical)
+3. WHEN initiating parent verification THEN the system SHALL send consent requests via SMS, WhatsApp, or Email based on student preference
+4. WHEN parent consent is requested THEN the system SHALL notify the student via WhatsApp and Email
+5. WHEN parent responds to consent link THEN the system SHALL log consent timestamp and method
+6. WHEN Deputy Dean makes decision THEN the system SHALL provide approve/reject options with optional notes
+7. IF parent doesn't respond within timeframe THEN the system SHALL allow Deputy Dean to make phone call and manually log consent
+
+
+### Requirement 5: Dean Final Authorization Portal
+
+
+**User Story:** As a Dean, I want final authority over exeat approvals with comprehensive analytics, so that I can maintain oversight of the entire exeat process.
+
+
+#### Acceptance Criteria
+
+
+1. WHEN Dean accesses dashboard THEN the system SHALL display analytics including total approved exeats, pending requests, students not returned, overdue returns, today's requests, rejected requests, returned students, and parent consent pending
+2. WHEN Dean reviews applications THEN the system SHALL show complete request chain (student, CMD, Deputy Dean, parent consent)
+3. WHEN Dean makes decisions THEN the system SHALL provide individual approval or bulk approval options
+4. WHEN Dean approves exeats THEN the system SHALL automatically notify relevant parties (Security, Hostel Admin, Student)
+5. WHEN viewing analytics THEN the system SHALL provide pie charts of exeat categories, graphs of requests over time, bar charts of frequent reasons, and tables of top students by exeat count
+
+
+### Requirement 6: Hostel Admin Student Management Portal
+
+
+**User Story:** As a Hostel Admin, I want to manage student sign-out/sign-in processes, so that I can track student presence and enforce return policies.
+
+
+#### Acceptance Criteria
+
+
+1. WHEN Hostel Admin accesses dashboard THEN the system SHALL display students by hostel with Dean-approved exeats
+2. WHEN a student with approved exeat requests sign-out THEN the system SHALL allow Hostel Admin to sign them out
+3. WHEN a student returns THEN the system SHALL allow Hostel Admin to sign them back in
+4. IF a student hasn't been signed back in THEN the system SHALL prevent future exeat applications
+5. WHEN viewing hostel analytics THEN the system SHALL show hostel-specific statistics and student status
+
+
+### Requirement 7: Security Gate Validation Portal
+
+
+**User Story:** As a Security officer, I want to validate exeats at the gate, so that I can ensure only authorized students leave and return to campus.
+
+
+#### Acceptance Criteria
+
+
+1. WHEN Security accesses the system THEN the system SHALL provide QR code scanner and matric number search functionality
+2. WHEN scanning QR code or searching matric number THEN the system SHALL display student's approved exeat details
+3. WHEN signing students out/in THEN the system SHALL update student status in real-time
+4. IF student doesn't have hostel approval THEN the system SHALL prevent Security from overriding the requirement
+5. WHEN viewing student list THEN the system SHALL only show students with complete approvals
+
+
+### Requirement 8: Comprehensive Notification System
+
+
+**User Story:** As a system user, I want to receive timely notifications about exeat status changes, so that I can stay informed about the approval process.
+
+
+#### Acceptance Criteria
+
+
+1. WHEN parent consent is required THEN the system SHALL send automatic alerts to parent/guardian
+2. WHEN exeat approvals are complete THEN the system SHALL notify Security and Hostel Admin
+3. WHEN exeat is approved or rejected THEN the system SHALL notify the student
+4. WHEN parent is being contacted THEN the system SHALL notify the student
+5. WHEN notifications are sent THEN the system SHALL log delivery status and timestamps
+
+
+### Requirement 9: Communication Integration
+
+
+**User Story:** As the system, I want to integrate with multiple communication channels, so that I can reach users through their preferred methods.
+
+
+#### Acceptance Criteria
+
+
+1. WHEN sending SMS THEN the system SHALL use configured SMS Gateway
+2. WHEN sending emails THEN the system SHALL use configured Email Server
+3. WHEN sending WhatsApp messages THEN the system SHALL use WhatsApp API integration
+4. WHEN communication fails THEN the system SHALL log errors and attempt alternative methods
+5. WHEN users set preferences THEN the system SHALL respect their preferred communication channels
+
+
+### Requirement 10: Historical Records and Audit Trail
+
+
+**User Story:** As an administrator, I want comprehensive historical records and audit capabilities, so that I can maintain accountability and generate reports.
+
+
+#### Acceptance Criteria
+
+
+1. WHEN exeats are processed THEN the system SHALL archive all exeat records with complete audit trail
+2. WHEN searching records THEN the system SHALL provide search by matric number, date, category, and status
+3. WHEN generating reports THEN the system SHALL provide exportable reports for audit and review
+4. WHEN viewing audit logs THEN the system SHALL show all user actions with timestamps and user identification
+5. WHEN data retention policies apply THEN the system SHALL maintain records according to university policies
+
+
+### Requirement 11: Administrative Management Panel
+
+
+**User Story:** As a Super Admin, I want comprehensive system management capabilities, so that I can maintain the system and handle emergency situations.
+
+
+#### Acceptance Criteria
+
+
+1. WHEN Super Admin accesses admin panel THEN the system SHALL provide user and role management capabilities
+2. WHEN viewing system logs THEN the system SHALL display all system activities and user actions
+3. WHEN emergency situations arise THEN the system SHALL allow Super Admin to override or revoke exeats
+4. WHEN managing users THEN the system SHALL provide create, update, delete, and role assignment functions
+5. WHEN system maintenance is required THEN the system SHALL provide configuration and monitoring
+
+
