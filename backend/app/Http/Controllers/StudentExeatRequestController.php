@@ -75,6 +75,43 @@ class StudentExeatRequestController extends Controller
         return response()->json(['message' => 'Exeat request created successfully.', 'exeat_request' => $exeat], 201);
     }
 
+
+    // GET /api/student/profile
+public function profile(Request $request)
+{
+    $user = $request->user();
+
+    $studentAcademic = StudentAcademic::where('student_id', $user->id)->first();
+    $studentContact = StudentContact::where('student_id', $user->id)->first();
+    $accommodationHistory = VunaAccomodationHistory::where('student_id', $user->id)
+        ->orderBy('created_at', 'desc')->first();
+
+    $accommodation = null;
+    if ($accommodationHistory) {
+        $accommodationModel = VunaAccomodation::find($accommodationHistory->vuna_accomodation_id);
+        $accommodation = $accommodationModel ? $accommodationModel->name : null;
+    }
+
+    return response()->json([
+        'profile' => [
+            'matric_no' => $studentAcademic?->matric_no,
+            'parent_surname' => $studentContact?->surname,
+            'parent_othernames' => $studentContact?->other_names,
+            'parent_phone_no' => $studentContact?->phone_no,
+            'parent_phone_no_two' => $studentContact?->phone_no_two,
+            'parent_email' => $studentContact?->email,
+            'student_accommodation' => $accommodation,
+        ]
+    ]);
+}
+
+public function categories()
+{
+    return response()->json([
+        'categories' => ExeatCategory::all(['id', 'name'])
+    ]);
+}
+
     // GET /api/student/exeat-requests
     public function index(Request $request)
     {

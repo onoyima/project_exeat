@@ -46,29 +46,41 @@ class StaffExeatRequestController extends Controller
         return response()->json(['exeat_request' => $exeatRequest]);
     }
 
-    public function approve(StaffExeatApprovalRequest $request, $id)
-    {
-        $user = $request->user();
-        if (!($user instanceof \App\Models\Staff)) {
-            return response()->json(['message' => 'Unauthorized.'], 403);
-        }
-        $approval = ExeatApproval::where('staff_id', $user->id)
-            ->where('exeat_request_id', $id)
-            ->first();
-        if (!$approval) {
-            return response()->json(['message' => 'Exeat request not assigned to you or not found.'], 404);
-        }
-        $exeatRequest = ExeatRequest::find($id);
-        if (!$exeatRequest) {
-            return response()->json(['message' => 'Exeat request not found.'], 404);
-        }
-        $validated = $request->validate([
-            'comment' => 'nullable|string',
-        ]);
-        $workflow = new ExeatWorkflowService();
-        $exeatRequest = $workflow->approve($exeatRequest, $approval, $validated['comment'] ?? null);
-        return response()->json(['message' => 'Exeat request approved.', 'exeat_request' => $exeatRequest]);
+   public function approve(StaffExeatApprovalRequest $request, $id)
+{
+    $user = $request->user();
+    if (!($user instanceof \App\Models\Staff)) {
+        return response()->json(['message' => 'Unauthorized.'], 403);
     }
+
+    $approval = ExeatApproval::where('staff_id', $user->id)
+        ->where('exeat_request_id', $id)
+        ->first();
+
+    if (!$approval) {
+        return response()->json(['message' => 'Exeat request not assigned to you or not found.'], 404);
+    }
+
+    $exeatRequest = ExeatRequest::find($id);
+    if (!$exeatRequest) {
+        return response()->json(['message' => 'Exeat request not found.'], 404);
+    }
+
+    $validated = $request->validate([
+        'comment' => 'nullable|string',
+    ]);
+
+    $workflow = new ExeatWorkflowService();
+
+    try {
+        $exeatRequest = $workflow->approve($exeatRequest, $approval, $validated['comment'] ?? null);
+    } catch (\Exception $ex) {
+        return response()->json(['message' => 'Approval failed: ' . $ex->getMessage()], 400);
+    }
+
+    return response()->json(['message' => 'Exeat request approved.', 'exeat_request' => $exeatRequest]);
+}
+
 
     public function reject(StaffExeatApprovalRequest $request, $id)
     {
@@ -94,44 +106,56 @@ class StaffExeatRequestController extends Controller
         return response()->json(['message' => 'Exeat request rejected.', 'exeat_request' => $exeatRequest]);
     }
 
-    public function sendParentConsent(Request $request, $id)
-    {
-        $user = $request->user();
-        if (!($user instanceof \App\Models\Staff)) {
-            return response()->json(['message' => 'Unauthorized.'], 403);
-        }
-        $approval = ExeatApproval::where('staff_id', $user->id)
-            ->where('exeat_request_id', $id)
-            ->first();
-        if (!$approval) {
-            return response()->json(['message' => 'Exeat request not assigned to you or not found.'], 404);
-        }
-        $exeatRequest = ExeatRequest::find($id);
-        if (!$exeatRequest) {
-            return response()->json(['message' => 'Exeat request not found.'], 404);
-        }
-        $validated = $request->validate([
-            'method' => 'required|string', // e.g., sms, email, whatsapp
-            'message' => 'nullable|string',
-        ]);
-        // For demo: create a ParentConsent record (assume model exists)
-        $parentConsent = \App\Models\ParentConsent::create([
-            'exeat_request_id' => $exeatRequest->id,
-            'student_contact_id' => null, // You may want to look up the parent contact
-            'consent_status' => 'pending',
-            'consent_method' => $validated['method'],
-            'consent_token' => uniqid('consent_', true),
-            'consent_timestamp' => null,
-        ]);
-        // In a real app, send notification (SMS, email, etc.) here
-        Log::info('Staff sent parent consent request', [
-            'staff_id' => $user->id,
-            'exeat_id' => $id,
-            'method' => $validated['method'],
-        ]);
-        return response()->json([
-            'message' => 'Parent consent request sent.',
-            'parent_consent' => $parentConsent,
-        ]);
+   public function sendParentConsent(Request $request, $id)
+{
+    $user = $request->user();
+    if (!($user instanceof \App\Models\Staff)) {
+        return response()->json(['message' => 'Unauthorized.'], 403);
     }
+
+    $approval = ExeatApproval::where('staff_id', $user->id)
+        ->where('exeat_request_id', $id)
+        ->first();
+
+    if (!$approval) {
+        return response()->json(['message' => 'Exeat request not assigned to you or not found.'], 404);
+    }
+
+    $exeatRequest = ExeatRequest::find($id);
+    if (!$exeatRequest) {
+        return response()->json(['message' => 'Exeat request not found.'], 404);
+    }
+
+    $validated = $request->validate([
+        'method' => 'required|string',
+        'message' => 'nullable|string',
+    ]);
+
+    // 🔴 REMOVE this block:
+    /*
+    $parentConsent = \App\Models\ParentConsent::create([
+        'exeat_request_id' => $exeatRequest->id,
+        'student_contact_id' => null,
+        'consent_status' => 'pending',
+        'consent_method' => $validated['method'],
+        'consent_token' => uniqid('consent_', true),
+        'consent_timestamp' => null,
+    ]);
+    */
+
+    // ✅ ADD THIS INSTEAD:
+    $workflow = new ExeatWorkflowService();
+    $parentConsent = $workflow->sendParentConsent($exeatRequest, $validated['method'], $validated['message'] ?? null);
+
+    Log::info('Staff sent parent consent request', [
+        'staff_id' => $user->id,
+        'exeat_id' => $id,
+        'method' => $validated['method'],
+    ]);
+
+    return response()->json([
+        'message' => 'Parent consent request sent.',
+        'parent_consent' => $parentConsent,
+    ]);
+}
 }

@@ -1,65 +1,64 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+import React, { useEffect, useState } from 'react';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "./ui/select";
-import { SelectField } from "./ui/select-field";
-import { FormField } from "./ui/form-field"; // ✅ new component
-import { createStudentExeatRequest } from "../lib/api";
-
-interface ExeatCategory {
-  id: number;
-  name: string;
-}
-
-interface StudentProfile {
-  matric_no: string;
-  parent_surname: string;
-  parent_othernames: string;
-  parent_phone_no: string;
-  parent_phone_no_two: string;
-  parent_email: string;
-  student_accommodation: string;
-}
+} from './ui/select';
+import { SelectField } from './ui/select-field';
+import { FormField } from './ui/form-field';
+import {
+  fetchStudentCategories,
+  fetchStudentProfile,
+  createStudentExeatRequest,
+} from '../lib/api';
+import type { ExeatCategory, StudentProfile } from '../lib/api';
 
 const preferredModes = [
-  { value: "whatsapp", label: "WhatsApp" },
-  { value: "text", label: "Text" },
-  { value: "phone_call", label: "Phone Call" },
-  { value: "any", label: "Any" },
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'text', label: 'Text' },
+  { value: 'phone_call', label: 'Phone Call' },
+  { value: 'any', label: 'Any' },
 ];
 
 export default function ExeatApplicationForm() {
   const [categories, setCategories] = useState<ExeatCategory[]>([]);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [form, setForm] = useState({
-    category_id: "",
-    preferred_mode_of_contact: "",
-    reason: "",
-    destination: "",
-    departure_date: "",
-    return_date: "",
+    category_id: '',
+    preferred_mode_of_contact: '',
+    reason: '',
+    destination: '',
+    departure_date: '',
+    return_date: '',
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [formDisabled, setFormDisabled] = useState(false);
+  const [categoriesError, setCategoriesError] = useState('');
+  const [profileError, setProfileError] = useState('');
 
   useEffect(() => {
-    fetch("/api/lookup/exeat-categories")
-      .then((res) => res.json())
-      .then((data) => setCategories(data.categories || []));
+    fetchStudentCategories()
+      .then((res) => {
+        if (!res.success) throw new Error(res.error || 'Failed to fetch categories');
+        setCategories(res.data?.categories || []);
+      })
+      .catch((err: Error) => setCategoriesError(err.message));
 
-    fetch("/api/student/profile")
-      .then((res) => res.json())
-      .then((data) => setProfile(data.profile || null));
+    fetchStudentProfile()
+      .then((res) => {
+        if (!res.success) throw new Error(res.error || 'Failed to fetch profile');
+        setProfile(res.data?.profile || null);
+      })
+      .catch((err: Error) => setProfileError(err.message));
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,57 +68,89 @@ export default function ExeatApplicationForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
-    setSuccess("");
+    setError('');
+    setSuccess('');
+
+    if (
+      form.departure_date &&
+      form.return_date &&
+      form.return_date < form.departure_date
+    ) {
+      setError('Return date cannot be before departure date.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await createStudentExeatRequest(form);
-      if (!res.success) throw new Error(res.error || "Submission failed");
-      setSuccess("Exeat request submitted successfully.");
+      const payload = {
+        ...form,
+        category_id: Number(form.category_id),
+        preferred_mode_of_contact: form.preferred_mode_of_contact as
+          | 'whatsapp'
+          | 'text'
+          | 'phone_call'
+          | 'any',
+        // Hidden fields: still submitted
+        matric_no: profile?.matric_no,
+        parent_surname: profile?.parent_surname,
+        parent_othernames: profile?.parent_othernames,
+        parent_phone_no: profile?.parent_phone_no,
+        parent_phone_no_two: profile?.parent_phone_no_two,
+        parent_email: profile?.parent_email,
+        student_accommodation: profile?.student_accommodation,
+      };
+
+      const res = await createStudentExeatRequest(payload);
+
+      if (res.status === 403) {
+        setError('You cannot submit a new exeat request until your previous one is completed.');
+      } else if (!res.success) {
+        setError(res.error || 'Submission failed.');
+      } else {
+        setSuccess('Exeat request submitted successfully.');
+      }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
 
+  if (categoriesError || profileError) {
+    return (
+      <div className="text-red-500 p-4 bg-red-50 rounded">
+        {categoriesError && <div>Category Error: {categoriesError}</div>}
+        {profileError && <div>Profile Error: {profileError}</div>}
+      </div>
+    );
+  }
+
+  if (!categories.length || !profile) {
+    return <div className="text-gray-500 p-4">Loading form data...</div>;
+  }
+
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-6 bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto"
+      className="space-y-6 bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto overflow-y-auto max-h-[90vh]"
     >
       <h2 className="text-2xl font-bold mb-4">Exeat Application</h2>
 
-      {profile && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormField label="Matric No">
-            <Input value={profile.matric_no} readOnly />
-          </FormField>
-          <FormField label="Parent Surname">
-           <Input
-  defaultValue={profile?.parent_surname}
-  readOnly
-  className="bg-gray-100 cursor-not-allowed text-gray-700"
-/>
-
-          </FormField>
-          <FormField label="Parent Othernames">
-            <Input value={profile.parent_othernames} readOnly />
-          </FormField>
-          <FormField label="Parent Phone No">
-            <Input value={profile.parent_phone_no} readOnly />
-          </FormField>
-          <FormField label="Parent Phone No 2">
-            <Input value={profile.parent_phone_no_two} readOnly />
-          </FormField>
-          <FormField label="Parent Email">
-            <Input value={profile.parent_email} readOnly />
-          </FormField>
-          <FormField label="Accommodation">
-            <Input value={profile.student_accommodation} readOnly />
-          </FormField>
-        </div>
+      {success && (
+        <div className="p-3 bg-green-100 text-green-800 rounded">{success}</div>
       )}
+      {error && <div className="p-3 bg-red-100 text-red-800 rounded">{error}</div>}
 
+      {/* Hidden inputs: not shown but submitted */}
+      <input type="hidden" name="matric_no" value={profile.matric_no} />
+      <input type="hidden" name="parent_surname" value={profile.parent_surname} />
+      <input type="hidden" name="parent_othernames" value={profile.parent_othernames} />
+      <input type="hidden" name="parent_phone_no" value={profile.parent_phone_no} />
+      <input type="hidden" name="parent_phone_no_two" value={profile.parent_phone_no_two} />
+      <input type="hidden" name="parent_email" value={profile.parent_email} />
+      <input type="hidden" name="student_accommodation" value={profile.student_accommodation} />
+
+      {/* Only showing necessary form fields to user */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <SelectField label="Exeat Category">
           <Select
@@ -147,7 +178,7 @@ export default function ExeatApplicationForm() {
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select Mode" />
+              <SelectValue placeholder="Select contact mode" />
             </SelectTrigger>
             <SelectContent>
               {preferredModes.map((mode) => (
@@ -159,12 +190,14 @@ export default function ExeatApplicationForm() {
           </Select>
         </SelectField>
       </div>
-      <FormField label="Reason">
+
+      <FormField label="Reason for Exeat">
         <Input
           name="reason"
           value={form.reason}
           onChange={handleInputChange}
           required
+          disabled={formDisabled}
         />
       </FormField>
 
@@ -174,6 +207,7 @@ export default function ExeatApplicationForm() {
           value={form.destination}
           onChange={handleInputChange}
           required
+          disabled={formDisabled}
         />
       </FormField>
 
@@ -185,9 +219,9 @@ export default function ExeatApplicationForm() {
             value={form.departure_date}
             onChange={handleInputChange}
             required
+            disabled={formDisabled}
           />
         </FormField>
-
         <FormField label="Return Date">
           <Input
             type="date"
@@ -195,15 +229,13 @@ export default function ExeatApplicationForm() {
             value={form.return_date}
             onChange={handleInputChange}
             required
+            disabled={formDisabled}
           />
         </FormField>
       </div>
 
-      {error && <div className="text-red-500">{error}</div>}
-      {success && <div className="text-green-600">{success}</div>}
-
-      <Button type="submit" disabled={loading} className="w-full">
-        {loading ? "Submitting..." : "Submit Request"}
+      <Button type="submit" disabled={loading || formDisabled} className="w-full">
+        {loading ? 'Submitting...' : 'Submit Exeat Request'}
       </Button>
     </form>
   );

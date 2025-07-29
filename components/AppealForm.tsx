@@ -33,12 +33,36 @@ export default function AppealForm({ isOpen, onClose, application, onSubmit }: A
       setIsSubmitting(false);
     }, 2000);
   };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsSubmitting(true);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setAdditionalDocuments(Array.from(e.target.files));
-    }
-  };
+  const formData = new FormData();
+  formData.append("applicationId", application.id);
+  formData.append("appealReason", appealReason);
+  additionalDocuments.forEach((file, index) =>
+    formData.append(`documents[${index}]`, file)
+  );
+
+  try {
+    const res = await fetch("/api/student/exeat-appeals", {
+      method: "POST",
+      body: formData,
+    });
+    const result = await res.json();
+
+    if (!res.ok || !result.success) throw new Error(result.message || "Submission failed");
+
+    onSubmit(result.data);
+    onClose();
+  } catch (err: any) {
+    console.error(err);
+    // optionally show error toast
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
