@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\ExeatApproval;
 use App\Models\ExeatRequest;
 use Illuminate\Support\Facades\Log;
+use App\Services\ExeatWorkflowService;
+use App\Http\Requests\StaffExeatApprovalRequest;
 
 class StaffExeatRequestController extends Controller
 {
@@ -44,7 +46,7 @@ class StaffExeatRequestController extends Controller
         return response()->json(['exeat_request' => $exeatRequest]);
     }
 
-    public function approve(Request $request, $id)
+    public function approve(StaffExeatApprovalRequest $request, $id)
     {
         $user = $request->user();
         if (!($user instanceof \App\Models\Staff)) {
@@ -63,16 +65,12 @@ class StaffExeatRequestController extends Controller
         $validated = $request->validate([
             'comment' => 'nullable|string',
         ]);
-        $exeatRequest->status = 'approved';
-        $exeatRequest->save();
-        $approval->status = 'approved';
-        $approval->comment = $validated['comment'] ?? null;
-        $approval->save();
-        Log::info('Staff approved exeat request', ['staff_id' => $user->id, 'exeat_id' => $id]);
+        $workflow = new ExeatWorkflowService();
+        $exeatRequest = $workflow->approve($exeatRequest, $approval, $validated['comment'] ?? null);
         return response()->json(['message' => 'Exeat request approved.', 'exeat_request' => $exeatRequest]);
     }
 
-    public function reject(Request $request, $id)
+    public function reject(StaffExeatApprovalRequest $request, $id)
     {
         $user = $request->user();
         if (!($user instanceof \App\Models\Staff)) {
@@ -91,12 +89,8 @@ class StaffExeatRequestController extends Controller
         $validated = $request->validate([
             'comment' => 'nullable|string',
         ]);
-        $exeatRequest->status = 'rejected';
-        $exeatRequest->save();
-        $approval->status = 'rejected';
-        $approval->comment = $validated['comment'] ?? null;
-        $approval->save();
-        Log::info('Staff rejected exeat request', ['staff_id' => $user->id, 'exeat_id' => $id]);
+        $workflow = new ExeatWorkflowService();
+        $exeatRequest = $workflow->reject($exeatRequest, $approval, $validated['comment'] ?? null);
         return response()->json(['message' => 'Exeat request rejected.', 'exeat_request' => $exeatRequest]);
     }
 

@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://attendance.veritas.edu.ng/api';
+const API_BASE_URL = 'http://localhost:8000/api';
+// const API_BASE_URL = 'http://attendance.veritas.edu.ng/api';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -102,4 +103,18 @@ export async function getStaffList() {
 
 export async function getExeatRoleAssignments() {
   return apiCall('/admin/staff/assignments');
+}
+
+export async function createStudentExeatRequest(form: {
+  category_id: string;
+  preferred_mode_of_contact: string;
+  reason: string;
+  destination: string;
+  departure_date: string;
+  return_date: string;
+}) {
+  return apiCall('/student/exeat-requests', {
+    method: 'POST',
+    body: JSON.stringify(form),
+  });
 }

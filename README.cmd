@@ -9,7 +9,7 @@ REM Prerequisites
 REM -----------
 REM - Node.js (v16+ recommended)
 REM - npm (v8+ recommended)
-REM - PHP (v8.0+ recommended)
+REM - Laravel (v8.0+ recommended)
 REM - Composer (latest)
 REM - MySQL or compatible database
 REM - Git
@@ -17,8 +17,8 @@ REM - Git
 REM -----------
 REM 1. Clone the Repository
 REM -----------
-git clone <your-repo-url> vua-exeat
-cd vua-exeat
+git clone <your-repo-url> project_exeat
+cd project_exeat
 
 REM -----------
 REM 2. Backend Setup

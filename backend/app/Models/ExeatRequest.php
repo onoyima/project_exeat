@@ -10,7 +10,24 @@ class ExeatRequest extends Model
     use HasFactory;
     protected $table = 'exeat_requests';
     protected $fillable = [
-        'student_id', 'category', 'reason', 'location', 'departure_date', 'return_date', 'status'
+        'student_id',
+        'matric_no',
+        'category_id',
+        'reason',
+        'destination',
+        'departure_date',
+        'return_date',
+        'preferred_mode_of_contact',
+        'parent_surname',
+        'parent_othernames',
+        'parent_phone_no',
+        'parent_phone_no_two',
+        'parent_email',
+        'student_accommodation',
+        'status',
+        'is_medical',
+        'created_at',
+        'updated_at',
     ];
 
     public function student()
@@ -46,3 +63,5 @@ class ExeatRequest extends Model
         return $this->hasMany(AuditLog::class, 'target_id')->where('target_type', 'exeat_request');
     }
 }
+
+// Status enum: pending, medical_review, recommendation1, parent_pending, dean_final_pending, hostel_signout, security_signout, security_signin, hostel_signin, completed, rejected, appeal

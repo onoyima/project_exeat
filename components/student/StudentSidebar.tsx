@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import LogoutModal from '@/components/ui/logout-modal';
 
-export default function StudentSidebar({ open, onClose }: { open: boolean, onClose: () => void }) {
+export default function StudentSidebar({ open, onClose, onApplyExeat }: { open: boolean, onClose: () => void, onApplyExeat?: () => void }) {
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [currentUser, setCurrentUser] = useState({ fname: '', lname: '', email: '' });
@@ -38,7 +38,6 @@ export default function StudentSidebar({ open, onClose }: { open: boolean, onClo
           onClick={onClose}
         />
       )}
-      
       {/* Sidebar */}
       <div className={`
         fixed md:relative z-40 w-64 h-full
@@ -67,9 +66,16 @@ export default function StudentSidebar({ open, onClose }: { open: boolean, onClo
           <Link href="/student/dashboard" className="flex items-center px-6 py-3 text-green-900 font-semibold bg-green-100 rounded-lg mb-1">
             <span className="mx-3">Dashboard</span>
           </Link>
-          <Link href="/student/apply" className="flex items-center px-6 py-3 text-green-900 hover:bg-green-50 rounded-lg mb-1">
-            <span className="mx-3">Apply for Exeat</span>
-          </Link>
+          <button
+  onClick={() => {
+    onApplyExeat?.(); // Calls the parent function to open modal
+    onClose(); // If needed, to close a dropdown/menu etc.
+  }}
+  className="flex items-center w-full px-6 py-3 text-green-900 hover:bg-green-50 rounded-lg mb-1"
+>
+  <span className="mx-3">Apply for Exeat</span>
+</button>
+
           <Link href="/student/history" className="flex items-center px-6 py-3 text-green-900 hover:bg-green-50 rounded-lg mb-1">
             <span className="mx-3">Exeat History</span>
           </Link>
@@ -97,4 +103,4 @@ export default function StudentSidebar({ open, onClose }: { open: boolean, onClo
       />
     </>
   );
-} 
+}

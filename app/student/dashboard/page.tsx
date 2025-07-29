@@ -30,6 +30,15 @@ import {
 import ExeatApplicationForm from '@/components/ExeatApplicationForm';
 import ExeatHistory from '@/components/ExeatHistory';
 import AppealForm from '@/components/AppealForm';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose
+} from '@/components/ui/dialog';
+import { X } from 'lucide-react';
 
 /**
  * ExeatApplication interface defines the structure of an exeat application object.
@@ -150,6 +159,8 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+   const [showExeatModal, setShowExeatModal] = useState(false);
+
   useEffect(() => {
     const loadUserData = () => {
       try {
@@ -241,7 +252,7 @@ export default function StudentDashboard() {
               </h3>
               <div className="mt-2 max-w-xl text-sm text-gray-500">
                 <p>
-                  Student {user?.matric_number ? `| ${user.matric_number}` : ''}
+                  {/* Student {user?.matric_number ? `| ${user.matric_number}` : ''} */}
                 </p>
               </div>
             </div>
@@ -330,12 +341,10 @@ export default function StudentDashboard() {
             Quick Actions
           </h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <a href="/student/apply" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-              <svg className="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Apply for New Exeat
-            </a>
+            <Button onClick={() => setShowExeatModal(true)} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              <PlusCircle className="mr-2 h-5 w-5" />
+              Create Exeat Request
+            </Button>
             <a href="/student/permits" className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
               <svg className="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -346,6 +355,31 @@ export default function StudentDashboard() {
           </div>
         </div>
       </div>
+      {/* Exeat Application Modal */}
+     
+     <Dialog open={showExeatModal} onOpenChange={setShowExeatModal}>
+  <DialogContent className="sm:max-w-2xl">
+    <DialogHeader>
+      <DialogTitle>Create New Exeat Request</DialogTitle>
+      <DialogDescription>
+        Fill out the form below to request a new exeat.
+      </DialogDescription>
+    </DialogHeader>
+    <div className="mt-4">
+      <ExeatApplicationForm />
+    </div>
+
+   
+    <DialogClose asChild>
+      <button
+        className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+        onClick={() => setShowExeatModal(false)}
+      >
+        <X className="h-5 w-5" />
+      </button>
+    </DialogClose>
+  </DialogContent>
+</Dialog>
       {/* Recent Exeats */}
       <div className="bg-white overflow-hidden shadow-sm rounded-lg">
         <div className="px-4 py-5 sm:p-6">
