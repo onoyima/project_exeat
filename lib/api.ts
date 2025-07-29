@@ -1,5 +1,5 @@
-const API_BASE_URL = 'http://localhost:8000/api';
-// const API_BASE_URL = 'http://attendance.veritas.edu.ng/api';
+// const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'http://attendance.veritas.edu.ng/api';
 
 //
 // ✅ Types

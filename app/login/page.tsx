@@ -108,8 +108,8 @@ export default function LoginPage() {
     setIsLoading(true); // Show loading spinner
     
     try {
-      // const res = await fetch("http://attendance.veritas.edu.ng/api/login", {
-      const res = await fetch("http://localhost:8000/api/login", {
+      const res = await fetch("http://attendance.veritas.edu.ng/api/login", {
+      // const res = await fetch("http://localhost:8000/api/login", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
