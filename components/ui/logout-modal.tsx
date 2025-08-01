@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
+import { useDispatch } from 'react-redux';
 import { Button } from '@/components/ui/button';
-import { logout } from '@/lib/api';
+import { logout as logoutAction } from '@/lib/services/authSlice';
 
 interface LogoutModalProps {
   isOpen: boolean;
@@ -13,15 +14,16 @@ interface LogoutModalProps {
 }
 
 export default function LogoutModal({ isOpen, onClose, userName, onLogoutSuccess }: LogoutModalProps) {
+  const dispatch = useDispatch();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [error, setError] = useState('');
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
     setError('');
-    
+
     try {
-      await logout();
+      dispatch(logoutAction());
       onLogoutSuccess();
     } catch (error) {
       console.error('Logout failed:', error);
@@ -35,12 +37,12 @@ export default function LogoutModal({ isOpen, onClose, userName, onLogoutSuccess
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
         onClick={!isLoggingOut ? onClose : undefined}
       >
         {/* Modal */}
-        <div 
+        <div
           className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4"
           onClick={(e) => e.stopPropagation()}
         >

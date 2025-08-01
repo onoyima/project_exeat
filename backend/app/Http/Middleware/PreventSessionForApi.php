@@ -30,6 +30,17 @@ class PreventSessionForApi
             $request->cookies->remove('laravel_session');
         }
 
-        return $next($request);
+        $response = $next($request);
+
+        // Add CORS headers for API routes
+        if ($request->is('api/*')) {
+            $response->headers->set('Access-Control-Allow-Origin', $request->header('Origin'));
+            $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+            $response->headers->set('Access-Control-Allow-Credentials', 'true');
+            $response->headers->set('Access-Control-Max-Age', '86400');
+        }
+
+        return $response;
     }
 }
