@@ -1,19 +1,17 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-
-const inter = Inter({ 
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter'
-});
+import { Providers } from './providers';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Veritas University - Digital Exeat System',
+  title: 'Veritas University Digital Exeat System',
   description: 'Digital platform for managing student exeat applications and approvals at Veritas University',
   keywords: 'Veritas University, Exeat, Digital System, Student Portal',
-  viewport: 'width=device-width, initial-scale=1',
-  themeColor: '#114629',
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -22,17 +20,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en">
       <head>
-        {/* Preload critical resources */}
-        <link rel="preload" href="/veritas-logo.png" as="image" type="image/png" />
-        <link rel="dns-prefetch" href="//localhost:8000" />
-        <link rel="preconnect" href="//localhost:8000" />
+        <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className={inter.className}>
-        <div className="min-h-screen bg-university-light">
-          {children}
-        </div>
+      <body>
+        <Providers>
+          <div className="min-h-screen bg-university-light">
+            {children}
+            <Toaster />
+          </div>
+        </Providers>
       </body>
     </html>
   );

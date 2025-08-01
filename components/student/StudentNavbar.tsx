@@ -1,37 +1,36 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { Menu, User, LogOut } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import type { useGetCurrentUser } from '@/hooks/use-current-user';
 import LogoutModal from '@/components/ui/logout-modal';
 
 export default function StudentNavbar({
   onMenuClick,
-  user,
+  currentUser,
 }: {
   onMenuClick: () => void;
-  user: { fname: string; lname: string; email: string; image?: string };
+  currentUser: ReturnType<typeof useGetCurrentUser>;
 }) {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [currentUser, setCurrentUser] = useState(user);
+  const { user, fullName, initials, avatarUrl } = currentUser;
   const router = useRouter();
 
-  // Sync user from localStorage
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setCurrentUser(parsedUser);
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-      }
-    }
-  }, []);
-
   const handleLogoutClick = () => {
-    setDropdownOpen(false);
     setShowLogoutModal(true);
   };
 
@@ -41,94 +40,87 @@ export default function StudentNavbar({
   };
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50 w-full">
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
-          {/* Mobile menu button */}
-          <button
-            type="button"
-            className="text-green-900 md:hidden"
-            onClick={onMenuClick}
-            aria-label="Open sidebar"
-          >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
+    <header className="sticky top-0 z-50 w-full border-b bg-white">
+      <div className="flex h-14 items-center px-4 lg:px-6">
+        {/* Mobile Menu Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden mr-2"
+          onClick={onMenuClick}
+        >
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle menu</span>
+        </Button>
 
-          {/* Logo & title */}
-          <div className="flex items-center space-x-3">
-            <div className="relative w-8 h-8 sm:w-10 sm:h-10">
-              <Image
-                src="/veritas-logo.png"
-                alt="Veritas University Logo"
-                fill
-                className="object-contain"
-                sizes="(max-width: 640px) 32px, 40px"
-                priority
-              />
-            </div>
-            <h1 className="text-lg sm:text-xl font-semibold text-green-900">
-              Student Dashboard
-            </h1>
+        {/* Logo and Title */}
+        <div className="flex items-center gap-3 flex-1">
+          <div className="flex items-center gap-2">
+            <Image
+              src="/veritas-logo.png"
+              alt="Veritas University Logo"
+              width={28}
+              height={28}
+              className="object-contain"
+              priority
+            />
+            <span className="hidden lg:inline-block text-lg font-semibold text-primary">
+              Veritas University
+            </span>
           </div>
+          <div className="hidden lg:block h-4 w-px bg-border mx-2" />
+          <div className="text-sm font-medium">Digital Exeat System</div>
+        </div>
 
-          {/* Profile dropdown */}
-          <div className="relative">
-            <button
-              type="button"
-              className="flex items-center text-sm rounded-full focus:outline-none"
-              onClick={() => setDropdownOpen((v) => !v)}
-              aria-haspopup="true"
-              aria-expanded={dropdownOpen}
-            >
-              {currentUser.image ? (
-                <img
-                  src={currentUser.image}
-                  alt="Profile"
-                  className="h-8 w-8 rounded-full object-cover"
-                />
-              ) : (
-                <div className="h-8 w-8 rounded-full bg-green-800 flex items-center justify-center text-white font-medium">
-                  {currentUser.fname?.charAt(0).toUpperCase()}
-                  {currentUser.lname?.charAt(0).toUpperCase() || 'ST'}
-                </div>
-              )}
-            </button>
+        {/* User Menu */}
+        <div className="flex items-center gap-4">
+          <span className="hidden sm:block text-sm text-muted-foreground">
+            Welcome, {user?.fname}
+          </span>
 
-            {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-2 z-50 border">
-                <div className="px-4 py-2 border-b">
-                  <div className="font-semibold text-gray-900">
-                    {currentUser.fname} {currentUser.lname}
-                  </div>
-                  <div className="text-xs text-gray-500">{currentUser.email}</div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage
+                    src={avatarUrl}
+                    alt={user ? `${user.fname} ${user.lname}` : 'User avatar'}
+                  />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {fullName}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user?.email}
+                  </p>
                 </div>
-                <a
-                  href="/student/profile"
-                  className="block px-4 py-2 text-gray-700 hover:bg-green-50"
-                >
-                  Profile
-                </a>
-                <button
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                  <a href="/student/profile" className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
                   onClick={handleLogoutClick}
-                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-green-50"
                 >
+                  <LogOut className="mr-2 h-4 w-4" />
                   Logout
-                </button>
-              </div>
-            )}
-          </div>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -136,7 +128,7 @@ export default function StudentNavbar({
       <LogoutModal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
-        userName={`${currentUser.fname} ${currentUser.lname}`}
+        userName={fullName}
         onLogoutSuccess={handleLogoutSuccess}
       />
     </header>

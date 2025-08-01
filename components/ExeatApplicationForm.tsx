@@ -1,8 +1,14 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { format } from 'date-fns';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
+import { X } from 'lucide-react';
+import { Textarea } from './ui/textarea';
 import {
   Select,
   SelectTrigger,
@@ -10,232 +16,315 @@ import {
   SelectContent,
   SelectItem,
 } from './ui/select';
-import { SelectField } from './ui/select-field';
 import { FormField } from './ui/form-field';
+import { DatePicker } from './ui/date-picker';
+import { toast } from '@/hooks/use-toast';
 import {
-  fetchStudentCategories,
-  fetchStudentProfile,
-  createStudentExeatRequest,
-} from '../lib/api';
-import type { ExeatCategory, StudentProfile } from '../lib/api';
+  useGetCategoriesQuery,
+  useCreateExeatRequestMutation,
+} from '@/lib/services/exeatApi';
 
 const preferredModes = [
   { value: 'whatsapp', label: 'WhatsApp' },
   { value: 'text', label: 'Text' },
   { value: 'phone_call', label: 'Phone Call' },
   { value: 'any', label: 'Any' },
-];
+] as const;
 
-export default function ExeatApplicationForm() {
-  const [categories, setCategories] = useState<ExeatCategory[]>([]);
-  const [profile, setProfile] = useState<StudentProfile | null>(null);
-  const [form, setForm] = useState({
-    category_id: '',
-    preferred_mode_of_contact: '',
-    reason: '',
-    destination: '',
-    departure_date: '',
-    return_date: '',
+const exeatFormSchema = z.object({
+  category_id: z.string().min(1, 'Please select a category'),
+  preferred_mode_of_contact: z.enum(['whatsapp', 'text', 'phone_call', 'any'], {
+    required_error: 'Please select a contact mode',
+  }),
+  reason: z.string().min(10, 'Please provide a detailed reason (minimum 10 characters)'),
+  destination: z.string().min(3, 'Please specify your destination'),
+  departure_date: z.date({
+    required_error: 'Please select a departure date',
+  }),
+  return_date: z.date({
+    required_error: 'Please select a return date',
+  }),
+}).refine((data) => data.return_date > data.departure_date, {
+  message: 'Return date must be after departure date',
+  path: ['return_date'],
+});
+
+type ExeatFormValues = z.infer<typeof exeatFormSchema>;
+
+interface ExeatApplicationFormProps {
+  onSuccess?: () => void;
+}
+
+export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationFormProps) {
+
+  const { data: categoriesData, isLoading: loadingCategories, error: categoriesError } = useGetCategoriesQuery();
+  const [createExeatRequest, { isLoading: isSubmitting }] = useCreateExeatRequestMutation();
+
+  const form = useForm<ExeatFormValues>({
+    resolver: zodResolver(exeatFormSchema),
+    defaultValues: {
+      category_id: '',
+      preferred_mode_of_contact: 'any',
+      reason: '',
+      destination: '',
+    },
+    mode: 'onSubmit',
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [formDisabled, setFormDisabled] = useState(false);
-  const [categoriesError, setCategoriesError] = useState('');
-  const [profileError, setProfileError] = useState('');
 
-  useEffect(() => {
-    fetchStudentCategories()
-      .then((res) => {
-        if (!res.success) throw new Error(res.error || 'Failed to fetch categories');
-        setCategories(res.data?.categories || []);
-      })
-      .catch((err: Error) => setCategoriesError(err.message));
-
-    fetchStudentProfile()
-      .then((res) => {
-        if (!res.success) throw new Error(res.error || 'Failed to fetch profile');
-        setProfile(res.data?.profile || null);
-      })
-      .catch((err: Error) => setProfileError(err.message));
-  }, []);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccess('');
-
-    if (
-      form.departure_date &&
-      form.return_date &&
-      form.return_date < form.departure_date
-    ) {
-      setError('Return date cannot be before departure date.');
-      setLoading(false);
-      return;
-    }
-
+  const onSubmit = async (values: ExeatFormValues) => {
     try {
+
       const payload = {
-        ...form,
-        category_id: Number(form.category_id),
-        preferred_mode_of_contact: form.preferred_mode_of_contact as
-          | 'whatsapp'
-          | 'text'
-          | 'phone_call'
-          | 'any',
-        // Hidden fields: still submitted
-        matric_no: profile?.matric_no,
-        parent_surname: profile?.parent_surname,
-        parent_othernames: profile?.parent_othernames,
-        parent_phone_no: profile?.parent_phone_no,
-        parent_phone_no_two: profile?.parent_phone_no_two,
-        parent_email: profile?.parent_email,
-        student_accommodation: profile?.student_accommodation,
+        ...values,
+        category_id: Number(values.category_id),
+        departure_date: format(values.departure_date, 'yyyy-MM-dd'),
+        return_date: format(values.return_date, 'yyyy-MM-dd'),
+        // // Include profile data
+        // matric_no: profile.matric_no,
+        // parent_surname: profile.parent_surname,
+        // parent_othernames: profile.parent_othernames,
+        // parent_phone_no: profile.parent_phone_no,
+        // parent_phone_no_two: profile.parent_phone_no_two,
+        // parent_email: profile.parent_email,
+        // student_accommodation: profile.student_accommodation,
       };
 
-      const res = await createStudentExeatRequest(payload);
+      // Call the mutation
+      const result = await createExeatRequest(payload).unwrap();
+      console.log('result:', result);
 
-      if (res.status === 403) {
-        setError('You cannot submit a new exeat request until your previous one is completed.');
-      } else if (!res.success) {
-        setError(res.error || 'Submission failed.');
-      } else {
-        setSuccess('Exeat request submitted successfully.');
+      // Show success message and close modal
+      toast({
+        variant: "success",
+        title: "Success",
+        description: result.message || "Exeat request submitted successfully.",
+        duration: 3000,
+      });
+
+      // Reset form and close modal immediately
+      form.reset();
+      onSuccess?.();
+      return;
+    } catch (error: any) {
+      console.log('Error object:', error);
+
+      // Force immediate toast display
+      if (error?.status === 403 && error?.data?.message) {
+        toast({
+          variant: "destructive",
+          title: "Existing Request",
+          description: error.data.message,
+          duration: 5000, // Show for 5 seconds
+        });
+        setTimeout(() => onSuccess?.(), 100); // Close modal after a brief delay
+        return;
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
-    } finally {
-      setLoading(false);
+
+      // Handle other errors
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to submit exeat request. Please try again.",
+        duration: 5000, // Show for 5 seconds
+      });
     }
   };
 
-  if (categoriesError || profileError) {
+  // Handle loading states
+  if (loadingCategories) {
     return (
-      <div className="text-red-500 p-4 bg-red-50 rounded">
-        {categoriesError && <div>Category Error: {categoriesError}</div>}
-        {profileError && <div>Profile Error: {profileError}</div>}
+      <div className="flex items-center justify-center p-8">
+        <div className="space-y-4 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+          <p className="text-muted-foreground">Loading form data...</p>
+        </div>
       </div>
     );
   }
 
-  if (!categories.length || !profile) {
-    return <div className="text-gray-500 p-4">Loading form data...</div>;
+  // Handle API errors
+  if (categoriesError) {
+    console.error('API Errors:', { categoriesError });
+    return (
+      <div className="space-y-4">
+        {categoriesError && (
+          <div className="p-4 bg-destructive/10 text-destructive rounded-md">
+            <p>Failed to load exeat categories. Please try again later.</p>
+            <p className="text-sm mt-2">{categoriesError.toString()}</p>
+          </div>
+        )}
+
+      </div>
+    );
   }
 
+  // Verify data is available
+  if (!categoriesData?.categories) {
+    console.error('Missing required data:', { categoriesData });
+    return (
+      <div className="p-4 bg-destructive/10 text-destructive rounded-md">
+        <p>Unable to load required data. Please refresh the page and try again.</p>
+      </div>
+    );
+  }
+
+  const categories = categoriesData?.categories ? [...categoriesData.categories].sort((a, b) => a.name.localeCompare(b.name)) : [];
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6 bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto overflow-y-auto max-h-[90vh]"
-    >
-      <h2 className="text-2xl font-bold mb-4">Exeat Application</h2>
-
-      {success && (
-        <div className="p-3 bg-green-100 text-green-800 rounded">{success}</div>
-      )}
-      {error && <div className="p-3 bg-red-100 text-red-800 rounded">{error}</div>}
-
-      {/* Hidden inputs: not shown but submitted */}
-      <input type="hidden" name="matric_no" value={profile.matric_no} />
-      <input type="hidden" name="parent_surname" value={profile.parent_surname} />
-      <input type="hidden" name="parent_othernames" value={profile.parent_othernames} />
-      <input type="hidden" name="parent_phone_no" value={profile.parent_phone_no} />
-      <input type="hidden" name="parent_phone_no_two" value={profile.parent_phone_no_two} />
-      <input type="hidden" name="parent_email" value={profile.parent_email} />
-      <input type="hidden" name="student_accommodation" value={profile.student_accommodation} />
-
-      {/* Only showing necessary form fields to user */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <SelectField label="Exeat Category">
-          <Select
-            value={form.category_id}
-            onValueChange={(val) => setForm({ ...form, category_id: val })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select Category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={String(cat.id)}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </SelectField>
-
-        <SelectField label="Preferred Mode of Contact">
-          <Select
-            value={form.preferred_mode_of_contact}
-            onValueChange={(val) =>
-              setForm({ ...form, preferred_mode_of_contact: val })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select contact mode" />
-            </SelectTrigger>
-            <SelectContent>
-              {preferredModes.map((mode) => (
-                <SelectItem key={mode.value} value={mode.value}>
-                  {mode.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </SelectField>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      {/* Close button */}
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-8 w-8 p-0 absolute right-4 top-4"
+          onClick={() => onSuccess?.()}
+        >
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </Button>
       </div>
 
-      <FormField label="Reason for Exeat">
-        <Input
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <FormField
+          label="Exeat Category"
+          error={form.formState.errors.category_id?.message}
+        >
+          <Controller
+            control={form.control}
+            name="category_id"
+            render={({ field }) => (
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={String(cat.id)}>
+                      {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </FormField>
+
+        <FormField
+          label="Preferred Contact Method"
+          error={form.formState.errors.preferred_mode_of_contact?.message}
+        >
+          <Controller
+            control={form.control}
+            name="preferred_mode_of_contact"
+            render={({ field }) => (
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select contact mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  {preferredModes.map((mode) => (
+                    <SelectItem key={mode.value} value={mode.value}>
+                      {mode.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </FormField>
+      </div>
+
+      <FormField
+        label="Reason for Exeat"
+        error={form.formState.errors.reason?.message}
+      >
+        <Controller
+          control={form.control}
           name="reason"
-          value={form.reason}
-          onChange={handleInputChange}
-          required
-          disabled={formDisabled}
+          render={({ field }) => (
+            <Textarea
+              {...field}
+              placeholder="Please provide a detailed reason for your exeat request"
+              className="min-h-[100px]"
+            />
+          )}
         />
       </FormField>
 
-      <FormField label="Destination">
-        <Input
+      <FormField
+        label="Destination"
+        error={form.formState.errors.destination?.message}
+      >
+        <Controller
+          control={form.control}
           name="destination"
-          value={form.destination}
-          onChange={handleInputChange}
-          required
-          disabled={formDisabled}
+          render={({ field }) => (
+            <Input {...field} placeholder="Where are you going?" />
+          )}
         />
       </FormField>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <FormField label="Departure Date">
-          <Input
-            type="date"
+        <FormField
+          label="Departure Date"
+          error={form.formState.errors.departure_date?.message}
+        >
+          <Controller
+            control={form.control}
             name="departure_date"
-            value={form.departure_date}
-            onChange={handleInputChange}
-            required
-            disabled={formDisabled}
+            render={({ field }) => (
+              <DatePicker
+                value={field.value}
+                onChange={field.onChange}
+                disabled={(date) =>
+                  date < new Date() || date > new Date(new Date().setMonth(new Date().getMonth() + 3))
+                }
+              />
+            )}
           />
         </FormField>
-        <FormField label="Return Date">
-          <Input
-            type="date"
+
+        <FormField
+          label="Return Date"
+          error={form.formState.errors.return_date?.message}
+        >
+          <Controller
+            control={form.control}
             name="return_date"
-            value={form.return_date}
-            onChange={handleInputChange}
-            required
-            disabled={formDisabled}
+            render={({ field }) => (
+              <DatePicker
+                value={field.value}
+                onChange={field.onChange}
+                disabled={(date) =>
+                  date < new Date() || date > new Date(new Date().setMonth(new Date().getMonth() + 3))
+                }
+              />
+            )}
           />
         </FormField>
       </div>
 
-      <Button type="submit" disabled={loading || formDisabled} className="w-full">
-        {loading ? 'Submitting...' : 'Submit Exeat Request'}
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? (
+          <>
+            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
+            Submitting...
+          </>
+        ) : (
+          'Submit Exeat Request'
+        )}
       </Button>
     </form>
   );
