@@ -5,6 +5,7 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { Button } from '@/components/ui/button';
 import { logout as logoutAction } from '@/lib/services/authSlice';
+import { useLogoutMutation } from '@/lib/services/authApi';
 
 interface LogoutModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface LogoutModalProps {
 
 export default function LogoutModal({ isOpen, onClose, userName, onLogoutSuccess }: LogoutModalProps) {
   const dispatch = useDispatch();
+  const [logout] = useLogoutMutation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [error, setError] = useState('');
 
@@ -23,12 +25,20 @@ export default function LogoutModal({ isOpen, onClose, userName, onLogoutSuccess
     setError('');
 
     try {
+      // Try to call logout API endpoint
+      await logout().unwrap();
+    } catch (error: any) {
+      // Log the error but don't prevent logout
+      console.warn('API logout failed:', error);
+
+      // If it's just "No authenticated user", that's fine - user is already logged out on server
+      if (error?.data?.message !== "No authenticated user.") {
+        console.error('Unexpected logout error:', error);
+      }
+    } finally {
+      // Always clear local state regardless of API response
       dispatch(logoutAction());
       onLogoutSuccess();
-    } catch (error) {
-      console.error('Logout failed:', error);
-      setError('Logout failed. Please try again.');
-      setIsLoggingOut(false);
     }
   };
 

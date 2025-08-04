@@ -1,138 +1,275 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Alert } from "@/components/ui/alert";
-import { getProfile } from "@/lib/api";
-import { User, Mail, IdCard, Phone, ClipboardList, GraduationCap, Edit } from "lucide-react";
+
+import { motion } from "framer-motion";
+import { useGetStudentProfileQuery } from "@/lib/services/studentApi";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { User, Mail, IdCard, Phone, ClipboardList, GraduationCap } from "lucide-react";
 import Image from "next/image";
+import { format } from "date-fns";
 
-export default function StudentProfilePage() {
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const fadeIn = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5 }
+};
 
-  useEffect(() => {
-    async function fetchProfile() {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await getProfile();
-        if (result.success) {
-          setProfile(result.data.profile);
-        } else {
-          setError(result.error || "Failed to load profile");
-        }
-      } catch (err) {
-        setError("Failed to load profile");
-      } finally {
-        setLoading(false);
-      }
+const stagger = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1
     }
-    fetchProfile();
-  }, []);
+  }
+};
 
-  if (loading) return <div className="p-8 text-center">Loading profile...</div>;
-  if (error) return <Alert variant="destructive">{error}</Alert>;
-  if (!profile) return null;
-
-  const { personal, academic, medical, sponsor_contact } = profile;
-  const initials = personal.first_name?.[0]?.toUpperCase() + (personal.last_name?.[0]?.toUpperCase() || "");
-
+function ProfileSkeleton() {
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
-      {/* Profile Card */}
-      <Card className="flex flex-col md:flex-row items-center gap-6 p-6 shadow-lg rounded-xl">
-        <div className="flex-shrink-0">
-          {/* Avatar: Use passport if available, else initials */}
-          {personal.extras?.passport ? (
-            <Image src={`data:image/jpeg;base64,${personal.extras.passport}`} alt="Avatar" width={96} height={96} className="rounded-full border-2 border-primary object-cover" />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center text-3xl font-bold text-blue-700 border-2 border-primary">
-              {initials}
+    <div className="space-y-8">
+      {/* Profile Card Skeleton */}
+      <Card className="p-6">
+        <div className="flex flex-col md:flex-row items-center gap-6">
+          <Skeleton className="w-24 h-24 rounded-full" />
+          <div className="flex-1 space-y-4">
+            <Skeleton className="h-8 w-3/4" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-4 w-1/3" />
             </div>
-          )}
-        </div>
-        <div className="flex-1 space-y-2">
-          <div className="flex items-center gap-2">
-            <User className="w-6 h-6 text-primary" />
-            <span className="text-2xl font-bold">{personal.first_name} {personal.last_name}</span>
-            {personal.title && <span className="ml-2 px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-semibold">{personal.title}</span>}
           </div>
-          <div className="flex items-center gap-2 text-gray-600">
-            <Mail className="w-4 h-4" />
-            <span>{personal.contact?.email}</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-600">
-            <IdCard className="w-4 h-4" />
-            <span>Matric No: {academic?.matric_no || <span className="text-gray-400">-</span>}</span>
-          </div>
-          <button className="mt-2 px-4 py-1 bg-primary text-white rounded flex items-center gap-1 hover:bg-primary/90 transition text-sm font-medium">
-            <Edit className="w-4 h-4" /> Edit Profile
-          </button>
         </div>
       </Card>
-      {/* Info Sections */}
+
+      {/* Info Sections Skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Sponsor/Contact */}
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Phone className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-lg">Sponsor/Contact</h3>
+        <Card className="p-6">
+          <Skeleton className="h-6 w-1/3 mb-4" />
+          <div className="space-y-3">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-4 w-full" />
+            ))}
           </div>
-          {sponsor_contact ? (
-            <ul className="space-y-1">
-              <li><span className="font-medium">Name:</span> {sponsor_contact.full_name}</li>
-              <li><span className="font-medium">Relationship:</span> {sponsor_contact.relationship}</li>
-              <li><span className="font-medium">Phone:</span> {sponsor_contact.phone_no}</li>
-              <li><span className="font-medium">Email:</span> {sponsor_contact.email}</li>
-              <li><span className="font-medium">Address:</span> {sponsor_contact.address}</li>
-              <li><span className="font-medium">City/State:</span> {sponsor_contact.city}, {sponsor_contact.state}</li>
-            </ul>
-          ) : (
-            <div className="text-gray-400">No sponsor/contact info.</div>
-          )}
         </Card>
-        {/* Medical Records */}
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <ClipboardList className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-lg">Medical Records</h3>
+
+        <Card className="p-6">
+          <Skeleton className="h-6 w-1/3 mb-4" />
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-4 w-full" />
+            ))}
           </div>
-          {medical ? (
-            <ul className="space-y-1">
-              <li><span className="font-medium">Physical:</span> {medical.physical || <span className="text-gray-400">-</span>}</li>
-              <li><span className="font-medium">Blood Group:</span> {medical.blood_group || <span className="text-gray-400">-</span>}</li>
-              <li><span className="font-medium">Genotype:</span> {medical.genotype || <span className="text-gray-400">-</span>}</li>
-              <li><span className="font-medium">Condition:</span> {medical.condition || <span className="text-gray-400">-</span>}</li>
-              <li><span className="font-medium">Allergies:</span> {medical.allergies || <span className="text-gray-400">-</span>}</li>
-            </ul>
-          ) : (
-            <div className="text-gray-400">No medical records.</div>
-          )}
         </Card>
-        {/* Academic Records */}
-        <Card className="p-4 md:col-span-2">
-          <div className="flex items-center gap-2 mb-2">
-            <GraduationCap className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-lg">Academic Records</h3>
+
+        <Card className="p-6 md:col-span-2">
+          <Skeleton className="h-6 w-1/3 mb-4" />
+          <div className="space-y-3">
+            {[...Array(9)].map((_, i) => (
+              <Skeleton key={i} className="h-4 w-full" />
+            ))}
           </div>
-          {academic ? (
-            <ul className="space-y-1">
-              <li><span className="font-medium">Course of Study:</span> {academic.course_study_id || <span className="text-gray-400">-</span>}</li>
-              <li><span className="font-medium">Level:</span> {academic.level || <span className="text-gray-400">-</span>}</li>
-              <li><span className="font-medium">Faculty:</span> {academic.faculty_id || <span className="text-gray-400">-</span>}</li>
-              <li><span className="font-medium">Department:</span> {academic.department_id || <span className="text-gray-400">-</span>}</li>
-              <li><span className="font-medium">Session:</span> {academic.academic_session_id || <span className="text-gray-400">-</span>}</li>
-              <li><span className="font-medium">Admission Type:</span> {academic.admissions_type_id || <span className="text-gray-400">-</span>}</li>
-              <li><span className="font-medium">JAMB No:</span> {academic.jamb_no || <span className="text-gray-400">-</span>}</li>
-              <li><span className="font-medium">JAMB Score:</span> {academic.jamb_score || <span className="text-gray-400">-</span>}</li>
-              <li><span className="font-medium">Studentship:</span> {academic.studentship || <span className="text-gray-400">-</span>}</li>
-            </ul>
-          ) : (
-            <div className="text-gray-400">No academic records.</div>
-          )}
         </Card>
       </div>
     </div>
+  );
+}
+
+function InfoItem({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <motion.li
+      variants={fadeIn}
+      className="flex items-center justify-between py-2 border-b last:border-0 border-border/50"
+    >
+      <span className="font-medium text-muted-foreground">{label}</span>
+      <span className="text-foreground">{value || <span className="text-muted-foreground italic">Not provided</span>}</span>
+    </motion.li>
+  );
+}
+
+export default function StudentProfilePage() {
+  const { data: profileData, isLoading, error } = useGetStudentProfileQuery();
+
+  const profile = profileData;
+
+  if (isLoading) return <ProfileSkeleton />;
+  if (error) return (
+    <Alert variant="destructive" className="mx-auto max-w-2xl mt-8">
+      <AlertDescription>
+        {error instanceof Error ? error.message : "Failed to load profile"}
+      </AlertDescription>
+    </Alert>
+  );
+  if (!profile) return null;
+
+  const { personal, academic, medical, sponsor_contact } = profile;
+  const initials = personal.fname?.[0]?.toUpperCase() + (personal.last_name?.[0]?.toUpperCase() || "");
+
+  return (
+    <motion.div
+      initial="initial"
+      animate="animate"
+      variants={stagger}
+      className="container py-8 px-4 space-y-8"
+    >
+      {/* Profile Card */}
+      <motion.div variants={fadeIn}>
+        <Card className="overflow-hidden">
+          <div className="h-32 bg-gradient-to-r from-primary/10 via-primary/5 to-background" />
+          <div className="px-6 pb-6 -mt-16">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="relative">
+                {personal.extras?.passport ? (
+                  <Image
+                    src={`data:image/jpeg;base64,${personal.extras.passport}`}
+                    alt="Profile"
+                    width={128}
+                    height={128}
+                    className="rounded-full border-4 border-background shadow-xl object-cover"
+                  />
+                ) : (
+                  <div className="w-32 h-32 rounded-full bg-primary/10 border-4 border-background shadow-xl flex items-center justify-center">
+                    <span className="text-4xl font-bold text-primary">{initials}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 text-center md:text-left space-y-3">
+                <div className="space-y-1">
+                  <h1 className="text-2xl font-bold tracking-tight">
+                    {personal.fname} {personal.middle_name} {personal.last_name}
+                  </h1>
+                  {personal.title && (
+                    <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
+                      {personal.title}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col md:flex-row gap-4 text-muted-foreground">
+                  <div className="flex items-center gap-2 justify-center md:justify-start">
+                    <Mail className="w-4 h-4" />
+                    <span>{personal.contact?.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2 justify-center md:justify-start">
+                    <IdCard className="w-4 h-4" />
+                    <span>Matric No: {academic?.matric_no || "Not assigned"}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+
+      {/* Info Sections */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Personal Information */}
+        <motion.div variants={fadeIn}>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <User className="w-5 h-5 text-primary" />
+                Personal Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <motion.ul variants={stagger} className="divide-y divide-border/50">
+                <InfoItem label="Gender" value={personal.gender} />
+                <InfoItem label="Date of Birth" value={personal.dob ? format(new Date(personal.dob), 'PPP') : 'N/A'} />
+                <InfoItem label="Marital Status" value={personal.marital_status} />
+                <InfoItem label="LGA" value={personal.nationality?.lga_name} />
+                <InfoItem label="City" value={personal.nationality?.city} />
+                <InfoItem label="Address" value={personal.contact?.address} />
+                <InfoItem label="Phone" value={personal.contact?.phone} />
+                <InfoItem label="Username" value={personal.contact?.username} />
+                <InfoItem label="Hobbies" value={personal.extras?.hobbies} />
+              </motion.ul>
+            </CardContent>
+          </Card>
+        </motion.div>
+        {/* Sponsor/Contact */}
+        <motion.div variants={fadeIn}>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <Phone className="w-5 h-5 text-primary" />
+                Sponsor/Contact Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {sponsor_contact ? (
+                <motion.ul variants={stagger} className="divide-y divide-border/50">
+                  <InfoItem label="Title" value={sponsor_contact.title} />
+                  <InfoItem label="Full Name" value={sponsor_contact.full_name} />
+                  <InfoItem label="Relationship" value={sponsor_contact.relationship} />
+                  <InfoItem label="Phone" value={sponsor_contact.phone_no} />
+                  {sponsor_contact.phone_no_two && (
+                    <InfoItem label="Alternative Phone" value={sponsor_contact.phone_no_two} />
+                  )}
+                  <InfoItem label="Email" value={sponsor_contact.email} />
+                  {sponsor_contact.email_two && (
+                    <InfoItem label="Alternative Email" value={sponsor_contact.email_two} />
+                  )}
+                  <InfoItem label="Address" value={sponsor_contact.address} />
+                  <InfoItem label="Location" value={`${sponsor_contact.city}, ${sponsor_contact.state}`} />
+                </motion.ul>
+              ) : (
+                <p className="text-muted-foreground italic text-center py-4">No sponsor/contact information available</p>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Medical Records */}
+        <motion.div variants={fadeIn}>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <ClipboardList className="w-5 h-5 text-primary" />
+                Medical Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {medical ? (
+                <motion.ul variants={stagger} className="divide-y divide-border/50">
+                  <InfoItem label="Physical" value={medical.physical} />
+                  <InfoItem label="Blood Group" value={medical.blood_group} />
+                  <InfoItem label="Genotype" value={medical.genotype} />
+                  <InfoItem label="Medical Condition" value={medical.condition} />
+                  <InfoItem label="Allergies" value={medical.allergies} />
+                </motion.ul>
+              ) : (
+                <p className="text-muted-foreground italic text-center py-4">No medical records available</p>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Academic Records */}
+        <motion.div variants={fadeIn} className="md:col-span-2">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <GraduationCap className="w-5 h-5 text-primary" />
+                Academic Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {academic ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                  <motion.ul variants={stagger} className="divide-y divide-border/50">
+                    <InfoItem label="Matriculation No" value={academic.matric_no} />
+                    <InfoItem label="Current Level" value={academic.level?.toString()} />
+                  </motion.ul>
+                  <motion.ul variants={stagger} className="divide-y divide-border/50">
+                    <InfoItem label="JAMB Number" value={academic.jamb_no} />
+                    <InfoItem label="JAMB Score" value={academic.jamb_score?.toString()} />
+                  </motion.ul>
+                </div>
+              ) : (
+                <p className="text-muted-foreground italic text-center py-4">No academic records available</p>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    </motion.div>
   );
 }

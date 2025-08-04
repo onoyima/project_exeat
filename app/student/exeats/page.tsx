@@ -39,6 +39,7 @@ import {
 import { useGetExeatRequestsQuery } from '@/lib/services/exeatApi';
 import { getStatusColor, getStatusText } from '@/lib/utils/exeat';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 const categories = [
     { id: 1, name: 'Medical', icon: Stethoscope },
@@ -62,6 +63,7 @@ const statuses = [
 ];
 
 export default function ExeatHistory() {
+    const router = useRouter();
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [categoryFilter, setCategoryFilter] = useState('all');
@@ -201,7 +203,7 @@ export default function ExeatHistory() {
                     </div>
 
                     {/* Table */}
-                    <div className="rounded-md border overflow-x-auto">
+                    <div className="rounded-md border overflow-x-auto mt-4">
                         <Table>
                             <TableHeader className="bg-white sticky top-0">
                                 <TableRow>
@@ -233,7 +235,7 @@ export default function ExeatHistory() {
                                         <TableRow
                                             key={request.id}
                                             className="group cursor-pointer hover:bg-accent/50"
-                                            onClick={() => window.location.href = `/student/exeat/${request.id}`}
+                                            onClick={() => router.push(`/student/exeats/${request.id}`)}
                                         >
                                             <TableCell>
                                                 <div className="flex items-center gap-2">

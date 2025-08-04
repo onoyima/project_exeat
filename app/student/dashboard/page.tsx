@@ -40,10 +40,14 @@ import {
 import Link from 'next/link';
 import { useGetExeatRequestsQuery } from '@/lib/services/exeatApi';
 import { getStatusColor, getStatusText, isActiveStatus } from '@/lib/utils/exeat';
+import { extractMatricFromEmail, formatMatricNumber } from '@/lib/utils/student';
 import { cn } from '@/lib/utils';
 
 export default function StudentDashboard() {
   const { user } = useGetCurrentUser();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+
 
   const { data: exeatData, isLoading: loadingExeats } = useGetExeatRequestsQuery();
   const exeatRequests = exeatData?.exeat_requests || [];
@@ -97,7 +101,7 @@ export default function StudentDashboard() {
                 </CardDescription>
               </div>
             </div>
-            <Dialog>
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
                 <Button className="w-full sm:w-auto" size="lg">
                   <PlusCircle className="mr-2 h-5 w-5" />
@@ -111,7 +115,7 @@ export default function StudentDashboard() {
                     Please provide the details for your exeat request. We'll guide you through the process.
                   </DialogDescription>
                 </DialogHeader>
-                <ExeatApplicationForm onSuccess={() => { }} />
+                <ExeatApplicationForm onSuccess={() => setIsModalOpen(false)} />
               </DialogContent>
             </Dialog>
           </div>
@@ -211,7 +215,7 @@ export default function StudentDashboard() {
             <InfoItem
               icon={GraduationCap}
               label="Matriculation Number"
-              value={user?.matric_no}
+              value={formatMatricNumber(extractMatricFromEmail(user?.email)) || user?.matric_no || 'Not available'}
             />
             <InfoItem
               icon={Home}
@@ -254,7 +258,7 @@ export default function StudentDashboard() {
               ) : (
                 exeatRequests.map((request) => (
                   <Link
-                    href={`/student/exeat/${request.id}`}
+                    href={`/student/exeats/${request.id}`}
                     key={request.id}
                     className={cn(
                       "group relative block p-4 hover:bg-accent/50 rounded-lg transition-all duration-200",

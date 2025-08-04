@@ -98,19 +98,7 @@ const authSlice = createSlice({
                     state.isLoading = false;
                 }
             )
-            .addMatcher(
-                authApi.endpoints.refreshToken.matchFulfilled,
-                (state, { payload }) => {
-                    const user = { ...payload.user, role: payload.role };
-                    state.user = user;
-                    state.token = payload.token;
-                    state.isAuthenticated = true;
-                    if (isClient) {
-                        localStorage.setItem('token', payload.token);
-                        localStorage.setItem('user', JSON.stringify(user));
-                    }
-                }
-            );
+
     },
 });
 
