@@ -11,9 +11,8 @@ export const exeatApi = api.injectEndpoints({
             query: () => '/student/exeat-categories',
             transformResponse: (response: { categories: ExeatCategory[] }) => response,
         }),
-
         getStudentProfile: builder.query<{ profile: StudentProfile }, void>({
-            query: () => '/student/profile',
+            query: () => '/me',
             transformResponse: (response: { success: boolean; data: { profile: StudentProfile } }) => {
                 if (!response.success || !response.data?.profile) {
                     throw new Error('Failed to load profile data');
@@ -30,6 +29,33 @@ export const exeatApi = api.injectEndpoints({
             // Invalidate the relevant queries after a successful request
             invalidatesTags: ['ExeatRequests'],
         }),
+        getExeatRequestHistory: builder.query<{
+            history: {
+                audit_logs: Array<any>;
+                approvals: Array<{
+                    id: number;
+                    exeat_request_id: number;
+                    staff_id: number | null;
+                    role: string;
+                    status: string;
+                    comment: string | null;
+                    method: string | null;
+                    created_at: string;
+                    updated_at: string;
+                    staff: {
+                        name: string;
+                    } | null;
+                }>;
+                exeat_request: ExeatRequest;
+            };
+        }, number>({
+            query: (id) => `/student/exeat-requests/${id}/history`,
+            providesTags: ['ExeatRequests'],
+        }),
+        getExeatRequestDetails: builder.query<{ exeat_request: ExeatRequest }, number>({
+            query: (id) => `/student/exeat-requests/${id}`,
+            providesTags: ['ExeatRequests'],
+        }),
     }),
 });
 
@@ -38,4 +64,6 @@ export const {
     useGetStudentProfileQuery,
     useCreateExeatRequestMutation,
     useGetExeatRequestsQuery,
+    useGetExeatRequestDetailsQuery,
+    useGetExeatRequestHistoryQuery,
 } = exeatApi;

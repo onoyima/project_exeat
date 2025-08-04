@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser, selectIsAuthenticated } from '@/lib/services/authSlice';
-import { useRefreshTokenQuery } from '@/lib/services/authApi';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -15,9 +14,6 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     const router = useRouter();
     const user = useSelector(selectCurrentUser);
     const isAuthenticated = useSelector(selectIsAuthenticated);
-
-    // Setup token refresh
-    useRefreshTokenQuery();
 
     useEffect(() => {
         if (!isAuthenticated) {

@@ -10,9 +10,6 @@ export const authApi = api.injectEndpoints({
                 body: credentials,
             }),
         }),
-        refreshToken: builder.query<AuthResponse, void>({
-            query: () => '/refresh-token',
-        }),
         logout: builder.mutation<{ message: string }, void>({
             query: () => ({
                 url: '/logout',
@@ -24,6 +21,5 @@ export const authApi = api.injectEndpoints({
 
 export const {
     useLoginMutation,
-    useRefreshTokenQuery,
     useLogoutMutation,
 } = authApi;

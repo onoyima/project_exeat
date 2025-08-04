@@ -35,8 +35,7 @@ export default function StudentNavbar({
   };
 
   const handleLogoutSuccess = () => {
-    localStorage.removeItem('user');
-    router.push('/login');
+    router.replace('/login');
   };
 
   return (

@@ -40,13 +40,8 @@ export default function StudentSidebar({
     onClose();
   };
 
-  const handleLogoutSuccess = async () => {
-    try {
-      await logout().unwrap();
-      router.push('/login');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
+  const handleLogoutSuccess = () => {
+    router.replace('/login');
   };
 
   const pathname = usePathname();
@@ -137,17 +132,9 @@ export default function StudentSidebar({
               Dashboard
             </NavLink>
 
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-              onClick={() => {
-                onApplyExeat?.();
-                onClose();
-              }}
-            >
-              <FileText className="mr-2 h-4 w-4" />
+            <NavLink href="/student/apply-exeat" icon={FileText}>
               Apply for Exeat
-            </Button>
+            </NavLink>
 
             <NavLink href="/student/exeats" icon={History}>
               Exeat History

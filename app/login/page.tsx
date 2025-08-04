@@ -9,22 +9,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert } from '@/components/ui/alert';
 import { GraduationCap, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useLoginMutation } from '@/lib/services/authApi';
 import { useToast } from '@/hooks/use-toast';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '@/lib/services/authSlice';
 
-
 // Login form schema
 const loginSchema = z.object({
   email: z.string()
     .min(1, 'Email is required')
-    .regex(/@edu\.veritas\.edu\.ng$/, 'Email must end with @edu.veritas.edu.ng'),
+    .regex(/.veritas\.edu\.ng$/, 'Email must end with .veritas.edu.ng'),
   password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(50, 'Password must not exceed 50 characters'),
+    .min(1, 'Password is required'),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -171,7 +168,7 @@ export default function LoginPage() {
           </div>
           <div>
             <CardTitle className="text-2xl font-bold text-university-primary">Veritas University</CardTitle>
-            <CardDescription className="text-lg font-medium text-university-secondary mt-2">
+            <CardDescription className="text-lg font-medium text-university-primary mt-2">
               Digital Exeat System
             </CardDescription>
           </div>

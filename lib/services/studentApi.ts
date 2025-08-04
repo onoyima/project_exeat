@@ -5,8 +5,10 @@ import type { StudentProfile, ExeatCategory, ExeatRequestForm, ExeatRequest } fr
 export const studentApi = api.injectEndpoints({
     endpoints: (builder) => ({
         getStudentProfile: builder.query<StudentProfile, void>({
-            query: () => '/student/profile',
-            transformResponse: (response: ApiResponse<{ profile: StudentProfile }>) => response.data!.profile,
+            query: () => '/me',
+            transformResponse: (response: { user_id: number; roles: string[]; profile: StudentProfile }) => {
+                return response.profile;
+            },
             providesTags: ['Profile'],
         }),
 
