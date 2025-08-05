@@ -21,14 +21,36 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
             return;
         }
 
-        if (requiredRole && user?.role !== requiredRole) {
-            router.push(user?.role === 'student' ? '/student/dashboard' : '/staff/dashboard');
+        if (requiredRole && user?.role) {
+            const userRole = user.role.toLowerCase();
+            const required = requiredRole.toLowerCase();
+
+            // Handle role mapping - staff roles should be treated as "staff"
+            const normalizedUserRole = userRole === 'student' ? 'student' : 'staff';
+            const normalizedRequiredRole = required === 'student' ? 'student' : 'staff';
+
+            if (normalizedUserRole !== normalizedRequiredRole) {
+                router.push(normalizedUserRole === 'student' ? '/student/dashboard' : '/staff/dashboard');
+            }
         }
     }, [isAuthenticated, user, requiredRole, router]);
 
     // Show nothing while checking auth
-    if (!isAuthenticated || (requiredRole && user?.role !== requiredRole)) {
+    if (!isAuthenticated) {
         return null;
+    }
+
+    if (requiredRole && user?.role) {
+        const userRole = user.role.toLowerCase();
+        const required = requiredRole.toLowerCase();
+
+        // Handle role mapping - staff roles should be treated as "staff"  
+        const normalizedUserRole = userRole === 'student' ? 'student' : 'staff';
+        const normalizedRequiredRole = required === 'student' ? 'student' : 'staff';
+
+        if (normalizedUserRole !== normalizedRequiredRole) {
+            return null;
+        }
     }
 
     return <>{children}</>;

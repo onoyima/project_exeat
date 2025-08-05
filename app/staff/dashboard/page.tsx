@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { getProfile } from '@/lib/api';
-import { useAuthProtection } from '@/lib/auth';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/lib/services/authSlice';
 
 interface User {
   id: number;
@@ -13,50 +15,35 @@ interface User {
   title?: string;
 }
 
-export default function StaffDashboard() {
-  // Protect this route - redirect to login if not authenticated
-  useAuthProtection();
-  
+function StaffDashboardContent() {
+  const currentUser = useSelector(selectCurrentUser);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadUserData = () => {
-      try {
-        // Get user data from localStorage first (faster)
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
+    if (currentUser) {
+      setUser(currentUser);
+      setLoading(false);
+    } else {
+      // Fallback to API call if Redux state is empty
+      const fetchProfile = async () => {
+        try {
+          const result = await getProfile();
+          if (result.success && result.data?.user) {
+            setUser(result.data.user);
+          } else {
+            setError(result.error || 'Failed to load profile');
+          }
+        } catch (err) {
+          setError('Failed to load profile');
+        } finally {
           setLoading(false);
-        } else {
-          // Fallback to API call if localStorage is empty
-          const fetchProfile = async () => {
-            try {
-              const result = await getProfile();
-              if (result.success && result.data?.user) {
-                setUser(result.data.user);
-              } else {
-                setError(result.error || 'Failed to load profile');
-              }
-            } catch (err) {
-              setError('Failed to load profile');
-            } finally {
-              setLoading(false);
-            }
-          };
-          fetchProfile();
         }
-      } catch (error) {
-        console.error('Error loading user data:', error);
-        setError('Failed to load user data');
-        setLoading(false);
-      }
-    };
-
-    loadUserData();
-  }, []);
+      };
+      fetchProfile();
+    }
+  }, [currentUser]);
 
   if (loading) {
     return (
@@ -72,7 +59,7 @@ export default function StaffDashboard() {
             </div>
           </div>
         </div>
-        
+
         {/* Loading Modal Overlay */}
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-xl p-6 flex flex-col items-center space-y-4">
@@ -219,9 +206,9 @@ export default function StaffDashboard() {
             View all
           </a>
         </div>
-                 <div className="border-t border-gray-200">
-           <div className="overflow-x-auto border border-gray-200 rounded-lg">
-             <table className="min-w-full divide-y divide-gray-200">
+        <div className="border-t border-gray-200">
+          <div className="overflow-x-auto border border-gray-200 rounded-lg">
+            <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -377,5 +364,13 @@ export default function StaffDashboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function StaffDashboard() {
+  return (
+    <ProtectedRoute requiredRole="staff">
+      <StaffDashboardContent />
+    </ProtectedRoute>
   );
 } 

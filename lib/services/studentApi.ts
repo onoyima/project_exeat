@@ -11,13 +11,11 @@ export const studentApi = api.injectEndpoints({
             },
             providesTags: ['Profile'],
         }),
-
         getExeatCategories: builder.query<ExeatCategory[], void>({
             query: () => '/student/exeat-categories',
             transformResponse: (response: ApiResponse<{ categories: ExeatCategory[] }>) => response.data!.categories,
             providesTags: ['ExeatCategories'],
         }),
-
         createExeatRequest: builder.mutation<ApiResponse<ExeatRequest>, ExeatRequestForm>({
             query: (form) => ({
                 url: '/student/exeat-requests',
@@ -26,7 +24,6 @@ export const studentApi = api.injectEndpoints({
             }),
             invalidatesTags: ['ExeatRequests'],
         }),
-
         getExeatRequests: builder.query<ExeatRequest[], void>({
             query: () => '/student/exeat-requests',
             transformResponse: (response: ApiResponse<{ requests: ExeatRequest[] }>) => response.data!.requests,

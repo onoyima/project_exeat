@@ -9,7 +9,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://attendance.veritas.edu.ng/api/:path*',
+        destination: 'https://attendance.veritas.edu.ng/api/:path*',
       },
     ];
   },

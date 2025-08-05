@@ -1,31 +1,46 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/lib/services/authSlice';
 import StaffSidebar from '@/components/staff/StaffSidebar';
 import StaffNavbar from '@/components/staff/StaffNavbar';
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const currentUser = useSelector(selectCurrentUser);
   const [user, setUser] = useState({ fname: '', lname: '', email: '', image: '' });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadUserData = () => {
+    if (currentUser) {
+      setUser({
+        fname: currentUser.fname || '',
+        lname: currentUser.lname || '',
+        email: currentUser.email || '',
+        image: currentUser.passport || ''
+      });
+      setLoading(false);
+    } else {
+      // Fallback to localStorage if Redux state is not yet populated
       try {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
+          setUser({
+            fname: parsedUser.fname || '',
+            lname: parsedUser.lname || '',
+            email: parsedUser.email || '',
+            image: parsedUser.passport || parsedUser.image || ''
+          });
         }
       } catch (error) {
         console.error('Error loading user data:', error);
       } finally {
         setLoading(false);
       }
-    };
-
-    requestAnimationFrame(loadUserData);
-  }, []);
+    }
+  }, [currentUser]);
 
   if (loading) {
     // Show only loading overlay
@@ -52,7 +67,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   return (
     <div className="h-screen bg-gray-100 overflow-hidden">
       <div className="flex flex-col h-full">
-        <StaffNavbar onMenuClick={() => setSidebarOpen(true)} user={user} />
+        <StaffNavbar onMenuClick={() => setSidebarOpen(true)} />
         <div className="flex flex-1 relative overflow-hidden">
           <StaffSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:ml-0 bg-gray-100">

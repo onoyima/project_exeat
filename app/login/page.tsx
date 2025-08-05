@@ -61,9 +61,12 @@ export default function LoginPage() {
 
       // Redirect based on role
       const role = response.role.toLowerCase();
+      console.log('Login successful - User role:', response.role, 'Normalized:', role);
+
       if (role === "student") {
         router.push("/student/dashboard");
       } else {
+        // All non-student roles go to staff dashboard
         router.push("/staff/dashboard");
       }
     } catch (error: any) {
@@ -88,8 +91,11 @@ export default function LoginPage() {
       try {
         const userData = JSON.parse(user);
         const role = userData.role?.toLowerCase();
-        if (role === 'student' || role === 'staff') {
-          router.push(`/${role}/dashboard`);
+        if (role === 'student') {
+          router.push('/student/dashboard');
+        } else if (role) {
+          // All non-student roles go to staff dashboard
+          router.push('/staff/dashboard');
         } else {
           // Invalid role, clear storage
           localStorage.removeItem('token');
