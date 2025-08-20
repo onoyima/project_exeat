@@ -1,9 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 // Use proxy URL for development, direct URL for production
-const API_BASE_URL = process.env.NODE_ENV === 'development'
-    ? '/api'
-    : 'https://attendance.veritas.edu.ng/api';
+const API_BASE_URL = 'https://attendance.veritas.edu.ng/api';
 
 export const api = createApi({
     reducerPath: 'api',

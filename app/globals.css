@@ -11,6 +11,31 @@
   .animation-delay-4000 {
     animation-delay: 4s;
   }
+
+  /* Enhanced font size utilities */
+  .text-readable {
+    font-size: 1.0625rem;
+    /* 17px */
+    line-height: 1.625rem;
+  }
+
+  .text-comfortable {
+    font-size: 1.125rem;
+    /* 18px */
+    line-height: 1.75rem;
+  }
+
+  .text-large {
+    font-size: 1.25rem;
+    /* 20px */
+    line-height: 1.75rem;
+  }
+
+  .text-xl-readable {
+    font-size: 1.375rem;
+    /* 22px */
+    line-height: 2rem;
+  }
 }
 
 /* Prevent Flash of Unstyled Content */
@@ -128,5 +153,228 @@ img {
     visibility: visible;
     opacity: 1;
     letter-spacing: var(--tracking-normal);
+    font-size: 16px;
+    /* Base font size */
+  }
+
+  /* Increase font sizes for better readability */
+  h1 {
+    font-size: 2.25rem;
+    /* 36px */
+    line-height: 2.5rem;
+  }
+
+  h2 {
+    font-size: 1.875rem;
+    /* 30px */
+    line-height: 2.25rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    /* 24px */
+    line-height: 2rem;
+  }
+
+  h4 {
+    font-size: 1.25rem;
+    /* 20px */
+    line-height: 1.75rem;
+  }
+
+  h5 {
+    font-size: 1.125rem;
+    /* 18px */
+    line-height: 1.75rem;
+  }
+
+  h6 {
+    font-size: 1rem;
+    /* 16px */
+    line-height: 1.5rem;
+  }
+
+  p {
+    font-size: 1.0625rem;
+    /* 17px */
+    line-height: 1.625rem;
+  }
+
+  /* Increase form element font sizes */
+  input,
+  textarea,
+  select {
+    font-size: 1rem !important;
+    /* 16px */
+  }
+
+  /* Increase button font sizes */
+  button {
+    font-size: 1rem;
+    /* 16px */
+  }
+
+  /* Increase table font sizes */
+  table {
+    font-size: 1rem;
+    /* 16px */
+  }
+
+  /* Increase card content font sizes */
+  .card-content {
+    font-size: 1.0625rem;
+    /* 17px */
+  }
+
+  /* Increase sidebar font sizes */
+  .sidebar-nav {
+    font-size: 1.0625rem;
+    /* 17px */
+  }
+
+  /* Increase badge font sizes */
+  .badge {
+    font-size: 0.875rem;
+    /* 14px */
+  }
+
+  /* Increase navigation and menu font sizes */
+  nav,
+  .nav {
+    font-size: 1.0625rem;
+    /* 17px */
+  }
+
+  /* Increase sidebar font sizes */
+  .sidebar {
+    font-size: 1.0625rem;
+    /* 17px */
+  }
+
+  /* Increase modal and dialog font sizes */
+  .dialog,
+  .modal {
+    font-size: 1.0625rem;
+    /* 17px */
+  }
+
+  /* Increase form label font sizes */
+  label {
+    font-size: 1rem;
+    /* 16px */
+    font-weight: 500;
+  }
+
+  /* Increase description text sizes */
+  .description,
+  .text-muted-foreground {
+    font-size: 1rem;
+    /* 16px */
+  }
+
+  /* Increase small text sizes */
+  .text-sm {
+    font-size: 0.9375rem !important;
+    /* 15px */
+  }
+
+  /* Increase extra small text sizes */
+  .text-xs {
+    font-size: 0.875rem !important;
+    /* 14px */
+  }
+
+  /* Increase large text sizes */
+  .text-lg {
+    font-size: 1.125rem !important;
+    /* 18px */
+  }
+
+  /* Increase extra large text sizes */
+  .text-xl {
+    font-size: 1.25rem !important;
+    /* 20px */
+  }
+
+  /* Increase 2xl text sizes */
+  .text-2xl {
+    font-size: 1.5rem !important;
+    /* 24px */
+  }
+
+  /* Increase 3xl text sizes */
+  .text-3xl {
+    font-size: 1.875rem !important;
+    /* 30px */
+  }
+
+  /* Increase 4xl text sizes */
+  .text-4xl {
+    font-size: 2.25rem !important;
+    /* 36px */
+  }
+
+  /* Increase 5xl text sizes */
+  .text-5xl {
+    font-size: 3rem !important;
+    /* 48px */
+  }
+
+  /* Additional readability improvements */
+  .text-6xl {
+    font-size: 3.75rem !important;
+    /* 60px */
+  }
+
+  /* Improve line heights for better readability */
+  .leading-relaxed {
+    line-height: 1.75 !important;
+  }
+
+  .leading-loose {
+    line-height: 2 !important;
+  }
+
+  /* Improve spacing between text elements */
+  .space-y-text>*+* {
+    margin-top: 1.5rem;
+  }
+
+  /* Better paragraph spacing */
+  p+p {
+    margin-top: 1rem;
+  }
+
+  /* Improve heading margins */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
+  }
+
+  /* Better list readability */
+  ul,
+  ol {
+    padding-left: 1.5rem;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+  }
+
+  /* Increase small text sizes */
+  .text-sm {
+    font-size: 0.9375rem !important;
+    /* 15px */
+  }
+
+  .text-xs {
+    font-size: 0.8125rem !important;
+    /* 13px */
   }
 }

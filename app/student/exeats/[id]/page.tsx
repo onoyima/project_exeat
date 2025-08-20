@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, MapPin, User, FileText, Clock, CheckCircle2, XCircle, AlertCircle, Stethoscope, UserCheck, Shield, Building, Home, Activity } from 'lucide-react';
@@ -110,7 +109,7 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
             key: 'cmd_review',
             label: 'CMD Review',
             icon: Shield,
-            description: 'College Medical Director review'
+            description: 'Chief Medical Director review'
         },
         {
             key: 'deputy-dean_review',
@@ -353,26 +352,6 @@ export default function ExeatDetailsPage() {
         skip: !requestId || isNaN(requestId)
     });
 
-    // Log the response for debugging
-    useEffect(() => {
-        if (exeatData) {
-            console.log('Exeat Request Details Response:', exeatData);
-        }
-        if (error) {
-            console.error('Exeat Request Details Error:', error);
-        }
-    }, [exeatData, error]);
-
-    // Log the history response for debugging
-    useEffect(() => {
-        if (historyData) {
-            console.log('Exeat Request History Response:', historyData);
-        }
-        if (historyError) {
-            console.error('Exeat Request History Error:', historyError);
-        }
-    }, [historyData, historyError]);
-
     // Handle invalid ID
     if (!id || isNaN(requestId)) {
         return (
@@ -464,7 +443,6 @@ export default function ExeatDetailsPage() {
                 </Button>
                 <div>
                     <h1 className="text-3xl font-bold">Exeat Request Details</h1>
-                    <p className="text-muted-foreground">Request ID: {exeat.id}</p>
                 </div>
             </motion.div>
 

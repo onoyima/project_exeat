@@ -52,8 +52,16 @@ export default function StudentSidebar({
 
   const NavLink = ({ href, icon: Icon, children }: { href: string; icon: any; children: React.ReactNode }) => {
     const active = isLinkActive(href);
+
+    const handleClick = () => {
+      // Close sidebar when link is clicked (only on mobile)
+      if (window.innerWidth < 1024) { // lg breakpoint
+        onClose();
+      }
+    };
+
     return (
-      <Link href={href} className="w-full">
+      <Link href={href} className="w-full" onClick={handleClick}>
         <Button
           variant="ghost"
           className={cn(
@@ -149,7 +157,13 @@ export default function StudentSidebar({
               <Button
                 variant="ghost"
                 className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={handleLogoutClick}
+                onClick={() => {
+                  handleLogoutClick();
+                  // Close sidebar when logout is clicked (only on mobile)
+                  if (window.innerWidth < 1024) { // lg breakpoint
+                    onClose();
+                  }
+                }}
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout

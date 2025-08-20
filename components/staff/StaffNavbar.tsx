@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { Menu, User, LogOut } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/lib/services/authSlice';
-
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -36,6 +35,7 @@ export default function StaffNavbar({
     ? `${user.fname?.[0] || ''}${user.lname?.[0] || ''}`.toUpperCase()
     : 'ST';
   const avatarUrl = user?.passport ? `data:image/jpeg;base64,${user.passport}` : '';
+
 
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
@@ -86,8 +86,8 @@ export default function StaffNavbar({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="relative size-12 rounded-full">
+                <Avatar className="size-12">
                   <AvatarImage
                     src={avatarUrl}
                     alt={user ? `${user.fname} ${user.lname}` : 'User avatar'}

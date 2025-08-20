@@ -20,6 +20,18 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--font-sans)'],
       },
+      fontSize: {
+        'xs': ['0.875rem', { lineHeight: '1.25rem' }],        // 14px
+        'sm': ['1rem', { lineHeight: '1.5rem' }],             // 16px
+        'base': ['1.125rem', { lineHeight: '1.625rem' }],     // 18px
+        'lg': ['1.25rem', { lineHeight: '1.75rem' }],         // 20px
+        'xl': ['1.375rem', { lineHeight: '1.875rem' }],       // 22px
+        '2xl': ['1.5rem', { lineHeight: '2rem' }],            // 24px
+        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],       // 30px
+        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],         // 36px
+        '5xl': ['3rem', { lineHeight: '1.2' }],               // 48px
+        '6xl': ['3.75rem', { lineHeight: '1.2' }],            // 60px
+      },
       colors: {
         border: "var(--border)",
         input: "var(--input)",
