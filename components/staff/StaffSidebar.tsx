@@ -7,17 +7,14 @@ import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/lib/services/authSlice';
 import LogoutModal from '@/components/ui/logout-modal';
 import { useLogoutMutation } from '@/lib/services/authApi';
-
 import {
   LayoutDashboard,
   Clock,
-  Stethoscope,
   History,
   UserCircle,
   LogOut,
   X,
   UserCog,
-  FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -60,8 +57,16 @@ export default function StaffSidebar({
 
   const NavLink = ({ href, icon: Icon, children }: { href: string; icon: any; children: React.ReactNode }) => {
     const active = isLinkActive(href);
+
+    const handleClick = () => {
+      // Close sidebar when link is clicked (only on mobile)
+      if (window.innerWidth < 1024) { // lg breakpoint
+        onClose();
+      }
+    };
+
     return (
-      <Link href={href} className="w-full">
+      <Link href={href} className="w-full my-2" onClick={handleClick}>
         <Button
           variant="ghost"
           className={cn(
@@ -112,7 +117,7 @@ export default function StaffSidebar({
 
         {/* Navigation */}
         <nav className="p-2 overflow-y-auto h-[calc(100%-4rem)]">
-          <div className="space-y-2">
+          <div className="space-y-4">
             {/* Main Navigation */}
             <NavLink href="/staff/dashboard" icon={LayoutDashboard}>
               Dashboard
@@ -120,10 +125,6 @@ export default function StaffSidebar({
 
             <NavLink href="/staff/pending" icon={Clock}>
               Pending Exeats
-            </NavLink>
-
-            <NavLink href="/staff/medical" icon={Stethoscope}>
-              Medical Exeats
             </NavLink>
 
             <NavLink href="/staff/history" icon={History}>
@@ -146,7 +147,13 @@ export default function StaffSidebar({
               <Button
                 variant="ghost"
                 className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={handleLogoutClick}
+                onClick={() => {
+                  handleLogoutClick();
+                  // Close sidebar when logout is clicked (only on mobile)
+                  if (window.innerWidth < 1024) { // lg breakpoint
+                    onClose();
+                  }
+                }}
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout

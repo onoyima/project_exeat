@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User, Mail, IdCard, Phone, ClipboardList, GraduationCap } from "lucide-react";
-import Image from "next/image";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
+import { useGetCurrentUser } from "@/hooks/use-current-user";
+import Image from "next/image";
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -29,7 +31,9 @@ function ProfileSkeleton() {
       {/* Profile Card Skeleton */}
       <Card className="p-6">
         <div className="flex flex-col md:flex-row items-center gap-6">
-          <Skeleton className="w-24 h-24 rounded-full" />
+          <Avatar className="w-24 h-24">
+            <AvatarFallback className="bg-muted animate-pulse" />
+          </Avatar>
           <div className="flex-1 space-y-4">
             <Skeleton className="h-8 w-3/4" />
             <div className="space-y-2">
@@ -89,6 +93,7 @@ export default function StudentProfilePage() {
   const { data: profileData, isLoading, error } = useGetStudentProfileQuery();
 
   const profile = profileData;
+  const { user } = useGetCurrentUser();
 
   if (isLoading) return <ProfileSkeleton />;
   if (error) return (
@@ -101,7 +106,6 @@ export default function StudentProfilePage() {
   if (!profile) return null;
 
   const { personal, academic, medical, sponsor_contact } = profile;
-  const initials = personal.fname?.[0]?.toUpperCase() + (personal.last_name?.[0]?.toUpperCase() || "");
 
   return (
     <motion.div
@@ -113,21 +117,23 @@ export default function StudentProfilePage() {
       {/* Profile Card */}
       <motion.div variants={fadeIn}>
         <Card className="overflow-hidden">
-          <div className="h-32 bg-gradient-to-r from-primary/10 via-primary/5 to-background" />
-          <div className="px-6 pb-6 -mt-16">
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background" />
+          <div className="px-6 py-6">
             <div className="flex flex-col md:flex-row items-center gap-6">
-              <div className="relative">
-                {personal.extras?.passport ? (
+              <div className="relative size-24 rounded-lg overflow-hidden bg-primary/10">
+                {user?.passport ? (
                   <Image
-                    src={`data:image/jpeg;base64,${personal.extras.passport}`}
-                    alt="Profile"
-                    width={128}
-                    height={128}
-                    className="rounded-full border-4 border-background shadow-xl object-cover"
+                    src={`data:image/jpeg;base64,${user.passport}`}
+                    alt={`${user.fname} ${user.lname}`}
+                    fill
+                    className="object-cover object-top"
+                    priority
                   />
                 ) : (
-                  <div className="w-32 h-32 rounded-full bg-primary/10 border-4 border-background shadow-xl flex items-center justify-center">
-                    <span className="text-4xl font-bold text-primary">{initials}</span>
+                  <div className="h-full w-full flex items-center justify-center">
+                    <span className="text-lg font-medium text-primary">
+                      {user?.fname?.[0]?.toUpperCase()}{user?.lname?.[0]?.toUpperCase()}
+                    </span>
                   </div>
                 )}
               </div>
@@ -136,11 +142,6 @@ export default function StudentProfilePage() {
                   <h1 className="text-2xl font-bold tracking-tight">
                     {personal.fname} {personal.middle_name} {personal.last_name}
                   </h1>
-                  {personal.title && (
-                    <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
-                      {personal.title}
-                    </div>
-                  )}
                 </div>
                 <div className="flex flex-col md:flex-row gap-4 text-muted-foreground">
                   <div className="flex items-center gap-2 justify-center md:justify-start">

@@ -11,7 +11,7 @@ export const exeatApi = api.injectEndpoints({
             query: () => '/student/exeat-categories',
             transformResponse: (response: { categories: ExeatCategory[] }) => response,
         }),
-        getStudentProfile: builder.query<{ profile: StudentProfile }, void>({
+        getStudentProfileFromExeat: builder.query<{ profile: StudentProfile }, void>({
             query: () => '/me',
             transformResponse: (response: { success: boolean; data: { profile: StudentProfile } }) => {
                 if (!response.success || !response.data?.profile) {
@@ -61,7 +61,7 @@ export const exeatApi = api.injectEndpoints({
 
 export const {
     useGetCategoriesQuery,
-    useGetStudentProfileQuery,
+    useGetStudentProfileFromExeatQuery,
     useCreateExeatRequestMutation,
     useGetExeatRequestsQuery,
     useGetExeatRequestDetailsQuery,

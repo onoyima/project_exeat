@@ -24,7 +24,6 @@ import {
   XCircle,
   Calendar,
   MapPin,
-  User,
   Home,
   GraduationCap,
   Users,
@@ -46,8 +45,6 @@ import { cn } from '@/lib/utils';
 export default function StudentDashboard() {
   const { user } = useGetCurrentUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-
 
   const { data: exeatData, isLoading: loadingExeats } = useGetExeatRequestsQuery();
   const exeatRequests = exeatData?.exeat_requests || [];
@@ -95,23 +92,23 @@ export default function StudentDashboard() {
                 )}
               </div>
               <div>
-                <CardTitle className="text-2xl">Welcome back, {user?.fname}! 👋</CardTitle>
-                <CardDescription className="text-base">
+                <CardTitle className="text-3xl">Welcome back, {user?.fname}! 👋</CardTitle>
+                <CardDescription className="text-lg">
                   Here's an overview of your exeat requests and important information
                 </CardDescription>
               </div>
             </div>
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
-                <Button className="w-full sm:w-auto" size="lg">
-                  <PlusCircle className="mr-2 h-5 w-5" />
+                <Button className="w-full sm:w-auto text-lg" size="lg">
+                  <PlusCircle className="mr-2 h-6 w-6" />
                   New Exeat Request
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Request New Exeat</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className="text-2xl">Request New Exeat</DialogTitle>
+                  <DialogDescription className="text-lg">
                     Please provide the details for your exeat request. We'll guide you through the process.
                   </DialogDescription>
                 </DialogHeader>
@@ -183,21 +180,21 @@ export default function StudentDashboard() {
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
         <Card className="md:col-span-4">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-xl">Quick Actions</CardTitle>
+            <CardDescription className="text-lg">
               Common tasks you might want to do
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Link href="/student/exeats" className="w-full">
-                <Button variant="outline" className="w-full">
-                  <History className="mr-2 h-4 w-4" />
+                <Button variant="outline" className="w-full text-lg">
+                  <History className="mr-2 h-5 w-5" />
                   View All Exeats
                 </Button>
               </Link>
-              <Button variant="outline" className="w-full">
-                <Clock className="mr-2 h-4 w-4" />
+              <Button variant="outline" className="w-full text-lg">
+                <Clock className="mr-2 h-5 w-5" />
                 View Active Permits
               </Button>
             </div>
@@ -206,8 +203,8 @@ export default function StudentDashboard() {
 
         <Card className="md:col-span-3">
           <CardHeader>
-            <CardTitle>Student Information</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-xl">Student Information</CardTitle>
+            <CardDescription className="text-lg">
               Your academic details
             </CardDescription>
           </CardHeader>
@@ -236,8 +233,8 @@ export default function StudentDashboard() {
       {/* Recent Exeat Requests */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Exeat Requests</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-xl">Recent Exeat Requests</CardTitle>
+          <CardDescription className="text-lg">
             Your latest exeat applications and their current status
           </CardDescription>
         </CardHeader>
@@ -247,13 +244,13 @@ export default function StudentDashboard() {
               {loadingExeats ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="space-y-4 text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-                    <p className="text-muted-foreground">Loading exeat requests...</p>
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" />
+                    <p className="text-lg text-muted-foreground">Loading exeat requests...</p>
                   </div>
                 </div>
               ) : exeatRequests.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <p>No exeat requests found</p>
+                  <p className="text-lg">No exeat requests found</p>
                 </div>
               ) : (
                 exeatRequests.map((request) => (
@@ -289,39 +286,39 @@ export default function StudentDashboard() {
                         {/* Header */}
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
-                            <h3 className="font-medium capitalize">
+                            <h3 className="text-lg font-medium capitalize">
                               {request.is_medical ? 'Medical' : request.category_id === 1 ? 'Medical' :
                                 request.category_id === 2 ? 'Casual' :
                                   request.category_id === 3 ? 'Emergency' :
                                     request.category_id === 4 ? 'Official' : 'Unknown'}
                             </h3>
                             <span className="text-muted-foreground">•</span>
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-base text-muted-foreground">
                               {format(new Date(request.created_at), 'MMM d, yyyy')}
                             </span>
                           </div>
-                          <Badge variant="outline" className={cn("text-xs whitespace-nowrap", getStatusColor(request.status))}>
+                          <Badge variant="outline" className={cn("text-sm whitespace-nowrap", getStatusColor(request.status))}>
                             {getStatusText(request.status)}
                           </Badge>
                         </div>
 
                         {/* Reason */}
-                        <p className="text-sm text-muted-foreground line-clamp-2">
+                        <p className="text-base text-muted-foreground line-clamp-2">
                           {request.reason}
                         </p>
 
                         {/* Details */}
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <MapPin className="h-3.5 w-3.5" />
+                          <div className="flex items-center gap-1.5 text-base text-muted-foreground">
+                            <MapPin className="h-4 w-4" />
                             <span className="truncate max-w-[200px]">{request.destination}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <Calendar className="h-3.5 w-3.5" />
+                          <div className="flex items-center gap-1.5 text-base text-muted-foreground">
+                            <Calendar className="h-4 w-4" />
                             <span>{format(new Date(request.departure_date), 'MMM d')} - {format(new Date(request.return_date), 'MMM d')}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <Phone className="h-3.5 w-3.5" />
+                          <div className="flex items-center gap-1.5 text-base text-muted-foreground">
+                            <Phone className="h-4 w-4" />
                             <span>{request.preferred_mode_of_contact}</span>
                           </div>
                         </div>
@@ -362,12 +359,12 @@ function StatsCard({ title, value, description, icon: Icon, className }: StatsCa
   return (
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+        <CardTitle className="text-base font-medium">{title}</CardTitle>
+        <Icon className="h-5 w-5 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground">
+        <div className="text-3xl font-bold">{value}</div>
+        <p className="text-sm text-muted-foreground">
           {description}
         </p>
       </CardContent>
@@ -385,12 +382,12 @@ interface InfoItemProps {
 function InfoItem({ icon: Icon, label, value, fallback = 'Not available' }: InfoItemProps) {
   return (
     <div className="flex items-center gap-4">
-      <Icon className="h-4 w-4 text-muted-foreground" />
+      <Icon className="h-5 w-5 text-muted-foreground" />
       <div className="space-y-1">
-        <p className="text-sm font-medium leading-none">
+        <p className="text-base font-medium leading-none">
           {value || fallback}
         </p>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           {label}
         </p>
       </div>
