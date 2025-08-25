@@ -131,9 +131,13 @@ export default function LoginPage() {
         {/* Loading Card */}
         <Card className="w-full max-w-md relative z-10 shadow-2xl border-0">
           <CardHeader className="text-center space-y-4 pb-8">
-            {/* University Logo Circle */}
-            <div className="mx-auto w-20 h-20 gradient-bg rounded-full flex items-center justify-center mb-4">
-              <GraduationCap className="w-10 h-10 text-white" />
+            {/* University Logo */}
+            <div className="mx-auto w-20 h-20 mb-4 flex items-center justify-center">
+              <img 
+                src="/logo.svg" 
+                alt="Veritas University Logo" 
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <CardTitle className="text-2xl font-bold text-university-primary">Veritas University</CardTitle>
@@ -168,9 +172,13 @@ export default function LoginPage() {
       {/* Login Card */}
       <Card className="w-full max-w-md relative z-10 shadow-2xl border-0 bg-white/95 backdrop-blur-md">
         <CardHeader className="text-center space-y-4 pb-8">
-          {/* University Logo Circle */}
-          <div className="mx-auto w-20 h-20 gradient-bg rounded-full flex items-center justify-center mb-4">
-            <GraduationCap className="w-10 h-10 text-white" />
+          {/* University Logo */}
+          <div className="mx-auto w-20 h-20 mb-4 flex items-center justify-center">
+            <img 
+              src="/logo.svg" 
+              alt="Veritas University Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold text-university-primary">Veritas University</CardTitle>

@@ -121,11 +121,13 @@ export const useStaffExeatRequests = (status?: string) => {
         return useGetExeatRequestsByStatusQuery('cmd_review');
     }
 
-    if (status && status !== 'all') {
-        return statusRequests;
+    // If status is 'all' or undefined, return all requests
+    if (!status || status === 'all') {
+        return allRequests;
     }
 
-    return allRequests;
+    // Otherwise return status-specific requests
+    return statusRequests;
 };
 
 /**

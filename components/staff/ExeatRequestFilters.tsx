@@ -20,10 +20,9 @@ interface ExeatRequestFiltersProps {
     setStatusFilter: (status: string) => void;
     dateFilter: string;
     setDateFilter: (date: string) => void;
-    sortBy: string;
-    setSortBy: (sort: string) => void;
+    categoryFilter: string;
+    setCategoryFilter: (category: string) => void;
     onClearFilters: () => void;
-    hasRole: (role: string) => boolean;
 }
 
 export const ExeatRequestFilters: React.FC<ExeatRequestFiltersProps> = ({
@@ -33,12 +32,11 @@ export const ExeatRequestFilters: React.FC<ExeatRequestFiltersProps> = ({
     setStatusFilter,
     dateFilter,
     setDateFilter,
-    sortBy,
-    setSortBy,
+    categoryFilter,
+    setCategoryFilter,
     onClearFilters,
-    hasRole,
 }) => {
-    const hasActiveFilters = searchTerm || statusFilter || dateFilter || sortBy !== 'created_at';
+    const hasActiveFilters = searchTerm || statusFilter !== 'all' || dateFilter !== 'all' || categoryFilter !== 'all';
 
     return (
         <Card className="mb-6">
@@ -56,7 +54,7 @@ export const ExeatRequestFilters: React.FC<ExeatRequestFiltersProps> = ({
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search by student name..."
+                                placeholder="Search by name, matric no, destination..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="pl-10"
@@ -84,6 +82,23 @@ export const ExeatRequestFilters: React.FC<ExeatRequestFiltersProps> = ({
                         </Select>
                     </div>
 
+                    {/* Category Filter */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Category</label>
+                        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="All Categories" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Categories</SelectItem>
+                                <SelectItem value="medical">Medical</SelectItem>
+                                <SelectItem value="casual">Casual</SelectItem>
+                                <SelectItem value="emergency">Emergency</SelectItem>
+                                <SelectItem value="official">Official</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     {/* Date Filter */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Date Range</label>
@@ -100,54 +115,36 @@ export const ExeatRequestFilters: React.FC<ExeatRequestFiltersProps> = ({
                             </SelectContent>
                         </Select>
                     </div>
-
-                    {/* Sort By */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Sort By</label>
-                        <Select value={sortBy} onValueChange={setSortBy}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Sort by..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="created_at">Date Created</SelectItem>
-                                <SelectItem value="start_date">Start Date</SelectItem>
-                                <SelectItem value="end_date">End Date</SelectItem>
-                                <SelectItem value="student_name">Student Name</SelectItem>
-                                <SelectItem value="destination">Destination</SelectItem>
-                                <SelectItem value="duration">Duration</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
                 </div>
 
                 {/* Active Filters Display */}
                 {hasActiveFilters && (
                     <div className="mt-4 pt-4 border-t">
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-sm font-medium">Active Filters:</span>
                                 {searchTerm && (
                                     <Badge variant="secondary" className="flex items-center gap-1">
-                                        <Search className="h-3 w-3" />
+                                        <Search className="h-4 w-4" />
                                         {searchTerm}
                                     </Badge>
                                 )}
-                                {statusFilter && (
+                                {statusFilter !== 'all' && (
                                     <Badge variant="secondary" className="flex items-center gap-1">
-                                        <Clock className="h-3 w-3" />
+                                        <Clock className="h-4 w-4" />
                                         {statusFilter}
                                     </Badge>
                                 )}
-                                {dateFilter && (
+                                {categoryFilter !== 'all' && (
                                     <Badge variant="secondary" className="flex items-center gap-1">
-                                        <Calendar className="h-3 w-3" />
-                                        {dateFilter}
+                                        <MapPin className="h-4 w-4" />
+                                        {categoryFilter}
                                     </Badge>
                                 )}
-                                {sortBy !== 'created_at' && (
+                                {dateFilter !== 'all' && (
                                     <Badge variant="secondary" className="flex items-center gap-1">
-                                        <User className="h-3 w-3" />
-                                        {sortBy}
+                                        <Calendar className="h-4 w-4" />
+                                        {dateFilter}
                                     </Badge>
                                 )}
                             </div>

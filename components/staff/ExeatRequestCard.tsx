@@ -156,11 +156,11 @@ export const ExeatRequestCard: React.FC<ExeatRequestCardProps> = ({
                             </CardTitle>
                             <CardDescription className="flex items-center gap-4 mt-2">
                                 <span className="flex items-center gap-1">
-                                    <MailIcon className="h-3 w-3" />
+                                    <MailIcon className="h-4 w-4" />
                                     {request.matric_no}
                                 </span>
                                 <span className="flex items-center gap-1">
-                                    <PhoneIcon className="h-3 w-3" />
+                                    <PhoneIcon className="h-4 w-4" />
                                     {request.parent_phone_no}
                                 </span>
                             </CardDescription>
@@ -178,15 +178,15 @@ export const ExeatRequestCard: React.FC<ExeatRequestCardProps> = ({
                             <h4 className="font-semibold text-sm text-gray-600">Request Details</h4>
                             <div className="mt-2 space-y-1 text-sm">
                                 <div className="flex items-center gap-2">
-                                    <CalendarIcon className="h-3 w-3" />
+                                    <CalendarIcon className="h-4 w-4" />
                                     <span>From: {format(new Date(request.departure_date), 'PPP')}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <CalendarIcon className="h-3 w-3" />
+                                    <CalendarIcon className="h-4 w-4" />
                                     <span>To: {format(new Date(request.return_date), 'PPP')}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <ClockIcon className="h-3 w-3" />
+                                    <ClockIcon className="h-4 w-4" />
                                     <span>Duration: {Math.ceil((new Date(request.return_date).getTime() - new Date(request.departure_date).getTime()) / (1000 * 60 * 60 * 24))} days</span>
                                 </div>
                             </div>
@@ -196,7 +196,7 @@ export const ExeatRequestCard: React.FC<ExeatRequestCardProps> = ({
                             <h4 className="font-semibold text-sm text-gray-600">Destination</h4>
                             <div className="mt-2 space-y-1 text-sm">
                                 <div className="flex items-center gap-2">
-                                    <MapPinIcon className="h-3 w-3" />
+                                    <MapPinIcon className="h-4 w-4" />
                                     <span>{request.destination}</span>
                                 </div>
                                 <div className="text-xs text-gray-500">

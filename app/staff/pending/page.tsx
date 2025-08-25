@@ -26,11 +26,10 @@ export default function PendingExeatRequestsPage() {
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [dateFilter, setDateFilter] = useState<string>('all');
-    const [sortBy, setSortBy] = useState<string>('created_at');
+    const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
     const {
         profile,
-        hasRole,
         allRoles,
         canSignStudents,
         approveExeatRequest,
@@ -41,7 +40,7 @@ export default function PendingExeatRequestsPage() {
 
     const { data: allRequests, isLoading, refetch } = useStaffExeatRequests(statusFilter);
 
-    // Derive filtered, dated, and sorted requests
+    // Derive filtered and dated requests
     const requests = (allRequests || [])
         .filter((request: StaffExeatRequest) => {
             if (!searchTerm) return true;
@@ -82,33 +81,24 @@ export default function PendingExeatRequestsPage() {
             }
             return true;
         })
-        .sort((a: StaffExeatRequest, b: StaffExeatRequest) => {
-            switch (sortBy) {
-                case 'student_name':
-                    return (
-                        `${a.student.lname} ${a.student.fname}`.localeCompare(
-                            `${b.student.lname} ${b.student.fname}`
-                        )
-                    );
-                case 'destination':
-                    return a.destination.localeCompare(b.destination);
-                case 'duration': {
-                    const dA =
-                        (new Date(a.return_date).getTime() - new Date(a.departure_date).getTime()) /
-                        (1000 * 60 * 60 * 24);
-                    const dB =
-                        (new Date(b.return_date).getTime() - new Date(b.departure_date).getTime()) /
-                        (1000 * 60 * 60 * 24);
-                    return dB - dA;
-                }
-                case 'start_date':
-                    return new Date(b.departure_date).getTime() - new Date(a.departure_date).getTime();
-                case 'end_date':
-                    return new Date(b.return_date).getTime() - new Date(a.return_date).getTime();
-                case 'created_at':
-                default:
-                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        .filter((request: StaffExeatRequest) => {
+            if (categoryFilter === 'all') return true;
+
+            // Handle medical category
+            if (categoryFilter === 'medical') {
+                return request.is_medical === 1 || request.category_id === 1;
             }
+
+            // Handle other categories
+            if (categoryFilter === 'casual') return request.category_id === 2;
+            if (categoryFilter === 'emergency') return request.category_id === 3;
+            if (categoryFilter === 'official') return request.category_id === 4;
+
+            return true;
+        })
+        .sort((a: StaffExeatRequest, b: StaffExeatRequest) => {
+            // Default sort by creation date (newest first)
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         });
 
     const handleApprove = async (exeat_request_id: number, comment?: string) => {
@@ -176,7 +166,7 @@ export default function PendingExeatRequestsPage() {
         setSearchTerm('');
         setStatusFilter('all');
         setDateFilter('all');
-        setSortBy('created_at');
+        setCategoryFilter('all');
     };
 
     const handleViewDetails = (request: StaffExeatRequest) => {
@@ -285,37 +275,32 @@ export default function PendingExeatRequestsPage() {
                 </div>
 
                 {/* Filters Toolbar */}
-                <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-sm mb-6">
-                    <CardContent className="p-6">
-                        <div className="">
-                            <div className="flex-1 w-full">
-                                <ExeatRequestFilters
-                                    searchTerm={searchTerm}
-                                    setSearchTerm={setSearchTerm}
-                                    statusFilter={statusFilter}
-                                    setStatusFilter={setStatusFilter}
-                                    dateFilter={dateFilter}
-                                    setDateFilter={setDateFilter}
-                                    sortBy={sortBy}
-                                    setSortBy={setSortBy}
-                                    onClearFilters={handleClearFilters}
-                                    hasRole={hasRole}
-                                />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleClearFilters}
-                                    className="border-slate-300 hover:bg-slate-100"
-                                >
-                                    <Filter className="h-4 w-4 mr-2" />
-                                    Clear Filters
-                                </Button>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                <div className="mb-6">
+                    <div className="flex-1 w-full">
+                        <ExeatRequestFilters
+                            searchTerm={searchTerm}
+                            setSearchTerm={setSearchTerm}
+                            statusFilter={statusFilter}
+                            setStatusFilter={setStatusFilter}
+                            dateFilter={dateFilter}
+                            setDateFilter={setDateFilter}
+                            categoryFilter={categoryFilter}
+                            setCategoryFilter={setCategoryFilter}
+                            onClearFilters={handleClearFilters}
+                        />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleClearFilters}
+                            className="border-slate-300 hover:bg-slate-100"
+                        >
+                            <Filter className="h-4 w-4 mr-2" />
+                            Clear Filters
+                        </Button>
+                    </div>
+                </div>
 
                 {/* Content */}
                 <div className="space-y-6">
@@ -360,7 +345,6 @@ export default function PendingExeatRequestsPage() {
                                     onSignOut={canSignStudents ? handleSignOut : undefined}
                                     onSignIn={canSignStudents ? handleSignIn : undefined}
                                     onViewDetails={handleViewDetails}
-                                    userRole={allRoles[0]?.name || ''}
                                 />
                             </CardContent>
                         </Card>
