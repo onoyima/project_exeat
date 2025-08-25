@@ -25,7 +25,7 @@ export default function ApplyExeatPage() {
     };
 
     return (
-        <div className="container max-w-7xl mx-auto py-8 px-4">
+        <div className="py-8 px-4">
             {/* Header */}
             <motion.div
                 initial="initial"

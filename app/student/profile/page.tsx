@@ -112,7 +112,7 @@ export default function StudentProfilePage() {
       initial="initial"
       animate="animate"
       variants={stagger}
-      className="container py-8 px-4 space-y-8"
+      className="py-8 px-4 space-y-8"
     >
       {/* Profile Card */}
       <motion.div variants={fadeIn}>

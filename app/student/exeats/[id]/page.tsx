@@ -200,13 +200,13 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'completed':
-                return 'text-green-600 bg-green-100';
+                return 'text-green-800 bg-green-100';
             case 'rejected':
-                return 'text-red-600 bg-red-100';
+                return 'text-red-800 bg-red-100';
             case 'current':
-                return 'text-blue-600 bg-blue-100';
+                return 'text-blue-800 bg-blue-100';
             default:
-                return 'text-gray-400 bg-gray-100';
+                return 'text-gray-800 bg-gray-100';
         }
     };
 
@@ -426,7 +426,7 @@ export default function ExeatDetailsPage() {
 
     return (
         <motion.div
-            className="container py-8"
+            className="py-8"
             initial="initial"
             animate="animate"
             variants={stagger}

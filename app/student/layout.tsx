@@ -28,7 +28,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
           />
 
           <main className="flex-1 relative">
-            <div className="container mx-auto p-4 lg:p-6">
+            <div className="p-4 md:p-6">
               {children}
             </div>
           </main>

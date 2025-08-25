@@ -3,19 +3,29 @@ import type { ExeatStatus } from '@/types/student';
 export const getStatusColor = (status: string) => {
     switch (status) {
         case 'pending':
-            return 'bg-yellow-50 text-yellow-900 border border-yellow-200';
+            return 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200';
         case 'approved':
-            return 'bg-green-50 text-green-900 border border-green-200';
+            return 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200';
+        case 'completed':
+            return 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200';
         case 'rejected':
-            return 'bg-red-50 text-red-900 border border-red-200';
+            return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200';
+        case 'cmd_review':
+        case 'deputy-dean_review':
+        case 'dean_review':
+            return 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200';
+        case 'parent_consent':
+            return 'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200';
+        case 'hostel_signin':
+        case 'hostel_signout':
+            return 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200';
         case 'recommendation1':
         case 'recommendation2':
-        case 'parent_consent':
         case 'dean_approval':
         case 'hostel_approval':
-            return 'bg-blue-50 text-blue-900 border border-blue-200';
+            return 'bg-indigo-100 text-indigo-800 border-indigo-200 hover:bg-indigo-200';
         default:
-            return 'bg-gray-50 text-gray-900 border border-gray-200';
+            return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200';
     }
 };
 

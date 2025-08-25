@@ -154,7 +154,7 @@ export const ExeatRequestDetail: React.FC<ExeatRequestDetailProps> = ({
                             {getStatusBadge(request.status)}
                             {request.is_medical && (
                                 <Badge variant="destructive">
-                                    <AlertCircle className="h-3 w-3 mr-1" />
+                                    <AlertCircle className="h-4 w-4 mr-1" />
                                     Medical
                                 </Badge>
                             )}

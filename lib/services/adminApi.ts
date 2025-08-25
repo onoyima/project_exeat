@@ -1,58 +1,99 @@
-import { api } from './api';
-import type { ApiResponse } from '@/types/api';
-import type { Staff, ExeatRole, ExeatRoleAssignment, HostelAdminAssignment } from '@/types/staff';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-export const adminApi = api.injectEndpoints({
+// Types
+export interface AdminStaffAssignment {
+    staff_id: number;
+    staff_name: string;
+    staff_email: string;
+    role_name: string;
+    role_display_name: string;
+    assigned_at: string;
+}
+
+export interface AdminRole {
+    id: number;
+    name: string;
+    display_name: string;
+    description: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface AssignRoleRequest {
+    staff_id: number;
+    exeat_role_id: number;
+}
+
+export interface AssignRoleResponse {
+    id: number;
+    staff_id: number;
+    exeat_role_id: number;
+    assigned_at: string;
+}
+
+export interface UnassignRoleRequest {
+    exeat_role_id: number;
+}
+
+// API
+export const adminApi = createApi({
+    reducerPath: 'adminApi',
+    baseQuery: fetchBaseQuery({
+        baseUrl: '/api/admin',
+        credentials: 'include',
+    }),
+    tagTypes: ['StaffAssignments', 'Roles'],
     endpoints: (builder) => ({
-        getExeatRoles: builder.query<ExeatRole[], void>({
-            query: () => '/admin/roles',
-            transformResponse: (response: ApiResponse<ExeatRole[]>) => response.data!,
-            providesTags: ['ExeatRoles'],
+        // Staff Management
+        getStaffAssignments: builder.query<AdminStaffAssignment[], void>({
+            query: () => '/staff/assignments',
+            transformResponse: (response: { success: boolean; data: AdminStaffAssignment[] }) => response.data,
+            providesTags: ['StaffAssignments'],
         }),
 
-        getStaffList: builder.query<Staff[], void>({
-            query: () => '/admin/staff',
-            transformResponse: (response: ApiResponse<Staff[]>) => response.data!,
-            providesTags: ['Staff'],
-        }),
-
-        assignExeatRole: builder.mutation<ApiResponse<ExeatRoleAssignment>, { staffId: number; exeatRoleId: number }>({
+        assignExeatRole: builder.mutation<AssignRoleResponse, { staffId: number; exeatRoleId: number }>({
             query: ({ staffId, exeatRoleId }) => ({
-                url: `/admin/staff/${staffId}/assign-exeat-role`,
+                url: `/staff/${staffId}/assign-exeat-role`,
                 method: 'POST',
                 body: { exeat_role_id: exeatRoleId },
             }),
-            invalidatesTags: ['Staff', 'ExeatRoles'],
+            transformResponse: (response: { success: boolean; data: AssignRoleResponse }) => response.data,
+            invalidatesTags: ['StaffAssignments'],
         }),
 
-        unassignExeatRole: builder.mutation<ApiResponse<void>, { staffId: number; exeatRoleId: number }>({
+        unassignExeatRole: builder.mutation<{ success: boolean; message: string }, { staffId: number; exeatRoleId: number }>({
             query: ({ staffId, exeatRoleId }) => ({
-                url: `/admin/staff/${staffId}/unassign-exeat-role`,
+                url: `/staff/${staffId}/unassign-exeat-role`,
                 method: 'DELETE',
                 body: { exeat_role_id: exeatRoleId },
             }),
-            invalidatesTags: ['Staff', 'ExeatRoles'],
+            invalidatesTags: ['StaffAssignments'],
         }),
 
-        getExeatRoleAssignments: builder.query<ExeatRoleAssignment[], void>({
-            query: () => '/admin/staff/assignments',
-            transformResponse: (response: ApiResponse<ExeatRoleAssignment[]>) => response.data!,
-            providesTags: ['Staff', 'ExeatRoles'],
+        // Role Management
+        getRoles: builder.query<AdminRole[], void>({
+            query: () => '/roles',
+            transformResponse: (response: { success: boolean; data: AdminRole[] }) => response.data,
+            providesTags: ['Roles'],
         }),
 
-        getHostelAdminAssignments: builder.query<HostelAdminAssignment[], void>({
-            query: () => '/admin/hostel-assignments',
-            transformResponse: (response: ApiResponse<HostelAdminAssignment[]>) => response.data!,
-            providesTags: ['Staff'],
+        createRoleAssignment: builder.mutation<AssignRoleResponse, AssignRoleRequest>({
+            query: (body) => ({
+                url: '/roles',
+                method: 'POST',
+                body,
+            }),
+            transformResponse: (response: { success: boolean; data: AssignRoleResponse }) => response.data,
+            invalidatesTags: ['StaffAssignments', 'Roles'],
         }),
     }),
 });
 
+// Export hooks
 export const {
-    useGetExeatRolesQuery,
-    useGetStaffListQuery,
+    useGetStaffAssignmentsQuery,
     useAssignExeatRoleMutation,
     useUnassignExeatRoleMutation,
-    useGetExeatRoleAssignmentsQuery,
-    useGetHostelAdminAssignmentsQuery,
+    useGetRolesQuery,
+    useCreateRoleAssignmentMutation,
 } = adminApi; 
