@@ -1,11 +1,20 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { AlertCircle } from "lucide-react";
-import { getExeatRoles, assignExeatRoleToStaff, getStaffList, getExeatRoleAssignments } from "@/lib/api";
-import { unassignExeatRoleFromStaff } from "@/lib/api";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Select,
   SelectTrigger,
@@ -13,6 +22,38 @@ import {
   SelectItem,
   SelectValue
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { AlertCircle, CheckCircle, Search, UserPlus, Users, Shield, Trash2, Loader2, X } from "lucide-react";
+import { getExeatRoles, assignExeatRoleToStaff, getStaffList, getExeatRoleAssignments } from "@/lib/api";
+import { unassignExeatRoleFromStaff } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+
+// Custom debounced hook
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export default function AssignExeatRolePage() {
   const [staffList, setStaffList] = useState<Staff[]>([]);
@@ -29,8 +70,23 @@ export default function AssignExeatRolePage() {
   const [historyError, setHistoryError] = useState("");
   const [staffSearch, setStaffSearch] = useState("");
   const [roleSearch, setRoleSearch] = useState("");
-  const [unassigning, setUnassigning] = useState<{[key:string]:boolean}>({});
+  const [unassigning, setUnassigning] = useState<{ [key: string]: boolean }>({});
   const [unassignError, setUnassignError] = useState("");
+
+  // Confirmation dialog state
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [roleToUnassign, setRoleToUnassign] = useState<{ staffEmail: string; roleName: string; staffName: string } | null>(null);
+
+  // Refs for managing focus
+  const staffSearchRef = useRef<HTMLInputElement>(null);
+  const roleSearchRef = useRef<HTMLInputElement>(null);
+
+  // Toast hook
+  const { toast } = useToast();
+
+  // Use debounced values to prevent focus loss during typing (300ms delay)
+  const debouncedStaffSearch = useDebouncedValue(staffSearch, 300);
+  const debouncedRoleSearch = useDebouncedValue(roleSearch, 300);
 
   useEffect(() => {
     let isMounted = true;
@@ -65,26 +121,9 @@ export default function AssignExeatRolePage() {
 
   useEffect(() => {
     let isMounted = true;
-    async function fetchHistory() {
-      setHistoryLoading(true);
-      setHistoryError("");
-      try {
-        const res = await getExeatRoleAssignments();
-        if (!isMounted) return;
-        if (res.success && Array.isArray(res.data.history)) {
-          setAssignmentHistory(res.data.history);
-        } else {
-          setHistoryError("Failed to load assignment history");
-        }
-      } catch (e) {
-        if (isMounted) setHistoryError("Failed to load assignment history");
-      } finally {
-        if (isMounted) setHistoryLoading(false);
-      }
-    }
     fetchHistory();
     return () => { isMounted = false; };
-  }, [assignSuccess]);
+  }, []);
 
   async function handleAssignRole() {
     setAssigning(true);
@@ -96,195 +135,619 @@ export default function AssignExeatRolePage() {
       const result = await assignExeatRoleToStaff(staffId, roleId);
       if (result.success) {
         setAssignSuccess("Role assigned successfully.");
+        setSelectedStaff("");
+        setSelectedRole("");
+        setStaffSearch("");
+        setRoleSearch("");
+
+        // Show success toast
+        toast({
+          title: "Role Assigned Successfully",
+          description: `Role has been assigned to the staff member.`,
+          variant: "success",
+        });
       } else {
         setAssignError(result.error || "Failed to assign role.");
+
+        // Show error toast
+        toast({
+          title: "Assignment Failed",
+          description: result.error || "Failed to assign role.",
+          variant: "destructive",
+        });
       }
     } catch (e) {
       setAssignError("Failed to assign role.");
+
+      // Show error toast
+      toast({
+        title: "Assignment Failed",
+        description: "Failed to assign role. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setAssigning(false);
     }
   }
 
-  async function handleUnassignRole(staffEmail: string, roleName: string) {
+  // Function to show confirmation dialog
+  function handleUnassignClick(staffEmail: string, roleName: string, staffName: string) {
+    setRoleToUnassign({ staffEmail, roleName, staffName });
+    setConfirmDialogOpen(true);
+  }
+
+  // Function to handle actual unassignment after confirmation
+  async function handleConfirmUnassign() {
+    if (!roleToUnassign) return;
+
+    const { staffEmail, roleName } = roleToUnassign;
+    setConfirmDialogOpen(false);
     setUnassignError("");
-    setUnassigning(u => ({...u, [staffEmail+roleName]: true}));
+    setUnassigning(u => ({ ...u, [staffEmail + roleName]: true }));
+
     try {
       const staff = staffList.find((s: Staff) => s.email === staffEmail);
       const role = exeatRoles.find((r: ExeatRole) => r.name === roleName);
       if (!staff || !role) throw new Error("Staff or role not found");
+
       const result = await unassignExeatRoleFromStaff(staff.id, role.id);
       if (!result.success) throw new Error(result.error || "Failed to unassign role");
+
       setAssignSuccess("Role unassigned successfully.");
+
+      // Show success toast
+      toast({
+        title: "Role Removed Successfully",
+        description: `Role "${roleName}" has been removed from ${roleToUnassign.staffName}.`,
+        variant: "success",
+      });
+
+      // Refresh assignment history
+      fetchHistory();
+
     } catch (e: any) {
       setUnassignError(e.message || "Failed to unassign role.");
+
+      // Show error toast
+      toast({
+        title: "Removal Failed",
+        description: e.message || "Failed to unassign role. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setUnassigning(u => ({...u, [staffEmail+roleName]: false}));
+      setUnassigning(u => ({ ...u, [staffEmail + roleName]: false }));
+      setRoleToUnassign(null);
+    }
+  }
+
+  // Function to fetch history (extracted for reuse)
+  async function fetchHistory() {
+    setHistoryLoading(true);
+    setHistoryError("");
+    try {
+      const res = await getExeatRoleAssignments();
+      if (res.success && Array.isArray(res.data.history)) {
+        setAssignmentHistory(res.data.history);
+      } else {
+        setHistoryError("Failed to load assignment history");
+      }
+    } catch (e) {
+      setHistoryError("Failed to load assignment history");
+    } finally {
+      setHistoryLoading(false);
     }
   }
 
   if (loading) return (
-    <div className="p-8 text-center">
-      <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-600"></div>
-      <p className="mt-4 text-lg font-medium">Loading data...</p>
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header Skeleton */}
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-96" />
+        </CardHeader>
+      </Card>
+
+      {/* Form Skeleton */}
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-48" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-10 w-full" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* History Table Skeleton */}
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center space-x-4">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-8 w-20" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 
   if (error) return (
-    <Alert variant="destructive" className="m-8">
-      <AlertCircle className="h-4 w-4" />
-      <AlertTitle>Error</AlertTitle>
-      <AlertDescription>
-        {error}
-        <Button 
-          variant="outline" 
-          className="mt-2"
-          onClick={() => window.location.reload()}
-        >
-          Try Again
-        </Button>
-      </AlertDescription>
-    </Alert>
+    <div className="container mx-auto p-6">
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error Loading Data</AlertTitle>
+        <AlertDescription className="space-y-2">
+          <p>{error}</p>
+          <Button
+            variant="outline"
+            onClick={() => window.location.reload()}
+            className="mt-2"
+          >
+            Try Again
+          </Button>
+        </AlertDescription>
+      </Alert>
+    </div>
   );
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-8 font-inter">
-      <Card className="p-6 shadow-lg rounded-xl bg-white border border-gray-200">
-        <h2 className="text-2xl font-bold mb-4 text-green-800">Assign Exeat Role to Staff</h2>
-        <div className="flex flex-col md:flex-row gap-4 items-center mb-4">
-          <div className="flex flex-col w-full md:w-1/2">
-            <Select value={selectedStaff} onValueChange={setSelectedStaff} disabled={assigning}>
-              <SelectTrigger className="min-w-[200px]"> <SelectValue placeholder="Select Staff" /> </SelectTrigger>
-              <SelectContent>
-                <div className="px-2 py-1 sticky top-0 bg-white z-10">
-                  <input
-                    type="text"
-                    placeholder="Search staff..."
-                    className="w-full border rounded px-2 py-1 text-sm"
-                    value={staffSearch}
-                    onChange={e => setStaffSearch(e.target.value)}
-                    disabled={assigning}
-                  />
-                </div>
-                {staffList.filter((staff: any) => {
-                  const search = staffSearch.toLowerCase();
-                  return (
-                    (staff.fname && staff.fname.toLowerCase().includes(search)) ||
-                    (staff.lname && staff.lname.toLowerCase().includes(search)) ||
-                    (staff.middle_name && staff.middle_name.toLowerCase().includes(search)) ||
-                    (`${staff.fname} ${staff.lname}`.toLowerCase().includes(search))
-                  );
-                }).map((staff: any) => (
-                  <SelectItem key={staff.id} value={String(staff.id)}>
-                    {staff.fname} {staff.middle_name ? staff.middle_name + ' ' : ''}{staff.lname}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Page Header */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Role Management</h1>
+        <p className="text-muted-foreground">
+          Assign and manage exeat roles for staff members
+        </p>
+      </div>
+
+      {/* Assignment Form */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5" />
+            Assign Exeat Role
+          </CardTitle>
+          <CardDescription>
+            Select a staff member and assign them an exeat role
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Staff Selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select Staff Member</label>
+              <div className="relative">
+                <Select value={selectedStaff} onValueChange={setSelectedStaff} disabled={assigning}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose staff member" />
+                  </SelectTrigger>
+                  <SelectContent key="staff-select-content">
+                    <div className="px-3 py-2">
+                      <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          ref={staffSearchRef}
+                          key="staff-search-input"
+                          placeholder="Search staff..."
+                          value={staffSearch}
+                          onChange={(e) => {
+                            setStaffSearch(e.target.value);
+                            // Maintain focus after state update
+                            setTimeout(() => staffSearchRef.current?.focus(), 0);
+                          }}
+                          className={`pl-8 pr-8 ${staffSearch !== debouncedStaffSearch ? 'border-blue-400' : ''}`}
+                          disabled={assigning}
+                        />
+                        {debouncedStaffSearch && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-1 top-1 h-6 w-6 p-0 hover:bg-muted"
+                            onClick={() => setStaffSearch('')}
+                            disabled={assigning}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {staffList
+                        .filter((staff: any) => {
+                          const search = debouncedStaffSearch.toLowerCase();
+                          return (
+                            (staff.fname && staff.fname.toLowerCase().includes(search)) ||
+                            (staff.lname && staff.lname.toLowerCase().includes(search)) ||
+                            (staff.middle_name && staff.middle_name.toLowerCase().includes(search)) ||
+                            (`${staff.fname} ${staff.lname}`.toLowerCase().includes(search))
+                          );
+                        })
+                        .map((staff: any) => (
+                          <SelectItem key={staff.id} value={String(staff.id)}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {staff.fname} {staff.middle_name ? staff.middle_name + ' ' : ''}{staff.lname}
+                              </span>
+                              <span className="text-xs text-muted-foreground">{staff.email}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                    </div>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Role Selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select Exeat Role</label>
+              <div className="relative">
+                <Select value={selectedRole} onValueChange={setSelectedRole} disabled={assigning}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose role" />
+                  </SelectTrigger>
+                  <SelectContent key="role-select-content">
+                    <div className="px-3 py-2">
+                      <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          ref={roleSearchRef}
+                          key="role-search-input"
+                          placeholder="Search roles..."
+                          value={roleSearch}
+                          onChange={(e) => {
+                            setRoleSearch(e.target.value);
+                            // Maintain focus after state update
+                            setTimeout(() => roleSearchRef.current?.focus(), 0);
+                          }}
+                          className={`pl-8 pr-8 ${roleSearch !== debouncedRoleSearch ? 'border-blue-400' : ''}`}
+                          disabled={assigning}
+                        />
+                        {debouncedRoleSearch && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-1 top-1 h-6 w-6 p-0 hover:bg-muted"
+                            onClick={() => setRoleSearch('')}
+                            disabled={assigning}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto">
+                      {exeatRoles
+                        .filter((role: any) =>
+                          (role.display_name || role.name).toLowerCase().includes(debouncedRoleSearch.toLowerCase())
+                        )
+                        .map((role: any) => (
+                          <SelectItem key={role.id} value={String(role.id)}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{role.display_name || role.name}</span>
+                              <span className="text-xs text-muted-foreground">{role.description}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                    </div>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Assign Button */}
+            <div className="flex items-end">
+              <Button
+                onClick={handleAssignRole}
+                disabled={!selectedStaff || !selectedRole || assigning}
+                className="w-full"
+                size="lg"
+              >
+                {assigning ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Assigning...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Assign Role
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
-          <div className="flex flex-col w-full md:w-1/2">
-            <Select value={selectedRole} onValueChange={setSelectedRole} disabled={assigning}>
-              <SelectTrigger className="min-w-[200px]"> <SelectValue placeholder="Select Exeat Role" /> </SelectTrigger>
-              <SelectContent>
-                <div className="px-2 py-1 sticky top-0 bg-white z-10">
-                  <input
-                    type="text"
-                    placeholder="Search role..."
-                    className="w-full border rounded px-2 py-1 text-sm"
-                    value={roleSearch}
-                    onChange={e => setRoleSearch(e.target.value)}
-                    disabled={assigning}
-                  />
-                </div>
-                {exeatRoles.filter((role: any) =>
-                  (role.display_name || role.name).toLowerCase().includes(roleSearch.toLowerCase())
-                ).map((role: any) => (
-                  <SelectItem key={role.id} value={String(role.id)}>
-                    {role.display_name || role.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <button
-            className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 font-medium shadow-md"
-            onClick={handleAssignRole}
-            disabled={!selectedStaff || !selectedRole || assigning}
-          >
-            {assigning ? "Assigning..." : "Assign Role"}
-          </button>
-        </div>
-        {assignError && <div className="text-red-600 mt-2">{assignError}</div>}
-        {assignSuccess && <div className="text-green-600 mt-2">{assignSuccess}</div>}
+
+          {/* Status Messages */}
+          {assignError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{assignError}</AlertDescription>
+            </Alert>
+          )}
+
+          {assignSuccess && (
+            <Alert>
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription className="text-green-800">{assignSuccess}</AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
       </Card>
-      {/* Assignment History Card */}
-      <Card className="p-6 shadow-md rounded-xl bg-white border border-gray-200">
-        <h3 className="text-lg font-semibold mb-4 text-green-800">Assignment History</h3>
-        {historyLoading ? (
-          <div>Loading assignment history...</div>
-        ) : historyError ? (
-          <div className="text-red-600">{historyError}</div>
-        ) : assignmentHistory.length === 0 ? (
-          <div className="text-gray-500">No assignments found.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned At</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {assignmentHistory.map((item: any, idx: number) => (
-                  <tr key={idx}>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{item.staff_name || item.staff_email}</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{item.role_display_name || item.role_name}</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{item.assigned_at}</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm">
-                      <button
-                        className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
-                        disabled={unassigning[item.staff_email+item.role_name]}
-                        onClick={() => handleUnassignRole(item.staff_email, item.role_name)}
-                      >
-                        {unassigning[item.staff_email+item.role_name] ? "Unassigning..." : "Unassign"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
-      {/* Exeat Roles Table Card */}
-      <Card className="p-6 shadow-md rounded-xl bg-white border border-gray-200">
-        <h3 className="text-lg font-semibold mb-4 text-green-800">All Exeat Roles</h3>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Display Name</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {exeatRoles.map((role: any, idx: number) => (
-                <tr key={idx}>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{role.name}</td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{role.display_name}</td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{role.description}</td>
-                </tr>
+      {/* Assignment History */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Assignment History
+          </CardTitle>
+          <CardDescription>
+            View and manage current role assignments
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {historyLoading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                  <Skeleton className="h-6 w-16" />
+                  <Skeleton className="h-8 w-20" />
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          ) : historyError ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Failed to Load History</AlertTitle>
+              <AlertDescription>{historyError}</AlertDescription>
+            </Alert>
+          ) : assignmentHistory.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium">No assignments found</p>
+              <p className="text-sm">Staff members will appear here once roles are assigned</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Mobile View */}
+              <div className="md:hidden space-y-4">
+                {assignmentHistory.map((item: any, idx: number) => (
+                  <Card key={idx} className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="space-y-1">
+                        <p className="font-medium">{item.staff_name || item.staff_email}</p>
+                        <p className="text-sm text-muted-foreground">{item.staff_email}</p>
+                      </div>
+                      <Badge variant="secondary">
+                        {item.role_display_name || item.role_name}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        Assigned: {item.assigned_at}
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={unassigning[item.staff_email + item.role_name]}
+                        onClick={() => handleUnassignClick(item.staff_email, item.role_name, item.staff_name || item.staff_email)}
+                        className="text-red-600 border-red-200 hover:bg-red-50"
+                      >
+                        {unassigning[item.staff_email + item.role_name] ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Removing...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Remove
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Staff Member</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Assigned Date</TableHead>
+                      <TableHead className="w-[100px]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {assignmentHistory.map((item: any, idx: number) => (
+                      <TableRow key={idx}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{item.staff_name || item.staff_email}</p>
+                            <p className="text-sm text-muted-foreground">{item.staff_email}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">
+                            {item.role_display_name || item.role_name}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {item.assigned_at}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={unassigning[item.staff_email + item.role_name]}
+                            onClick={() => handleUnassignClick(item.staff_email, item.role_name, item.staff_name || item.staff_email)}
+                            className="text-red-600 border-red-200 hover:bg-red-50"
+                          >
+                            {unassigning[item.staff_email + item.role_name] ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Removing...
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Remove
+                              </>
+                            )}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+        </CardContent>
       </Card>
+      {/* Available Exeat Roles */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Available Exeat Roles
+          </CardTitle>
+          <CardDescription>
+            Overview of all system roles and their permissions
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {exeatRoles.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium">No roles available</p>
+              <p className="text-sm">Roles will be displayed here once created</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Mobile View */}
+              <div className="md:hidden space-y-4">
+                {exeatRoles.map((role: any) => (
+                  <Card key={role.id} className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h4 className="font-medium">{role.display_name || role.name}</h4>
+                        <Badge variant="outline" className="mt-1 text-xs">
+                          {role.name}
+                        </Badge>
+                      </div>
+                      <Shield className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">{role.description}</p>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Role Name</TableHead>
+                      <TableHead>Display Name</TableHead>
+                      <TableHead>Description</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {exeatRoles.map((role: any) => (
+                      <TableRow key={role.id}>
+                        <TableCell>
+                          <Badge variant="outline">{role.name}</Badge>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {role.display_name}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {role.description}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Error Alert for Unassignment */}
       {unassignError && (
-  <div className="text-red-600 mt-2">{unassignError}</div>
-)}
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Failed to Remove Role</AlertTitle>
+          <AlertDescription>{unassignError}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Role Assignment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove the <strong>"{roleToUnassign?.roleName}"</strong> role from{" "}
+              <strong>{roleToUnassign?.staffName}</strong>?
+              <br />
+              <br />
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setRoleToUnassign(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmUnassign}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={roleToUnassign ? unassigning[roleToUnassign.staffEmail + roleToUnassign.roleName] : false}
+            >
+              {roleToUnassign && unassigning[roleToUnassign.staffEmail + roleToUnassign.roleName] ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Remove Role
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

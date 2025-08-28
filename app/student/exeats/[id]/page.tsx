@@ -464,22 +464,22 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
                         className="mt-8"
                     >
                         <div className={`p-6 rounded-xl border-2 ${workflowStages[currentStageIndex]?.key === 'departed_school'
-                                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
-                                : exeatRequest.status === 'approved' || exeatRequest.status === 'completed'
-                                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
-                                    : exeatRequest.status === 'rejected'
-                                        ? 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200'
-                                        : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+                            ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+                            : exeatRequest.status === 'approved' || exeatRequest.status === 'completed'
+                                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
+                                : exeatRequest.status === 'rejected'
+                                    ? 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200'
+                                    : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
                             }`}>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <div className={`p-3 rounded-full ${workflowStages[currentStageIndex]?.key === 'departed_school'
-                                            ? 'bg-blue-100'
-                                            : exeatRequest.status === 'approved' || exeatRequest.status === 'completed'
-                                                ? 'bg-green-100'
-                                                : exeatRequest.status === 'rejected'
-                                                    ? 'bg-red-100'
-                                                    : 'bg-blue-100'
+                                        ? 'bg-blue-100'
+                                        : exeatRequest.status === 'approved' || exeatRequest.status === 'completed'
+                                            ? 'bg-green-100'
+                                            : exeatRequest.status === 'rejected'
+                                                ? 'bg-red-100'
+                                                : 'bg-blue-100'
                                         }`}>
                                         {exeatRequest.status === 'rejected' ? (
                                             <XCircle className="h-6 w-6 text-red-600" />
@@ -507,12 +507,12 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
                                     variant={exeatRequest.status === 'approved' || exeatRequest.status === 'completed' ? 'default' :
                                         exeatRequest.status === 'rejected' ? 'destructive' : 'secondary'}
                                     className={`px-4 py-2 text-sm font-medium ${workflowStages[currentStageIndex]?.key === 'departed_school'
-                                            ? 'bg-blue-100 text-blue-700 border-blue-200'
-                                            : exeatRequest.status === 'approved' || exeatRequest.status === 'completed'
-                                                ? 'bg-green-100 text-green-700 border-green-200'
-                                                : exeatRequest.status === 'rejected'
-                                                    ? 'bg-red-100 text-red-700 border-red-200'
-                                                    : 'bg-blue-100 text-blue-700 border-blue-200'
+                                        ? 'bg-blue-100 text-blue-700 border-blue-200'
+                                        : exeatRequest.status === 'approved' || exeatRequest.status === 'completed'
+                                            ? 'bg-green-100 text-green-700 border-green-200'
+                                            : exeatRequest.status === 'rejected'
+                                                ? 'bg-red-100 text-red-700 border-red-200'
+                                                : 'bg-blue-100 text-blue-700 border-blue-200'
                                         }`}
                                 >
                                     {workflowStages[currentStageIndex]?.key === 'departed_school' ? 'Awaiting Return' : getStatusText(exeatRequest.status)}

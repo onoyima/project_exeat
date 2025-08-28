@@ -15,6 +15,12 @@ import {
   LogOut,
   X,
   UserCog,
+  Users,
+  Shield,
+  Settings,
+  BarChart3,
+  FileText,
+  Home,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -133,14 +139,34 @@ export default function StaffSidebar({
 
             {/* Admin-only navigation */}
             {isAdmin && (
-              <NavLink href="/staff/assign-exeat-role" icon={UserCog}>
-                Assign Exeat Role
-              </NavLink>
+              <>
+                <div className="pt-2">
+                  <p className="text-xs font-medium text-muted-foreground px-2 mb-2 uppercase tracking-wide">
+                    Administration
+                  </p>
+                </div>
+                <NavLink href="/staff/admin" icon={Home}>
+                  Admin Dashboard
+                </NavLink>
+                <NavLink href="/staff/assign-exeat-role" icon={UserCog}>
+                  Assign Exeat Role
+                </NavLink>
+                <NavLink href="/staff/admin/exeats" icon={FileText}>
+                  All Exeat Requests
+                </NavLink>
+                <NavLink href="/staff/admin/analytics" icon={BarChart3}>
+                  Analytics
+                </NavLink>
+                <NavLink href="/staff/admin/settings" icon={Settings}>
+                  System Settings
+                </NavLink>
+              </>
             )}
 
             {/* Account Navigation */}
             <div className="pt-4 mt-4 border-t">
-              <NavLink href="/staff/profile" icon={UserCircle}>
+              <NavLink href="/staff/profile"
+                icon={UserCircle}>
                 Profile
               </NavLink>
 

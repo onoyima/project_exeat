@@ -257,7 +257,7 @@ export default function AdminExeatsPage() {
                                         {/* Actions */}
                                         <div className="pt-2 border-t">
                                             <Button asChild variant="outline" size="sm" className="w-full">
-                                                <Link href={`/admin/exeats/${request.id}`}>
+                                                <Link href={`/staff/admin/exeats/${request.id}`}>
                                                     <FileText className="mr-2 h-4 w-4" />
                                                     View Details
                                                 </Link>
@@ -274,7 +274,7 @@ export default function AdminExeatsPage() {
                                         <div
                                             key={request.id}
                                             className="flex items-center gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
-                                            onClick={() => window.open(`/admin/exeats/${request.id}`, '_blank')}
+                                            onClick={() => window.open(`/staff/admin/exeats/${request.id}`, '_blank')}
                                         >
                                             {/* Category Icon */}
                                             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -318,7 +318,7 @@ export default function AdminExeatsPage() {
                                             {/* Actions */}
                                             <div className="flex items-center gap-2">
                                                 <Button asChild variant="outline" size="sm">
-                                                    <Link href={`/admin/exeats/${request.id}`}>
+                                                    <Link href={`/staff/admin/exeats/${request.id}`}>
                                                         <FileText className="mr-2 h-4 w-4" />
                                                         View Details
                                                     </Link>

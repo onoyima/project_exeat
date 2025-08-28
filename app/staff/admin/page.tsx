@@ -51,24 +51,24 @@ export default function AdminDashboard() {
     return (
         <div className="space-y-6 p-6">
             {/* Welcome Section */}
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+            <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary">
                 <CardHeader className="pb-4">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            <div className="h-16 w-16 rounded-xl bg-blue-600 flex items-center justify-center">
-                                <Shield className="h-8 w-8 text-white" />
+                            <div className="h-16 w-16 rounded-xl bg-primary flex items-center justify-center">
+                                <Shield className="h-8 w-8 text-primary-foreground" />
                             </div>
                             <div>
-                                <CardTitle className="text-3xl text-blue-900">
+                                <CardTitle className="text-3xl text-primary">
                                     Welcome back, {user?.fname}! 👋
                                 </CardTitle>
-                                <CardDescription className="text-lg text-blue-700">
+                                <CardDescription className="text-lg text-primary/80">
                                     Here's an overview of your administrative dashboard
                                 </CardDescription>
                             </div>
                         </div>
                         <div className="flex gap-3">
-                            <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
+                            <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
                                 <Link href="/staff/assign-exeat-role">
                                     <Users className="mr-2 h-5 w-5" />
                                     Assign Roles
@@ -92,7 +92,7 @@ export default function AdminDashboard() {
                     value={totalStaff}
                     description="Staff members with roles"
                     icon={Users}
-                    className="border-l-4 border-l-blue-500"
+                    className="border-l-4 border-l-primary"
                     trend="up"
                     trendValue="+12%"
                 />
@@ -286,7 +286,7 @@ export default function AdminDashboard() {
                                                     request.status === 'approved' ? 'border-green-200 text-green-700' :
                                                         request.status === 'rejected' ? 'border-red-200 text-red-700' :
                                                             request.status === 'pending' ? 'border-yellow-200 text-yellow-700' :
-                                                                'border-blue-200 text-blue-700'
+                                                                'border-primary/20 text-primary'
                                                 )}
                                             >
                                                 {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
@@ -385,3 +385,4 @@ function StatsCard({ title, value, description, icon: Icon, className, trend, tr
         </Card>
     );
 }
+
