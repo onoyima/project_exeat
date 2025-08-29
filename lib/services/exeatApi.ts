@@ -43,7 +43,9 @@ export const exeatApi = api.injectEndpoints({
                     created_at: string;
                     updated_at: string;
                     staff: {
-                        name: string;
+                        id: number;
+                        fname: string;
+                        lname: string;
                     } | null;
                 }>;
                 exeat_request: ExeatRequest;

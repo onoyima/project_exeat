@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGetCurrentUser } from '@/hooks/use-current-user';
-import { format } from 'date-fns';
+import { format, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns';
 import {
   PlusCircle,
   Clock,
@@ -27,6 +27,8 @@ import {
   FileText,
   History,
   TrendingUp,
+  Timer,
+  MapPinned,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useGetExeatRequestsQuery } from '@/lib/services/exeatApi';
@@ -50,22 +52,110 @@ export default function StudentDashboard() {
     return <DashboardSkeleton />;
   }
 
+  // Helper function to determine if an exeat is effectively approved
+  const isEffectivelyApproved = (exeat: any) => {
+    // If status is explicitly approved or completed
+    if (['approved', 'completed'].includes(exeat.status)) {
+      return true;
+    }
+
+    // If status indicates the user has departed and is out of school
+    // (security sign out completed OR security sign in pending - user is away)
+    if (exeat.status === 'hostel_signout' ||
+      exeat.status === 'security_signout' ||
+      exeat.status === 'security_signin') {  // User has left school, needs to sign in on return
+      return true;
+    }
+
+    // If status is in final stages of approval process
+    if (['dean_review', 'hostel_signout', 'security_signout', 'security_signin'].includes(exeat.status)) {
+      return true;
+    }
+
+    return false;
+  };
+
   // Calculate counts for different statuses with progressive disclosure priority
   const inReviewCount = exeatRequests.filter(r =>
-    ['cmd_review', 'deputy-dean_review', 'dean_review'].includes(r.status)
+    ['cmd_review', 'deputy-dean_review', 'dean_review'].includes(r.status) && !isEffectivelyApproved(r)
   ).length;
-  const parentConsentCount = exeatRequests.filter(r => r.status === 'parent_consent').length;
+  const parentConsentCount = exeatRequests.filter(r => r.status === 'parent_consent' && !isEffectivelyApproved(r)).length;
   const hostelCount = exeatRequests.filter(r =>
-    ['hostel_signin', 'hostel_signout'].includes(r.status)
+    ['hostel_signin', 'hostel_signout'].includes(r.status) && !isEffectivelyApproved(r)
   ).length;
-  const approvedCount = exeatRequests.filter(r => r.status === 'approved').length;
+  const approvedCount = exeatRequests.filter(r => isEffectivelyApproved(r)).length;
   const completedCount = exeatRequests.filter(r => r.status === 'completed').length;
   const rejectedCount = exeatRequests.filter(r => r.status === 'rejected').length;
 
   // Calculate active requests (all except completed, approved, and rejected) - Priority metric
   const activeCount = exeatRequests.filter(r =>
-    !['completed', 'approved', 'rejected'].includes(r.status)
+    !['completed', 'approved', 'rejected'].includes(r.status) && !isEffectivelyApproved(r)
   ).length;
+
+  // Find active exeat (approved but not completed - user is currently out)
+  const activeExeat = exeatRequests.find(r => {
+    try {
+      const currentDate = new Date();
+      const departureDate = new Date(r.departure_date);
+      const returnDate = new Date(r.return_date);
+      const isEffectivelyApprovedStatus = isEffectivelyApproved(r);
+      const isBeforeReturn = returnDate > currentDate;
+      const isAfterDeparture = currentDate >= departureDate;
+
+      // Handle invalid dates
+      if (isNaN(departureDate.getTime()) || isNaN(returnDate.getTime())) {
+        console.warn('Invalid date format for exeat:', r.id, r.departure_date, r.return_date);
+        return false;
+      }
+
+      // Check if user has effectively departed and hasn't returned yet
+      const hasDeparted = isEffectivelyApprovedStatus && currentDate >= departureDate;
+
+      return (isEffectivelyApprovedStatus && isBeforeReturn && isAfterDeparture) || (hasDeparted && isBeforeReturn);
+    } catch (error) {
+      console.error('Error processing exeat dates:', error, r);
+      return false;
+    }
+  });
+
+  // Fallback: Show any effectively approved exeat for testing
+  const testExeat = exeatRequests.find(r => isEffectivelyApproved(r));
+
+  // Debug: Log active exeat info
+  console.log('=== DASHBOARD DEBUG INFO ===');
+  console.log('Active Exeat Found:', activeExeat ? {
+    id: activeExeat.id,
+    status: activeExeat.status,
+    departure: activeExeat.departure_date,
+    return: activeExeat.return_date,
+    currentTime: new Date().toISOString()
+  } : 'No active exeat found');
+
+  console.log('Test Exeat (any approved):', testExeat ? {
+    id: testExeat.id,
+    status: testExeat.status
+  } : 'No approved exeat found');
+
+  console.log('All Exeat Requests:', exeatRequests.map(r => ({
+    id: r.id,
+    status: r.status,
+    departure: r.departure_date,
+    return: r.return_date,
+    isEffectivelyApproved: isEffectivelyApproved(r),
+    note: r.status === 'security_signin' ? 'User has departed, awaiting return sign-in' : ''
+  })));
+
+  console.log('Dashboard Counts:', {
+    total: exeatRequests.length,
+    active: activeCount,
+    inReview: inReviewCount,
+    parentConsent: parentConsentCount,
+    hostel: hostelCount,
+    approved: approvedCount,
+    completed: completedCount,
+    rejected: rejectedCount
+  });
+  console.log('===========================');
 
   return (
     <div className="space-y-4 md:space-y-6 lg:space-y-8">
@@ -110,6 +200,31 @@ export default function StudentDashboard() {
           </Button>
         </div>
       </Card>
+
+      {/* Active Exeat Countdown Timer */}
+      {(activeExeat || testExeat) ? (
+        <ReturnCountdown exeat={activeExeat || testExeat} />
+      ) : (
+        /* No exeats at all - with debug info */
+        <Card className="p-4 md:p-6 border-2 bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-gray-100">
+                <Timer className="h-6 w-6 text-gray-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg text-gray-900">No Active Exeats</h3>
+                <p className="text-sm text-gray-700">
+                  Check browser console for detailed debug information
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Total exeats: {exeatRequests.length} | Approved: {approvedCount}
+                </p>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Statistics Grid with Enhanced Mobile-First Progressive Disclosure */}
       <div className="space-y-4 md:space-y-6">
@@ -262,7 +377,7 @@ export default function StudentDashboard() {
       </div>
 
       {/* Recent Exeat Requests - Enhanced Mobile-First Design */}
-      <Card className="p-4 md:p-6">
+      <Card className="">
         <CardHeader className="pb-4 md:pb-6">
           <CardTitle className="text-lg md:text-xl font-semibold">Recent Requests</CardTitle>
           <CardDescription className="text-base md:text-lg">
@@ -270,7 +385,7 @@ export default function StudentDashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[400px] md:h-[450px] w-full rounded-md border">
+          <ScrollArea className="h-[400px] md:h-[450px] w-full rounded-md">
             <div className="space-y-4 p-4 md:p-6">
               {exeatRequests.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
@@ -453,5 +568,177 @@ function InfoItem({ icon: Icon, label, value, fallback = 'Not available' }: Info
         </p>
       </div>
     </div>
+  );
+}
+
+interface ReturnCountdownProps {
+  exeat: any;
+}
+
+function ReturnCountdown({ exeat }: ReturnCountdownProps) {
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    totalMinutes: number;
+  }>({ days: 0, hours: 0, minutes: 0, totalMinutes: 0 });
+
+  console.log('ReturnCountdown received exeat:', {
+    id: exeat.id,
+    return_date: exeat.return_date,
+    departure_date: exeat.departure_date,
+    status: exeat.status
+  });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      try {
+        const now = new Date();
+        const returnDate = new Date(exeat.return_date);
+
+        console.log('Raw return date:', exeat.return_date);
+        console.log('Parsed return date:', returnDate);
+        console.log('Return date is valid:', !isNaN(returnDate.getTime()));
+
+        if (isNaN(returnDate.getTime())) {
+          console.error('Invalid return date format:', exeat.return_date);
+          setTimeLeft({ days: 0, hours: 0, minutes: 0, totalMinutes: 0 });
+          return;
+        }
+
+        const totalMinutes = differenceInMinutes(returnDate, now);
+
+        console.log('Countdown calculation:', {
+          now: now.toISOString(),
+          returnDate: returnDate.toISOString(),
+          totalMinutes,
+          isOverdue: totalMinutes <= 0
+        });
+
+        if (totalMinutes <= 0) {
+          setTimeLeft({ days: 0, hours: 0, minutes: 0, totalMinutes });
+          return;
+        }
+
+        const days = differenceInDays(returnDate, now);
+        const hours = differenceInHours(returnDate, now) % 24;
+        const minutes = totalMinutes % 60;
+
+        setTimeLeft({ days, hours, minutes, totalMinutes });
+      } catch (error) {
+        console.error('Error in countdown calculation:', error);
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, totalMinutes: 0 });
+      }
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, [exeat.return_date]);
+
+  const isOverdue = timeLeft.totalMinutes <= 0;
+  const isUrgent = timeLeft.totalMinutes <= 1440 && timeLeft.totalMinutes > 0; // Less than 24 hours
+
+  return (
+    <Card className={cn(
+      "p-4 md:p-6 border-2 transition-all duration-300",
+      isOverdue
+        ? "bg-gradient-to-r from-red-50 to-rose-50 border-red-200 shadow-red-100"
+        : isUrgent
+          ? "bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200 shadow-orange-100"
+          : "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-green-100"
+    )}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className={cn(
+            "p-3 rounded-full",
+            isOverdue ? "bg-red-100" :
+              isUrgent ? "bg-orange-100" : "bg-green-100"
+          )}>
+            {isOverdue ? (
+              <AlertCircle className="h-6 w-6 text-red-600" />
+            ) : isUrgent ? (
+              <Timer className="h-6 w-6 text-orange-600" />
+            ) : (
+              <MapPinned className="h-6 w-6 text-green-600" />
+            )}
+          </div>
+          <div>
+            <h3 className={cn(
+              "font-semibold text-lg",
+              isOverdue ? "text-red-900" :
+                isUrgent ? "text-orange-900" : "text-green-900"
+            )}>
+              {isOverdue ? "Return Time Passed!" : "Expected Return Time"}
+            </h3>
+            <p className={cn(
+              "text-sm",
+              isOverdue ? "text-red-700" :
+                isUrgent ? "text-orange-700" : "text-green-700"
+            )}>
+              {isOverdue
+                ? `Return was expected on ${format(new Date(exeat.return_date), 'MMM d, yyyy')} - please sign back in`
+                : `Expected return on ${format(new Date(exeat.return_date), 'MMM d, yyyy')} - please sign back in upon return`
+              }
+            </p>
+          </div>
+        </div>
+
+        {!isOverdue && (
+          <div className="text-right">
+            <div className="grid grid-cols-3 gap-2 md:gap-4">
+              <div className="text-center">
+                <div className={cn(
+                  "text-2xl md:text-3xl font-bold",
+                  isUrgent ? "text-orange-600" : "text-green-600"
+                )}>
+                  {timeLeft.days}
+                </div>
+                <div className="text-xs md:text-sm text-muted-foreground">Days</div>
+              </div>
+              <div className="text-center">
+                <div className={cn(
+                  "text-2xl md:text-3xl font-bold",
+                  isUrgent ? "text-orange-600" : "text-green-600"
+                )}>
+                  {timeLeft.hours}
+                </div>
+                <div className="text-xs md:text-sm text-muted-foreground">Hours</div>
+              </div>
+              <div className="text-center">
+                <div className={cn(
+                  "text-2xl md:text-3xl font-bold",
+                  isUrgent ? "text-orange-600" : "text-green-600"
+                )}>
+                  {timeLeft.minutes}
+                </div>
+                <div className="text-xs md:text-sm text-muted-foreground">Minutes</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Progress Bar */}
+      {!isOverdue && (
+        <div className="mt-4">
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className={cn(
+                "h-2 rounded-full transition-all duration-1000",
+                isUrgent ? "bg-orange-500" : "bg-green-500"
+              )}
+              style={{
+                width: `${Math.max(0, Math.min(100, ((new Date(exeat.return_date).getTime() - new Date(exeat.departure_date).getTime() - (new Date(exeat.return_date).getTime() - new Date().getTime())) / (new Date(exeat.return_date).getTime() - new Date(exeat.departure_date).getTime())) * 100))}%`
+              }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {isUrgent ? "⚠️ Less than 24 hours remaining - sign back in soon" : "Please sign back in by your return date"}
+          </p>
+        </div>
+      )}
+    </Card>
   );
 }

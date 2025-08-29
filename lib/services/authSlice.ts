@@ -4,7 +4,7 @@ import type { User, AuthResponse } from '@/types/auth';
 import { authApi } from './authApi';
 
 interface AuthState {
-    user: (User & { role: string }) | null;
+    user: (User & { role: string; roles?: string[] }) | null;
     token: string | null;
     isAuthenticated: boolean;
     isLoading: boolean;
@@ -26,7 +26,13 @@ const getFromStorage = (key: string) => {
 const getStoredUser = () => {
     const storedUser = getFromStorage('user');
     try {
-        return storedUser ? JSON.parse(storedUser) : null;
+        const parsed = storedUser ? JSON.parse(storedUser) : null;
+        // If the stored user has exeat_roles but no roles, migrate it
+        if (parsed && parsed.exeat_roles && !parsed.roles) {
+            const roleNames = parsed.exeat_roles.map((role: any) => role.role?.name || role.name);
+            parsed.roles = roleNames;
+        }
+        return parsed;
     } catch {
         return null;
     }
@@ -60,7 +66,9 @@ const authSlice = createSlice({
         },
         setCredentials: (state, action: PayloadAction<AuthResponse>) => {
             const { user, role, token } = action.payload;
-            const userData = { ...user, role };
+            // Handle both 'roles' and 'exeat_roles' field names
+            const exeatRoles = (user as any)?.exeat_roles || (action.payload as any).roles;
+            const userData = { ...user, role, roles: exeatRoles };
             state.user = userData;
             state.token = token;
             state.isAuthenticated = true;
@@ -81,7 +89,9 @@ const authSlice = createSlice({
             .addMatcher(
                 authApi.endpoints.login.matchFulfilled,
                 (state, { payload }) => {
-                    const user = { ...payload.user, role: payload.role };
+                    // Handle both 'roles' and 'exeat_roles' field names
+                    const exeatRoles = (payload.user as any)?.exeat_roles || (payload as any).roles;
+                    const user = { ...payload.user, role: payload.role, roles: exeatRoles };
                     state.user = user;
                     state.token = payload.token;
                     state.isAuthenticated = true;
