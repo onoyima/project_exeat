@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { getCsrfTokenForHeaders, fetchCsrfToken } from '@/lib/utils/csrf';
 
 // Use proxy URL for development, direct URL for production
 const API_BASE_URL = 'https://attendance.veritas.edu.ng/api';
@@ -8,11 +9,17 @@ export const api = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: API_BASE_URL,
         prepareHeaders: (headers) => {
-            // Safely access localStorage
+            // Safely access localStorage and cookies
             if (typeof window !== 'undefined') {
                 const token = localStorage.getItem('token');
                 if (token) {
                     headers.set('Authorization', `Bearer ${token}`);
+                }
+
+                // Get CSRF token from cookies
+                const csrfToken = getCsrfTokenForHeaders();
+                if (csrfToken) {
+                    headers.set('X-XSRF-TOKEN', csrfToken);
                 }
             }
             headers.set('Content-Type', 'application/json');

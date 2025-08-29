@@ -37,6 +37,7 @@ import { AlertCircle, CheckCircle, Search, UserPlus, Users, Shield, Trash2, Load
 import { getExeatRoles, assignExeatRoleToStaff, getStaffList, getExeatRoleAssignments } from "@/lib/api";
 import { unassignExeatRoleFromStaff } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { extractRoleName } from "@/lib/utils/csrf";
 
 // Custom debounced hook
 function useDebouncedValue<T>(value: T, delay: number): T {
@@ -439,12 +440,12 @@ export default function AssignExeatRolePage() {
                     <div className="max-h-60 overflow-y-auto">
                       {exeatRoles
                         .filter((role: any) =>
-                          (role.display_name || role.name).toLowerCase().includes(debouncedRoleSearch.toLowerCase())
+                          extractRoleName(role).toLowerCase().includes(debouncedRoleSearch.toLowerCase())
                         )
                         .map((role: any) => (
                           <SelectItem key={role.id} value={String(role.id)}>
                             <div className="flex flex-col">
-                              <span className="font-medium">{role.display_name || role.name}</span>
+                              <span className="font-medium">{extractRoleName(role)}</span>
                               <span className="text-xs text-muted-foreground">{role.description}</span>
                             </div>
                           </SelectItem>
@@ -543,7 +544,7 @@ export default function AssignExeatRolePage() {
                         <p className="text-sm text-muted-foreground">{item.staff_email}</p>
                       </div>
                       <Badge variant="secondary">
-                        {item.role_display_name || item.role_name}
+                        {extractRoleName(item)}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
@@ -553,11 +554,11 @@ export default function AssignExeatRolePage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        disabled={unassigning[item.staff_email + item.role_name]}
-                        onClick={() => handleUnassignClick(item.staff_email, item.role_name, item.staff_name || item.staff_email)}
+                        disabled={unassigning[item.staff_email + extractRoleName(item)]}
+                        onClick={() => handleUnassignClick(item.staff_email, extractRoleName(item), item.staff_name || item.staff_email)}
                         className="text-red-600 border-red-200 hover:bg-red-50"
                       >
-                        {unassigning[item.staff_email + item.role_name] ? (
+                        {unassigning[item.staff_email + extractRoleName(item)] ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Removing...
@@ -596,7 +597,7 @@ export default function AssignExeatRolePage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary">
-                            {item.role_display_name || item.role_name}
+                            {extractRoleName(item)}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
@@ -606,11 +607,11 @@ export default function AssignExeatRolePage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            disabled={unassigning[item.staff_email + item.role_name]}
-                            onClick={() => handleUnassignClick(item.staff_email, item.role_name, item.staff_name || item.staff_email)}
+                            disabled={unassigning[item.staff_email + extractRoleName(item)]}
+                            onClick={() => handleUnassignClick(item.staff_email, extractRoleName(item), item.staff_name || item.staff_email)}
                             className="text-red-600 border-red-200 hover:bg-red-50"
                           >
-                            {unassigning[item.staff_email + item.role_name] ? (
+                            {unassigning[item.staff_email + extractRoleName(item)] ? (
                               <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 Removing...
@@ -658,9 +659,9 @@ export default function AssignExeatRolePage() {
                   <Card key={role.id} className="p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <h4 className="font-medium">{role.display_name || role.name}</h4>
+                        <h4 className="font-medium">{extractRoleName(role)}</h4>
                         <Badge variant="outline" className="mt-1 text-xs">
-                          {role.name}
+                          {extractRoleName(role)}
                         </Badge>
                       </div>
                       <Shield className="h-5 w-5 text-muted-foreground" />
@@ -684,10 +685,10 @@ export default function AssignExeatRolePage() {
                     {exeatRoles.map((role: any) => (
                       <TableRow key={role.id}>
                         <TableCell>
-                          <Badge variant="outline">{role.name}</Badge>
+                          <Badge variant="outline">{extractRoleName(role)}</Badge>
                         </TableCell>
                         <TableCell className="font-medium">
-                          {role.display_name}
+                          {extractRoleName(role)}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {role.description}

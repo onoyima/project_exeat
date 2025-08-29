@@ -21,6 +21,7 @@ import {
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { extractRoleName } from '@/lib/utils/csrf';
 
 export default function AdminDashboard() {
     const { user } = useGetCurrentUser();
@@ -30,8 +31,9 @@ export default function AdminDashboard() {
     const exeatRequests = exeatData?.exeat_requests || [];
     const totalStaff = staffAssignments?.length || 0;
     const totalRoles = staffAssignments?.reduce((acc, assignment) => {
-        if (!acc.includes(assignment.role_name)) {
-            acc.push(assignment.role_name);
+        const roleName = extractRoleName(assignment);
+        if (!acc.includes(roleName)) {
+            acc.push(roleName);
         }
         return acc;
     }, [] as string[]).length || 0;
@@ -196,7 +198,7 @@ export default function AdminDashboard() {
                             <div className="space-y-4">
                                 {recentAssignments.map((assignment) => (
                                     <div
-                                        key={`${assignment.staff_id}-${assignment.role_name}`}
+                                        key={`${assignment.staff_id}-${extractRoleName(assignment)}`}
                                         className="flex items-center gap-3 p-3 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors"
                                     >
                                         <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -212,7 +214,7 @@ export default function AdminDashboard() {
                                         </div>
                                         <div className="flex flex-col items-end gap-1">
                                             <Badge variant="secondary" className="text-xs">
-                                                {assignment.role_display_name}
+                                                {extractRoleName(assignment)}
                                             </Badge>
                                             <p className="text-xs text-muted-foreground">
                                                 {format(new Date(assignment.assigned_at), 'MMM d')}

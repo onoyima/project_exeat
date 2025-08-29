@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { getProfile } from "@/lib/api"; // Assuming getProfile handles both staff and student types
 import { getExeatRoles, assignExeatRoleToStaff } from "@/lib/api";
+import { extractRoleName } from "@/lib/utils/csrf";
 import { User, Mail, Phone, Briefcase, Users, Edit, Building2, CalendarDays } from "lucide-react";
 import Image from "next/image";
 
@@ -126,7 +127,7 @@ export default function StaffProfilePage() {
             <ul className="list-disc pl-5">
               {personal.exeat_roles.map((role: any) => (
                 <li key={role.id} className="mb-1">
-                  <span className="font-medium text-gray-800">{role.display_name || role.name}</span>
+                  <span className="font-medium text-gray-800">{extractRoleName(role)}</span>
                   {role.description && <span className="text-gray-500 ml-2">- {role.description}</span>}
                 </li>
               ))}
@@ -233,7 +234,7 @@ export default function StaffProfilePage() {
           <h3 className="font-semibold text-lg">Assign Exeat Role I have been assigned</h3>
         </div>
         <div className="flex flex-col md:flex-row gap-4 items-center">
-         
+
         </div>
       </Card>
     </div>

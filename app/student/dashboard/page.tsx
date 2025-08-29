@@ -121,42 +121,6 @@ export default function StudentDashboard() {
   // Fallback: Show any effectively approved exeat for testing
   const testExeat = exeatRequests.find(r => isEffectivelyApproved(r));
 
-  // Debug: Log active exeat info
-  console.log('=== DASHBOARD DEBUG INFO ===');
-  console.log('Active Exeat Found:', activeExeat ? {
-    id: activeExeat.id,
-    status: activeExeat.status,
-    departure: activeExeat.departure_date,
-    return: activeExeat.return_date,
-    currentTime: new Date().toISOString()
-  } : 'No active exeat found');
-
-  console.log('Test Exeat (any approved):', testExeat ? {
-    id: testExeat.id,
-    status: testExeat.status
-  } : 'No approved exeat found');
-
-  console.log('All Exeat Requests:', exeatRequests.map(r => ({
-    id: r.id,
-    status: r.status,
-    departure: r.departure_date,
-    return: r.return_date,
-    isEffectivelyApproved: isEffectivelyApproved(r),
-    note: r.status === 'security_signin' ? 'User has departed, awaiting return sign-in' : ''
-  })));
-
-  console.log('Dashboard Counts:', {
-    total: exeatRequests.length,
-    active: activeCount,
-    inReview: inReviewCount,
-    parentConsent: parentConsentCount,
-    hostel: hostelCount,
-    approved: approvedCount,
-    completed: completedCount,
-    rejected: rejectedCount
-  });
-  console.log('===========================');
-
   return (
     <div className="space-y-4 md:space-y-6 lg:space-y-8">
       {/* Welcome Section - Enhanced Mobile-First Responsive Design */}

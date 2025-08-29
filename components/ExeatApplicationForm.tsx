@@ -68,8 +68,12 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
       reason: '',
       destination: '',
     },
-    mode: 'onSubmit',
+    mode: 'onChange',
   });
+
+  // Watch departure date to validate return date
+  const watchedDepartureDate = form.watch('departure_date');
+  const watchedReturnDate = form.watch('return_date');
 
 
   const onSubmit = async (values: ExeatFormValues) => {
@@ -283,10 +287,25 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
             render={({ field }) => (
               <DatePicker
                 value={field.value}
-                onChange={field.onChange}
-                disabled={(date) =>
-                  date < new Date() || date > new Date(new Date().setMonth(new Date().getMonth() + 3))
-                }
+                onChange={(date) => {
+                  field.onChange(date);
+                  // Clear return date if it becomes invalid
+                  if (date && watchedReturnDate && watchedReturnDate <= date) {
+                    form.setValue('return_date', null as any);
+                  }
+                }}
+                disabled={(date) => {
+                  const today = new Date();
+                  const threeMonthsFromNow = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate());
+
+                  // Disable dates before today
+                  if (date < today) return true;
+
+                  // Disable dates more than 3 months from now
+                  if (date > threeMonthsFromNow) return true;
+
+                  return false;
+                }}
               />
             )}
           />
@@ -303,15 +322,32 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
               <DatePicker
                 value={field.value}
                 onChange={field.onChange}
-                disabled={(date) =>
-                  date < new Date() || date > new Date(new Date().setMonth(new Date().getMonth() + 3))
-                }
+                disabled={(date) => {
+                  const today = new Date();
+                  const threeMonthsFromNow = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate());
+
+                  // Disable dates before today
+                  if (date < today) return true;
+
+                  // Disable dates more than 3 months from now
+                  if (date > threeMonthsFromNow) return true;
+
+                  // Disable dates before departure date (if departure date is selected)
+                  if (watchedDepartureDate) {
+                    const departureDateOnly = new Date(watchedDepartureDate);
+                    departureDateOnly.setHours(0, 0, 0, 0);
+                    const checkDateOnly = new Date(date);
+                    checkDateOnly.setHours(0, 0, 0, 0);
+                    if (checkDateOnly <= departureDateOnly) return true;
+                  }
+
+                  return false;
+                }}
               />
             )}
           />
         </FormField>
       </div>
-
       <Button
         type="submit"
         className="w-full"

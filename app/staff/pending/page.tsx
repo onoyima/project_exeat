@@ -19,6 +19,7 @@ import {
 import { useStaff, useStaffExeatRequests } from '@/hooks/use-staff';
 import { ExeatRequestsTable } from '@/components/staff/ExeatRequestsTable';
 import { ExeatRequestFilters } from '@/components/staff/ExeatRequestFilters';
+import { extractRoleName } from '@/lib/utils/csrf';
 import type { StaffExeatRequest } from '@/lib/services/staffApi';
 
 export default function PendingExeatRequestsPage() {
@@ -208,7 +209,7 @@ export default function PendingExeatRequestsPage() {
                             <span className="text-sm font-medium text-slate-600">Your Roles:</span>
                             {profile.exeat_roles.map((role: any) => (
                                 <Badge key={role.id} variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
-                                    {getRoleDisplayName(role.role.name)}
+                                    {getRoleDisplayName(extractRoleName(role))}
                                 </Badge>
                             ))}
                         </div>
