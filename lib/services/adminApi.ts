@@ -1,4 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import type { RootState } from '@/lib/store';
+
+// Get token from Redux state
+const getAuthToken = (getState: () => RootState) => {
+    const state = getState();
+    return state.auth.token;
+};
 
 // Types
 export interface AdminStaffAssignment {
@@ -40,6 +47,18 @@ export const adminApi = createApi({
     reducerPath: 'adminApi',
     baseQuery: fetchBaseQuery({
         baseUrl: '/api/admin',
+        prepareHeaders: (headers, { getState }) => {
+            // Get token from Redux state
+            const token = getAuthToken(getState as () => RootState);
+            if (token) {
+                headers.set('Authorization', `Bearer ${token}`);
+            }
+
+            headers.set('Content-Type', 'application/json');
+            headers.set('Accept', 'application/json');
+            headers.set('X-Requested-With', 'XMLHttpRequest');
+            return headers;
+        },
         credentials: 'include',
     }),
     tagTypes: ['StaffAssignments', 'Roles'],
