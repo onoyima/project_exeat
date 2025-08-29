@@ -1,5 +1,4 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { getCsrfTokenForHeaders, fetchCsrfToken } from '@/lib/utils/csrf';
 import type { RootState } from '@/lib/store';
 
 // Use proxy URL for development, direct URL for production
@@ -22,15 +21,8 @@ export const api = createApi({
                 headers.set('Authorization', `Bearer ${token}`);
             }
 
-            // Get CSRF token from cookies
-            const csrfToken = getCsrfTokenForHeaders();
-            if (csrfToken) {
-                headers.set('X-XSRF-TOKEN', csrfToken);
-            }
-
             headers.set('Content-Type', 'application/json');
             headers.set('Accept', 'application/json');
-            headers.set('X-Requested-With', 'XMLHttpRequest');
             return headers;
         },
         credentials: 'include',
