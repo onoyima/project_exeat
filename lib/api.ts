@@ -36,11 +36,16 @@ export async function apiCall<T = any>(
 ): Promise<ApiResponse<T>> {
   const token = localStorage.getItem('token');
 
+  // Import CSRF utility function
+  const { getCsrfTokenForHeaders } = await import('@/lib/utils/csrf');
+  const csrfToken = getCsrfTokenForHeaders();
+
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
     ...(token && { Authorization: `Bearer ${token}` }),
+    ...(csrfToken && { 'X-XSRF-TOKEN': csrfToken }),
   };
 
   const config: RequestInit = {

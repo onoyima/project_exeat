@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { getProfile } from "@/lib/api";
+import { extractRoleName } from "@/lib/utils/csrf";
 
 export default function StaffProfilePage() {
   const [profile, setProfile] = useState<any>(null);
@@ -76,7 +77,7 @@ export default function StaffProfilePage() {
             {workProfiles && workProfiles.length > 0 ? (
               <ul className="list-disc ml-6">
                 {workProfiles.map((w: any, i: number) => (
-                  <li key={i}>{w.department || w.role || JSON.stringify(w)}</li>
+                  <li key={i}>{w.department || extractRoleName(w.role) || JSON.stringify(w)}</li>
                 ))}
               </ul>
             ) : (

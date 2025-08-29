@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/lib/services/authSlice';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { extractRoleName } from '@/lib/utils/csrf';
 
 const StaffDashboard = () => {
     const currentUser = useSelector(selectCurrentUser);
@@ -14,7 +15,10 @@ const StaffDashboard = () => {
         roles: (currentUser as any)?.roles,
         exeatRoles: (currentUser as any)?.exeat_roles, // Check if exeat_roles exists
         hasAdminRole: (currentUser as any)?.roles?.includes('admin'),
-        hasAdminInExeatRoles: (currentUser as any)?.exeat_roles?.some((role: any) => role.name === 'admin' || role.role?.name === 'admin'),
+        hasAdminInExeatRoles: (currentUser as any)?.exeat_roles?.some((role: any) => {
+            const roleName = extractRoleName(role);
+            return roleName === 'admin';
+        }),
         isAdmin: currentUser?.role === 'admin' || (currentUser as any)?.roles?.includes('admin')
     };
 
@@ -44,11 +48,15 @@ const StaffDashboard = () => {
                                 ) : 'No roles array found'}</div>
                                 <div><strong>Exeat Roles (Raw):</strong> {(currentUser as any)?.exeat_roles ? (
                                     <div className="flex gap-1 mt-1">
-                                        {(currentUser as any).exeat_roles.map((role: any) => (
-                                            <Badge key={role.id} variant={role.role?.name === 'admin' ? 'default' : 'secondary'}>
-                                                {role.role?.name || role.name}
-                                            </Badge>
-                                        ))}
+                                        {(currentUser as any).exeat_roles.map((role: any) => {
+                                            const roleName = extractRoleName(role);
+                                            const isAdmin = roleName === 'admin';
+                                            return (
+                                                <Badge key={role.id} variant={isAdmin ? 'default' : 'secondary'}>
+                                                    {roleName}
+                                                </Badge>
+                                            );
+                                        })}
                                     </div>
                                 ) : 'No exeat_roles found'}</div>
                                 <div><strong>Has Admin Role:</strong>

@@ -18,7 +18,8 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ['var(--font-sans)'],
+        sans: ['var(--font-montserrat)', 'system-ui', 'sans-serif'],
+        'montserrat': ['var(--font-montserrat)', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         'xs': ['0.875rem', { lineHeight: '1.25rem' }],        // 14px

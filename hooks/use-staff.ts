@@ -10,6 +10,7 @@ import {
     useGetExeatStatisticsQuery,
 } from '@/lib/services/staffApi';
 import type { StaffProfile } from '@/types/staff';
+import { extractRoleName } from '@/lib/utils/csrf';
 
 /**
  * Custom hook for staff functionality with role-based access control
@@ -23,7 +24,7 @@ export const useStaff = () => {
     const hasRole = useMemo(() => {
         if (!profile?.exeat_roles) return () => false;
 
-        const roles = profile.exeat_roles.map((role: any) => role.role.name);
+        const roles = profile.exeat_roles.map((role: any) => extractRoleName(role));
 
         return (roleName: string) => roles.includes(roleName);
     }, [profile]);
@@ -142,7 +143,7 @@ export const useStaffDashboard = () => {
 
         const roleStats: Record<string, any> = {};
         profile.exeat_roles.forEach((role: any) => {
-            const roleName = role.role.name;
+            const roleName = extractRoleName(role);
             roleStats[roleName] = statistics.role_specific_stats[roleName] || {
                 pending: 0,
                 approved: 0,

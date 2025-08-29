@@ -47,6 +47,8 @@ export const getStatusText = (status: string) => {
             return 'Approved';
         case 'rejected':
             return 'Not Approved';
+        case 'security_signin':
+            return 'Awaiting Return';
         default:
             return status.split('_').map(word =>
                 word.charAt(0).toUpperCase() + word.slice(1)
@@ -55,5 +57,5 @@ export const getStatusText = (status: string) => {
 };
 
 export const isActiveStatus = (status: string) => {
-    return ['pending', 'recommendation1', 'recommendation2', 'parent_consent', 'dean_approval', 'hostel_approval'].includes(status);
+    return ['pending', 'recommendation1', 'recommendation2', 'parent_consent', 'dean_approval', 'hostel_approval', 'security_signin'].includes(status);
 };

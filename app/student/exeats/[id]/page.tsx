@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, MapPin, User, FileText, Clock, CheckCircle2, XCircle, AlertCircle, Stethoscope, UserCheck, Shield, Building, Home, Activity, LogOut } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, User, FileText, Clock, CheckCircle2, XCircle, AlertCircle, Stethoscope, UserCheck, Shield, Building, Home, Activity, LogOut, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -153,11 +153,11 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
             roleMatch: 'security' // Same as security sign out but indicates departure
         },
         {
-            key: 'approved',
-            label: 'Approved',
-            icon: CheckCircle2,
-            description: 'Ready for departure',
-            roleMatch: null // Final status, not tied to specific approval
+            key: 'security_signin',
+            label: 'Return & Sign In',
+            icon: LogIn,
+            description: 'Student has departed school - awaiting return and security sign-in upon arrival back to campus',
+            roleMatch: 'security' // Security officer will sign student back in
         }
     ];
 
@@ -166,7 +166,20 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
         const stage = workflowStages.find(s => s.key === stageKey);
         if (!stage || !stage.roleMatch) return null;
 
-        // Find approval that matches the role
+        // Special handling for security_signin vs security_signout
+        // Both use the same role but represent different actions
+        if (stageKey === 'security_signin') {
+            // Security sign-in should only have an approval when status is 'completed'
+            // or when there's a specific sign-in approval (not just sign-out)
+            if (exeatRequest.status === 'completed') {
+                return approvals.find(approval => approval.role === stage.roleMatch);
+            }
+            // For security_signin, don't show any approval when status is security_signin
+            // because the student hasn't signed back in yet
+            return null;
+        }
+
+        // For all other stages, find approval that matches the role
         return approvals.find(approval => approval.role === stage.roleMatch);
     };
 
@@ -216,9 +229,21 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
             }
         }
 
-        // If request is fully approved or completed, handle final stages
-        if (exeatRequest.status === 'approved' || exeatRequest.status === 'completed') {
-            return workflowStages.length - 1; // Final stage (approved)
+        // Handle specific statuses first
+        if (exeatRequest.status === 'security_signin') {
+            // Student has departed and is awaiting return and sign-in
+            const signinStageIndex = workflowStages.findIndex(s => s.key === 'security_signin');
+            return signinStageIndex >= 0 ? signinStageIndex : workflowStages.length - 1;
+        }
+
+        if (exeatRequest.status === 'approved') {
+            // Student is approved but hasn't departed yet
+            const departedStageIndex = workflowStages.findIndex(s => s.key === 'departed_school');
+            return departedStageIndex >= 0 ? departedStageIndex : workflowStages.length - 2;
+        }
+
+        if (exeatRequest.status === 'completed') {
+            return workflowStages.length - 1; // Final stage (return & sign in completed)
         }
 
         // If we found approved stages, return the next stage as current
@@ -254,6 +279,42 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
             return 'pending';
         }
 
+        // Handle specific statuses
+        if (exeatRequest.status === 'security_signin') {
+            // Student has departed but not yet returned
+            if (stageKey === 'security_signin') {
+                return 'current'; // Currently awaiting return and sign-in
+            }
+            // All stages up to and including 'departed_school' are completed
+            // (security_signout approval triggers the departed status)
+            const departedSchoolIndex = workflowStages.findIndex(s => s.key === 'departed_school');
+            const securitySignoutIndex = workflowStages.findIndex(s => s.key === 'security_signout');
+            const currentStageIndex = workflowStages.findIndex(s => s.key === stageKey);
+
+            // All stages up to departed_school should be completed when student has departed
+            if (currentStageIndex <= departedSchoolIndex) {
+                return 'completed';
+            }
+            // Stages after departed_school (except security_signin) are pending
+            return 'pending';
+        }
+
+        if (exeatRequest.status === 'approved') {
+            // All approval stages are completed, but departure stages are pending
+            if (stageKey === 'departed_school') {
+                return 'current'; // Ready for departure
+            }
+            if (['security_signout', 'hostel_signout', 'dean_review', 'parent_consent', 'deputy_dean_review', 'cmd_review'].includes(stageKey)) {
+                return 'completed'; // Approval stages are done
+            }
+            return 'pending';
+        }
+
+        if (exeatRequest.status === 'completed') {
+            return 'completed'; // All stages are completed
+        }
+
+        // Default logic for other statuses
         if (index < currentStageIndex) return 'completed';
         if (index === currentStageIndex) return 'current';
         return 'pending';
@@ -396,34 +457,51 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
                                                     </div>
 
                                                     {/* Approval Details with Enhanced Styling */}
-                                                    {approval && (
+                                                    {(approval || stage.key === 'security_signin') && (
                                                         <motion.div
                                                             initial={{ opacity: 0, height: 0 }}
                                                             animate={{ opacity: 1, height: 'auto' }}
                                                             className="border-t pt-3 mt-3 space-y-2"
                                                         >
                                                             <div className="flex items-center gap-3">
-                                                                <Badge
-                                                                    variant={approval.status === 'approved' ? 'default' :
-                                                                        approval.status === 'rejected' ? 'destructive' : 'secondary'}
-                                                                    className={`text-xs ${approval.status === 'approved'
-                                                                        ? 'bg-green-100 text-green-700 border-green-200'
-                                                                        : approval.status === 'rejected'
-                                                                            ? 'bg-red-100 text-red-700 border-red-200'
-                                                                            : 'bg-gray-100 text-gray-700 border-gray-200'
-                                                                        }`}
-                                                                >
-                                                                    {approval.status}
-                                                                </Badge>
-                                                                {getStaffName(approval.staff) && (
-                                                                    <div className="flex items-center gap-1 text-xs text-gray-600">
-                                                                        <User className="h-3 w-3" />
-                                                                        <span>by {getStaffName(approval.staff)}</span>
-                                                                    </div>
-                                                                )}
+                                                                {approval ? (
+                                                                    <>
+                                                                        <Badge
+                                                                            variant={approval.status === 'approved' ? 'default' :
+                                                                                approval.status === 'rejected' ? 'destructive' : 'secondary'}
+                                                                            className={`text-xs ${approval.status === 'approved'
+                                                                                ? 'bg-green-100 text-green-700 border-green-200'
+                                                                                : approval.status === 'rejected'
+                                                                                    ? 'bg-red-100 text-red-700 border-red-200'
+                                                                                    : 'bg-gray-100 text-gray-700 border-gray-200'
+                                                                                }`}
+                                                                        >
+                                                                            {approval.status}
+                                                                        </Badge>
+                                                                        {getStaffName(approval.staff) && (
+                                                                            <div className="flex items-center gap-1 text-xs text-gray-600">
+                                                                                <User className="h-3 w-3" />
+                                                                                <span>by {getStaffName(approval.staff)}</span>
+                                                                            </div>
+                                                                        )}
+                                                                    </>
+                                                                ) : stage.key === 'security_signin' ? (
+                                                                    <>
+                                                                        <Badge
+                                                                            variant="secondary"
+                                                                            className="text-xs bg-orange-100 text-orange-700 border-orange-200"
+                                                                        >
+                                                                            Departed
+                                                                        </Badge>
+                                                                        <div className="flex items-center gap-1 text-xs text-gray-600">
+                                                                            <LogOut className="h-3 w-3" />
+                                                                            <span>Student has left school premises</span>
+                                                                        </div>
+                                                                    </>
+                                                                ) : null}
                                                             </div>
 
-                                                            {approval.comment && (
+                                                            {approval?.comment && (
                                                                 <div className="bg-gray-50 rounded-lg p-3 border-l-2 border-gray-200">
                                                                     <p className="text-xs text-gray-700 italic">
                                                                         "{approval.comment}"
@@ -431,10 +509,19 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
                                                                 </div>
                                                             )}
 
-                                                            <p className="text-xs text-gray-500 flex items-center gap-1">
-                                                                <Clock className="h-3 w-3" />
-                                                                {format(new Date(approval.updated_at), 'PPp')}
-                                                            </p>
+                                                            {approval?.updated_at ? (
+                                                                <p className="text-xs text-gray-500 flex items-center gap-1">
+                                                                    <Clock className="h-3 w-3" />
+                                                                    {format(new Date(approval.updated_at), 'PPp')}
+                                                                </p>
+                                                            ) : (
+                                                                stage.key === 'security_signin' && (
+                                                                    <p className="text-xs text-gray-500 flex items-center gap-1">
+                                                                        <Clock className="h-3 w-3" />
+                                                                        {format(new Date(exeatRequest.created_at), 'PPp')}
+                                                                    </p>
+                                                                )
+                                                            )}
                                                         </motion.div>
                                                     )}
 
@@ -495,24 +582,28 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
                                         <h4 className="font-semibold text-gray-900">Overall Status</h4>
                                         <p className="text-sm text-gray-600">
                                             {exeatRequest.status === 'rejected' ? 'Request has been rejected' :
-                                                workflowStages[currentStageIndex]?.key === 'departed_school' ?
-                                                    `You have departed school premises - expected return on ${exeatRequest.return_date ? format(new Date(exeatRequest.return_date), 'MMM d, yyyy') : 'return date'}` :
-                                                    exeatRequest.status === 'approved' ? 'Request approved - ready for departure' :
-                                                        exeatRequest.status === 'completed' ? 'Request completed successfully' :
-                                                            `Currently at: ${workflowStages[currentStageIndex]?.label || 'Unknown stage'}`}
+                                                exeatRequest.status === 'security_signin' ?
+                                                    `🏫 You have departed school premises - please return by ${exeatRequest.return_date ? format(new Date(exeatRequest.return_date), 'MMM d, yyyy') : 'return date'} and sign in at security` :
+                                                    workflowStages[currentStageIndex]?.key === 'departed_school' ?
+                                                        `You have departed school premises - expected return on ${exeatRequest.return_date ? format(new Date(exeatRequest.return_date), 'MMM d, yyyy') : 'return date'}` :
+                                                        exeatRequest.status === 'approved' ? '✅ All approvals received - ready for departure from school' :
+                                                            exeatRequest.status === 'completed' ? 'Request completed successfully' :
+                                                                `Currently at: ${workflowStages[currentStageIndex]?.label || 'Unknown stage'}`}
                                         </p>
                                     </div>
                                 </div>
                                 <Badge
-                                    variant={exeatRequest.status === 'approved' || exeatRequest.status === 'completed' ? 'default' :
+                                    variant={exeatRequest.status === 'approved' || exeatRequest.status === 'completed' || exeatRequest.status === 'security_signin' ? 'default' :
                                         exeatRequest.status === 'rejected' ? 'destructive' : 'secondary'}
-                                    className={`px-4 py-2 text-sm font-medium ${workflowStages[currentStageIndex]?.key === 'departed_school'
-                                        ? 'bg-blue-100 text-blue-700 border-blue-200'
-                                        : exeatRequest.status === 'approved' || exeatRequest.status === 'completed'
-                                            ? 'bg-green-100 text-green-700 border-green-200'
-                                            : exeatRequest.status === 'rejected'
-                                                ? 'bg-red-100 text-red-700 border-red-200'
-                                                : 'bg-blue-100 text-blue-700 border-blue-200'
+                                    className={`px-4 py-2 text-sm font-medium ${exeatRequest.status === 'security_signin'
+                                        ? 'bg-orange-100 text-orange-700 border-orange-200'
+                                        : workflowStages[currentStageIndex]?.key === 'departed_school'
+                                            ? 'bg-blue-100 text-blue-700 border-blue-200'
+                                            : exeatRequest.status === 'approved' || exeatRequest.status === 'completed'
+                                                ? 'bg-green-100 text-green-700 border-green-200'
+                                                : exeatRequest.status === 'rejected'
+                                                    ? 'bg-red-100 text-red-700 border-red-200'
+                                                    : 'bg-blue-100 text-blue-700 border-blue-200'
                                         }`}
                                 >
                                     {workflowStages[currentStageIndex]?.key === 'departed_school' ? 'Awaiting Return' : getStatusText(exeatRequest.status)}
@@ -643,29 +734,6 @@ export default function ExeatDetailsPage() {
                 <div>
                     <h1 className="text-3xl font-bold">Exeat Request Details</h1>
                 </div>
-            </motion.div>
-
-            {/* Status Card */}
-            <motion.div variants={fadeIn}>
-                <Card className="mb-6">
-                    <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <StatusIcon className={`h-6 w-6 ${getStatusColor(exeat.status)}`} />
-                                <div>
-                                    <h3 className="font-semibold">Status</h3>
-                                    <p className="text-sm text-muted-foreground">Current request status</p>
-                                </div>
-                            </div>
-                            <Badge
-                                variant="outline"
-                                className={`${getStatusColor(exeat.status)} border-current`}
-                            >
-                                {getStatusText(exeat.status)}
-                            </Badge>
-                        </div>
-                    </CardContent>
-                </Card>
             </motion.div>
 
             {/* Main Content */}

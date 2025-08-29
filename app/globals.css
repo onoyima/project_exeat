@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+
+/* Font Configuration */
+:root {
+  --font-montserrat: 'Montserrat', system-ui, sans-serif;
+}
+
+/* Apply Montserrat font globally */
+@layer base {
+  html {
+    font-family: var(--font-montserrat);
+  }
+
+  body {
+    font-family: var(--font-montserrat);
+  }
+}
+
+/* Font classes for specific usage */
+.font-montserrat {
+  font-family: var(--font-montserrat);
+}
+
 /* Animation Delays */
 @layer utilities {
   .animation-delay-2000 {
@@ -174,6 +196,7 @@ img {
     font-size: 1.5rem;
     /* 24px */
     line-height: 2rem;
+
   }
 
   h4 {
