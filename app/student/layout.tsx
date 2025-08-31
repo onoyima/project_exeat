@@ -27,8 +27,8 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
             currentUser={currentUser}
           />
 
-          <main className="flex-1 relative">
-            <div className="p-4 md:p-6">
+          <main className="flex-1 relative overflow-x-hidden">
+            <div className="p-4 md:p-6 max-w-full overflow-x-hidden">
               {children}
             </div>
           </main>

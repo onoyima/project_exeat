@@ -73,14 +73,14 @@ export function ActionableInsights({ exeatRequests, className, isLoading = false
   }
 
   return (
-    <Card className={cn("p-4 md:p-6", className)} role="region" aria-labelledby="actionable-insights-title">
+    <Card className={cn("p-4 md:p-6 overflow-x-hidden", className)} role="region" aria-labelledby="actionable-insights-title">
       <CardHeader className="pb-4 md:pb-6">
-        <CardTitle 
+        <CardTitle
           id="actionable-insights-title"
-          className="text-lg md:text-xl font-semibold flex items-center gap-3"
+          className="text-lg md:text-xl font-semibold flex items-center gap-3 overflow-x-hidden"
         >
-          <AlertCircle className="h-5 w-5 text-orange-500" aria-hidden="true" />
-          <span>Needs Your Attention</span>
+          <AlertCircle className="h-5 w-5 text-orange-500 flex-shrink-0" aria-hidden="true" />
+          <span className="truncate">Needs Your Attention</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -124,7 +124,7 @@ function ActionableItemCard({ item }: ActionableItemCardProps) {
   const cardContent = (
     <div className={cn(
       "group relative p-4 md:p-6 rounded-lg border-l-4 transition-all duration-200",
-      "hover:shadow-md hover:-translate-y-0.5 cursor-pointer",
+      "hover:shadow-md hover:-translate-y-0.5 cursor-pointer overflow-x-hidden",
       "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
       "touch-manipulation min-h-[100px] md:min-h-[120px]",
       priorityColors[priority]
@@ -139,15 +139,15 @@ function ActionableItemCard({ item }: ActionableItemCardProps) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-w-0 space-y-3 md:space-y-4">
-          <div className="flex items-start justify-between gap-3 md:gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-wrap">
-              <h3 className="text-sm md:text-base font-semibold text-foreground leading-tight">
+        <div className="flex-1 min-w-0 space-y-3 md:space-y-4 overflow-x-hidden">
+          <div className="flex items-start justify-between gap-3 md:gap-4 overflow-x-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-wrap min-w-0 flex-1">
+              <h3 className="text-sm md:text-base font-semibold text-foreground leading-tight truncate">
                 {title}
               </h3>
               {count && count > 0 && (
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   className={cn(
                     "text-xs md:text-sm font-medium px-2 md:px-3 py-1 md:py-1.5 self-start sm:self-auto",
                     priorityBadgeColors[priority]
@@ -158,8 +158,8 @@ function ActionableItemCard({ item }: ActionableItemCardProps) {
               )}
             </div>
           </div>
-          
-          <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+
+          <p className="text-sm md:text-base text-muted-foreground leading-relaxed break-words overflow-wrap-anywhere">
             {description}
           </p>
 
@@ -171,19 +171,19 @@ function ActionableItemCard({ item }: ActionableItemCardProps) {
                 "text-sm md:text-base font-medium p-0 h-auto transition-colors duration-200",
                 "hover:text-primary/80 focus:text-primary/80 touch-manipulation min-h-[48px] flex items-center",
                 priority === 'high' ? 'text-red-600 hover:text-red-700' :
-                priority === 'medium' ? 'text-orange-600 hover:text-orange-700' :
-                'text-blue-600 hover:text-blue-700'
+                  priority === 'medium' ? 'text-orange-600 hover:text-orange-700' :
+                    'text-blue-600 hover:text-blue-700'
               )}
             >
               {action}
             </Button>
-            
+
             <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               <ArrowRight className={cn(
                 "h-4 w-4 md:h-5 md:w-5",
                 priority === 'high' ? 'text-red-600' :
-                priority === 'medium' ? 'text-orange-600' :
-                'text-blue-600'
+                  priority === 'medium' ? 'text-orange-600' :
+                    'text-blue-600'
               )} />
             </div>
           </div>
@@ -194,8 +194,8 @@ function ActionableItemCard({ item }: ActionableItemCardProps) {
 
   if (href) {
     return (
-      <Link 
-        href={href} 
+      <Link
+        href={href}
         className="block"
         aria-label={`${title}: ${description}`}
       >
@@ -206,9 +206,9 @@ function ActionableItemCard({ item }: ActionableItemCardProps) {
 
   if (onClick) {
     return (
-      <div 
-        onClick={onClick} 
-        role="button" 
+      <div
+        onClick={onClick}
+        role="button"
         tabIndex={0}
         aria-label={`${title}: ${description}`}
         onKeyDown={(e) => {
@@ -249,14 +249,14 @@ function generateActionableItems(exeatRequests: ExeatRequest[]): ActionableItem[
   }
 
   // Hostel sign-in/sign-out required - High Priority
-  const hostelRequests = exeatRequests.filter(r => 
+  const hostelRequests = exeatRequests.filter(r =>
     ['hostel_signin', 'hostel_signout'].includes(r.status)
   );
-  
+
   if (hostelRequests.length > 0) {
     const signOutRequests = hostelRequests.filter(r => r.status === 'hostel_signout');
     const signInRequests = hostelRequests.filter(r => r.status === 'hostel_signin');
-    
+
     if (signOutRequests.length > 0) {
       items.push({
         id: 'hostel-signout',
@@ -269,7 +269,7 @@ function generateActionableItems(exeatRequests: ExeatRequest[]): ActionableItem[
         href: '/student/exeats?filter=hostel_signout',
       });
     }
-    
+
     if (signInRequests.length > 0) {
       items.push({
         id: 'hostel-signin',
@@ -285,18 +285,18 @@ function generateActionableItems(exeatRequests: ExeatRequest[]): ActionableItem[
   }
 
   // Requests under review that might need follow-up - Medium Priority
-  const reviewRequests = exeatRequests.filter(r => 
+  const reviewRequests = exeatRequests.filter(r =>
     ['cmd_review', 'deputy-dean_review', 'dean_review'].includes(r.status)
   );
-  
+
   // Check for requests older than 5 days in review
   const fiveDaysAgo = new Date();
   fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
-  
-  const oldReviewRequests = reviewRequests.filter(r => 
+
+  const oldReviewRequests = reviewRequests.filter(r =>
     new Date(r.created_at) < fiveDaysAgo
   );
-  
+
   if (oldReviewRequests.length > 0) {
     items.push({
       id: 'long-review',
@@ -311,10 +311,10 @@ function generateActionableItems(exeatRequests: ExeatRequest[]): ActionableItem[
   }
 
   // Medical requests that might need documentation - Medium Priority
-  const medicalRequests = exeatRequests.filter(r => 
+  const medicalRequests = exeatRequests.filter(r =>
     r.is_medical === 1 && ['pending', 'cmd_review'].includes(r.status)
   );
-  
+
   if (medicalRequests.length > 0) {
     items.push({
       id: 'medical-docs',
@@ -333,12 +333,12 @@ function generateActionableItems(exeatRequests: ExeatRequest[]): ActionableItem[
   tomorrow.setDate(tomorrow.getDate() + 1);
   const nextWeek = new Date();
   nextWeek.setDate(nextWeek.getDate() + 7);
-  
+
   const upcomingDepartures = exeatRequests.filter(r => {
     const departureDate = new Date(r.departure_date);
     return r.status === 'approved' && departureDate >= tomorrow && departureDate <= nextWeek;
   });
-  
+
   if (upcomingDepartures.length > 0) {
     items.push({
       id: 'upcoming-departures',

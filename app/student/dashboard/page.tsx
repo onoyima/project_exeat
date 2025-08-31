@@ -95,6 +95,11 @@ export default function StudentDashboard() {
   // Find active exeat (approved but not completed - user is currently out)
   const activeExeat = exeatRequests.find(r => {
     try {
+      // Skip completed exeats - they shouldn't show countdown
+      if (r.status === 'completed') {
+        return false;
+      }
+
       const currentDate = new Date();
       const departureDate = new Date(r.departure_date);
       const returnDate = new Date(r.return_date);
@@ -117,9 +122,6 @@ export default function StudentDashboard() {
       return false;
     }
   });
-
-  // Fallback: Show any effectively approved exeat for testing
-  const testExeat = exeatRequests.find(r => isEffectivelyApproved(r));
 
   return (
     <div className="space-y-4 md:space-y-6 lg:space-y-8">
@@ -156,7 +158,7 @@ export default function StudentDashboard() {
           {/* Mobile-optimized button placement */}
           <Button
             size="lg"
-            className="h-12 md:h-14 w-full sm:w-auto sm:min-w-[200px] md:min-w-[220px] transition-all duration-200 hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 touch-manipulation text-base px-6"
+            className="h-12 md:h-14 w-full sm:w-auto sm:max-w-[200px] md:max-w-[220px] transition-all duration-200 hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 touch-manipulation text-base px-4 sm:px-6"
             onClick={() => router.push("/student/apply-exeat")}
           >
             <PlusCircle className="mr-2 h-5 w-5" />
@@ -166,28 +168,8 @@ export default function StudentDashboard() {
       </Card>
 
       {/* Active Exeat Countdown Timer */}
-      {(activeExeat || testExeat) ? (
-        <ReturnCountdown exeat={activeExeat || testExeat} />
-      ) : (
-        /* No exeats at all - with debug info */
-        <Card className="p-4 md:p-6 border-2 bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-gray-100">
-                <Timer className="h-6 w-6 text-gray-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg text-gray-900">No Active Exeats</h3>
-                <p className="text-sm text-gray-700">
-                  Check browser console for detailed debug information
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Total exeats: {exeatRequests.length} | Approved: {approvedCount}
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card>
+      {(activeExeat) && (
+        <ReturnCountdown exeat={activeExeat} />
       )}
 
       {/* Statistics Grid with Enhanced Mobile-First Progressive Disclosure */}
@@ -419,7 +401,7 @@ export default function StudentDashboard() {
                         <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-3 sm:gap-x-6 md:gap-x-8 sm:gap-y-3 pt-2">
                           <div className="flex items-center gap-2 md:gap-3 text-sm md:text-base text-muted-foreground min-h-[44px] touch-manipulation">
                             <MapPin className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
-                            <span className="truncate max-w-[200px] md:max-w-[240px] font-medium">{request.destination}</span>
+                            <span className="truncate max-w-[120px] sm:max-w-[200px] md:max-w-[240px] font-medium">{request.destination}</span>
                           </div>
                           <div className="flex items-center gap-2 md:gap-3 text-sm md:text-base text-muted-foreground min-h-[44px] touch-manipulation">
                             <Calendar className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
@@ -651,33 +633,33 @@ function ReturnCountdown({ exeat }: ReturnCountdownProps) {
 
         {!isOverdue && (
           <div className="text-right">
-            <div className="grid grid-cols-3 gap-2 md:gap-4">
-              <div className="text-center">
+            <div className="grid grid-cols-3 gap-1 sm:gap-2 md:gap-4">
+              <div className="text-center min-w-0">
                 <div className={cn(
-                  "text-2xl md:text-3xl font-bold",
+                  "text-xl sm:text-2xl md:text-3xl font-bold",
                   isUrgent ? "text-orange-600" : "text-green-600"
                 )}>
                   {timeLeft.days}
                 </div>
-                <div className="text-xs md:text-sm text-muted-foreground">Days</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Days</div>
               </div>
-              <div className="text-center">
+              <div className="text-center min-w-0">
                 <div className={cn(
-                  "text-2xl md:text-3xl font-bold",
+                  "text-xl sm:text-2xl md:text-3xl font-bold",
                   isUrgent ? "text-orange-600" : "text-green-600"
                 )}>
                   {timeLeft.hours}
                 </div>
-                <div className="text-xs md:text-sm text-muted-foreground">Hours</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Hours</div>
               </div>
-              <div className="text-center">
+              <div className="text-center min-w-0">
                 <div className={cn(
-                  "text-2xl md:text-3xl font-bold",
+                  "text-xl sm:text-2xl md:text-3xl font-bold",
                   isUrgent ? "text-orange-600" : "text-green-600"
                 )}>
                   {timeLeft.minutes}
                 </div>
-                <div className="text-xs md:text-sm text-muted-foreground">Minutes</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Minutes</div>
               </div>
             </div>
           </div>
