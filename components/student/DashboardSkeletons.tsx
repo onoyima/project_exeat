@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils';
 // Main Dashboard Skeleton
 export function DashboardSkeleton() {
   return (
-    <div className="space-y-4 md:space-y-6" role="status" aria-label="Loading dashboard content">
+    <div className="space-y-4 md:space-y-6 overflow-x-hidden" role="status" aria-label="Loading dashboard content">
       <WelcomeSectionSkeleton />
       <ReturnCountdownSkeleton />
       <StatisticsGridSkeleton />
@@ -139,7 +139,7 @@ export function PriorityStatsCardSkeleton() {
     <Card className="border-l-4 border-l-blue-500 h-full flex flex-col transition-all duration-200 min-h-[120px] md:min-h-[140px]">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 flex-shrink-0 p-4 md:p-6">
         {/* Enhanced title skeleton matching responsive text-sm md:text-base */}
-        <Skeleton className="h-3 md:h-4 w-20 md:w-28" />
+        <Skeleton className="h-3 md:h-4 w-16 sm:w-20 md:w-28" />
         {/* Enhanced icon skeleton matching responsive h-4 w-4 md:h-5 md:w-5 */}
         <Skeleton className="h-4 w-4 md:h-5 md:w-5 rounded flex-shrink-0" />
       </CardHeader>
@@ -369,7 +369,7 @@ export function ExeatRequestCardSkeleton() {
   return (
     <div className={cn(
       "group relative p-4 md:p-6 rounded-lg transition-all duration-200",
-      "border border-border/50 hover:border-border",
+      "border border-border/50 hover:border-border overflow-x-hidden",
       "animate-pulse min-h-[120px] md:min-h-[140px]"
     )}>
       <div className="flex items-start gap-4 md:gap-6">
