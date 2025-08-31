@@ -25,7 +25,7 @@ export const api = createApi({
             headers.set('Accept', 'application/json');
             return headers;
         },
-        credentials: 'include',
+        // credentials: 'include',
     }),
     tagTypes: ['Profile', 'ExeatCategories', 'ExeatRequests', 'ExeatRoles', 'Staff'],
     endpoints: () => ({}),

@@ -1,6 +1,3 @@
-/**
- * CSRF Token utilities for Laravel Sanctum
- */
 
 // Helper function to get cookie value
 export const getCookie = (name: string): string | null => {
@@ -21,7 +18,7 @@ export const extractRoleName = (role: any): string => {
     // Handle different role object structures
     if (typeof role === 'string') return role;
     if (typeof role === 'object') {
-        // Handle nested role objects like { role: { name: 'admin' } }
+        // Handle staff role assignment objects like { role: { name: 'admin' } }
         if (role.role && typeof role.role === 'object' && role.role.name) {
             return role.role.name;
         }
@@ -29,51 +26,14 @@ export const extractRoleName = (role: any): string => {
         if (role.name) {
             return role.name;
         }
+        // Handle role objects with display_name like { display_name: 'Admin' }
+        if (role.display_name) {
+            return role.display_name;
+        }
     }
 
     return 'Unknown Role';
 };
 
-// Function to fetch CSRF token from Laravel
-export const fetchCsrfToken = async (baseUrl: string = 'https://attendance.veritas.edu.ng/api'): Promise<string | null> => {
-    try {
-        const response = await fetch(`${baseUrl}/sanctum/csrf-cookie`, {
-            method: 'GET',
-            credentials: 'include',
-        });
 
-        if (response.ok) {
-            // Wait a moment for the cookie to be set
-            await new Promise(resolve => setTimeout(resolve, 100));
-            return getCookie('XSRF-TOKEN') || getCookie('csrf_token');
-        }
-    } catch (error) {
-        console.warn('Failed to fetch CSRF token:', error);
-    }
-    return null;
-};
 
-// Function to ensure CSRF token is available
-export const ensureCsrfToken = async (baseUrl?: string): Promise<string | null> => {
-    let csrfToken = getCookie('XSRF-TOKEN') || getCookie('csrf_token');
-
-    if (!csrfToken) {
-        csrfToken = await fetchCsrfToken(baseUrl);
-    }
-
-    return csrfToken;
-};
-
-// Function to get CSRF token for headers
-export const getCsrfTokenForHeaders = (): string | null => {
-    return getCookie('XSRF-TOKEN') || getCookie('csrf_token');
-};
-
-// Function to initialize CSRF token on app startup
-export const initializeCsrfToken = async (baseUrl?: string): Promise<void> => {
-    try {
-        await ensureCsrfToken(baseUrl);
-    } catch (error) {
-        console.warn('Failed to initialize CSRF token:', error);
-    }
-};

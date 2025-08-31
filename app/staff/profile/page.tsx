@@ -1,242 +1,329 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Alert } from "@/components/ui/alert";
-import { getProfile } from "@/lib/api"; // Assuming getProfile handles both staff and student types
-import { getExeatRoles, assignExeatRoleToStaff } from "@/lib/api";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useGetProfileQuery } from "@/lib/services/authApi";
 import { extractRoleName } from "@/lib/utils/csrf";
-import { User, Mail, Phone, Briefcase, Users, Edit, Building2, CalendarDays } from "lucide-react";
-import Image from "next/image";
+import { useGetCurrentUser } from "@/hooks/use-current-user";
+import { User, Mail, Phone, Briefcase, Users } from "lucide-react";
 
 export default function StaffProfilePage() {
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [exeatRoles, setExeatRoles] = useState<any[]>([]);
-  const [selectedRole, setSelectedRole] = useState("");
-  const [assigning, setAssigning] = useState(false);
-  const [assignError, setAssignError] = useState("");
-  const [assignSuccess, setAssignSuccess] = useState("");
+  // RTK Query hooks
+  const {
+    data: profileData,
+    isLoading: profileLoading,
+    error: profileError
+  } = useGetProfileQuery();
 
-  useEffect(() => {
-    async function fetchProfile() {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await getProfile();
-        if (result.success) {
-          setProfile(result.data.profile);
-        } else {
-          setError(result.error || "Failed to load profile");
-        }
-      } catch (err) {
-        console.error("Error fetching profile:", err);
-        setError("Failed to load profile. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchProfile();
-  }, []);
+  // Get current user for avatar
+  const { user, avatarUrl } = useGetCurrentUser();
 
-  useEffect(() => {
-    async function fetchRoles() {
-      const result = await getExeatRoles();
-      if (result.success && result.data && Array.isArray(result.data.roles)) {
-        setExeatRoles(result.data.roles);
-      }
-    }
-    fetchRoles();
-  }, []);
+  if (profileLoading) {
+    return (
+      <div className="w-full px-4 sm:px-6 lg:px-8 h-full min-h-screen">
+        <div className="pt-6">
+          <div className="space-y-6">
+            {/* Header Skeleton */}
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-4 w-96" />
+            </div>
 
-  async function handleAssignRole() {
-    setAssigning(true);
-    setAssignError("");
-    setAssignSuccess("");
-    try {
-      const staffId = profile.personal.id;
-      const roleId = Number(selectedRole);
-      const result = await assignExeatRoleToStaff(staffId, roleId);
-      if (result.success) {
-        setAssignSuccess("Role assigned successfully.");
-      } else {
-        setAssignError(result.error || "Failed to assign role.");
-      }
-    } catch (e) {
-      setAssignError("Failed to assign role.");
-    } finally {
-      setAssigning(false);
-    }
+            {/* Profile Card Skeleton */}
+            <Card className="p-6">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <Skeleton className="h-20 w-20 rounded-full" />
+                <div className="flex-1 space-y-3">
+                  <Skeleton className="h-8 w-64" />
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-6 w-24" />
+                </div>
+              </div>
+            </Card>
+
+            {/* Info Cards Skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="p-6">
+                <Skeleton className="h-6 w-32 mb-4" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              </Card>
+              <Card className="p-6">
+                <Skeleton className="h-6 w-32 mb-4" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                </div>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  if (loading) return <div className="p-8 text-center text-lg font-medium">Loading staff profile...</div>;
-  if (error) return <Alert variant="destructive" className="m-8">Error: {error}</Alert>;
-  if (!profile) return <div className="p-8 text-center text-lg font-medium text-gray-500">No staff profile data available.</div>;
+  if (profileError) {
+    return (
+      <div className="w-full px-4 sm:px-6 lg:px-8 h-full min-h-screen">
+        <div className="max-w-4xl mx-auto pt-6">
+          <Alert variant="destructive">
+            <AlertTitle>Error Loading Profile</AlertTitle>
+            <AlertDescription>
+              {(profileError as any)?.data?.message || (profileError as any)?.message || "Failed to load profile data"}
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
 
-  const { personal, contacts, work_profiles } = profile;
-  const initials = personal.first_name?.[0]?.toUpperCase() + (personal.last_name?.[0]?.toUpperCase() || "");
+  if (!profileData?.profile) {
+    return (
+      <div className="w-full px-4 sm:px-6 lg:px-8 h-full min-h-screen">
+        <div className="max-w-4xl mx-auto pt-6">
+          <Card className="p-8">
+            <div className="text-center">
+              <User className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-medium text-muted-foreground">No Profile Data</h3>
+              <p className="text-sm text-muted-foreground mt-2">Unable to load staff profile information.</p>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const { personal, contacts, work_profiles } = profileData.profile;
+  // Use user data for initials to match navbar pattern
+  const initials = user ? `${user.fname?.[0] || ''}${user.lname?.[0] || ''}`.toUpperCase() : '';
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8 font-inter">
+    <div className="w-full px-4 sm:px-6 lg:px-8 h-full min-h-screen pt-6">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
+          My Profile
+        </h1>
+        <p className="text-base lg:text-lg text-muted-foreground mt-2">
+          View your personal and work information
+        </p>
+      </div>
+
       {/* Profile Card */}
-      <Card className="flex flex-col md:flex-row items-center gap-6 p-6 shadow-lg rounded-xl bg-white border border-gray-200">
-        <div className="flex-shrink-0">
-          {/* Avatar: Use passport if available, else initials */}
-          {personal.extras?.passport ? (
-            <Image
-              src={`data:image/jpeg;base64,${personal.extras.passport}`}
-              alt="Staff Avatar"
-              width={96}
-              height={96}
-              className="rounded-full border-2 border-blue-500 object-cover shadow-md"
-            />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center text-3xl font-bold text-blue-700 border-2 border-blue-500 shadow-md">
-              {initials}
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <div className="flex-shrink-0">
+              <Avatar className="size-20 border-2 border-primary">
+                <AvatarImage
+                  src={avatarUrl}
+                  alt={user ? `${user.fname} ${user.lname}` : 'User avatar'}
+                />
+                <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
             </div>
-          )}
-        </div>
-        <div className="flex-1 space-y-2">
-          <div className="flex items-center gap-2">
-            <User className="w-6 h-6 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-800">{personal.title} {personal.first_name} {personal.middle_name ? personal.middle_name + ' ' : ''}{personal.last_name}</span>
+
+            <div className="flex-1 text-center sm:text-left">
+              <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
+                {personal.title} {personal.first_name} {personal.middle_name ? personal.middle_name + ' ' : ''}{personal.last_name}
+              </h2>
+
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <div className="flex items-center justify-center sm:justify-start gap-2">
+                  <Mail className="h-4 w-4" />
+                  <span>{personal.contact?.email || 'No email provided'}</span>
+                </div>
+
+                {personal.contact?.phone && (
+                  <div className="flex items-center justify-center sm:justify-start gap-2">
+                    <Phone className="h-4 w-4" />
+                    <span>{personal.contact.phone}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Assigned Roles */}
+              {personal.exeat_roles && personal.exeat_roles.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Assigned Roles:</p>
+                  <div className="flex flex-wrap justify-center sm:justify-start gap-2">
+                    {personal.exeat_roles.map((role: any) => (
+                      <Badge key={role.id} variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                        {extractRoleName(role)}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-gray-600">
-            <Mail className="w-4 h-4" />
-            <span>{personal.contact?.email}</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-600">
-            <Phone className="w-4 h-4" />
-            <span>{personal.contact?.phone || <span className="text-gray-400">-</span>}</span>
-          </div>
-          <button className="mt-4 px-5 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-all duration-200 text-base font-medium shadow-md">
-            <Edit className="w-4 h-4" /> Edit Profile
-          </button>
-        </div>
+        </CardContent>
       </Card>
 
-      {/* Info Sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Assigned Exeat Roles */}
-        <Card className="p-6 shadow-md rounded-xl bg-white border border-gray-200 md:col-span-2">
-          <div className="flex items-center gap-2 mb-4 text-gray-800">
-            <Briefcase className="w-5 h-5 text-green-600" />
-            <h3 className="font-semibold text-lg">Assigned Exeat Roles</h3>
-          </div>
-          {personal.exeat_roles && personal.exeat_roles.length > 0 ? (
-            <ul className="list-disc pl-5">
-              {personal.exeat_roles.map((role: any) => (
-                <li key={role.id} className="mb-1">
-                  <span className="font-medium text-gray-800">{extractRoleName(role)}</span>
-                  {role.description && <span className="text-gray-500 ml-2">- {role.description}</span>}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="text-gray-500">No roles assigned.</div>
-          )}
-        </Card>
-        {/* Personal Details */}
-        <Card className="p-6 shadow-md rounded-xl bg-white border border-gray-200">
-          <div className="flex items-center gap-2 mb-4 text-gray-800">
-            <User className="w-5 h-5 text-blue-600" />
-            <h3 className="font-semibold text-lg">Personal Details</h3>
-          </div>
-          <ul className="space-y-2 text-gray-700">
-            <li><span className="font-medium">Gender:</span> {personal.gender || <span className="text-gray-400">-</span>}</li>
-            <li><span className="font-medium">Date of Birth:</span> {personal.dob || <span className="text-gray-400">-</span>}</li>
-            <li><span className="font-medium">Marital Status:</span> {personal.marital_status || <span className="text-gray-400">-</span>}</li>
-            <li><span className="font-medium">Religion:</span> {personal.religion || <span className="text-gray-400">-</span>}</li>
-            <li><span className="font-medium">Address:</span> {personal.contact?.address || <span className="text-gray-400">-</span>}</li>
-            <li><span className="font-medium">City:</span> {personal.nationality?.city || <span className="text-gray-400">-</span>}</li>
-            <li><span className="font-medium">LGA:</span> {personal.nationality?.lga_name || <span className="text-gray-400">-</span>}</li>
-            <li><span className="font-medium">Nationality:</span> {personal.nationality?.country_id || <span className="text-gray-400">-</span>}</li>
-            <li><span className="font-medium">Status:</span> {personal.extras?.status || <span className="text-gray-400">-</span>}</li>
-          </ul>
+      {/* Information Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Personal Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              Personal Information
+            </CardTitle>
+            <CardDescription>
+              Your personal details and contact information
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 gap-3">
+              <div className="flex justify-between items-center py-2 border-b border-border/50">
+                <span className="text-sm font-medium text-muted-foreground">Full Name</span>
+                <span className="text-sm text-foreground">
+                  {personal.first_name} {personal.middle_name ? personal.middle_name + ' ' : ''}{personal.last_name}
+                </span>
+              </div>
+
+              {personal.contact?.email && (
+                <div className="flex justify-between items-center py-2 border-b border-border/50">
+                  <span className="text-sm font-medium text-muted-foreground">Email</span>
+                  <span className="text-sm text-foreground">{personal.contact.email}</span>
+                </div>
+              )}
+
+              {personal.contact?.phone && (
+                <div className="flex justify-between items-center py-2 border-b border-border/50">
+                  <span className="text-sm font-medium text-muted-foreground">Phone</span>
+                  <span className="text-sm text-foreground">{personal.contact.phone}</span>
+                </div>
+              )}
+
+              {personal.gender && (
+                <div className="flex justify-between items-center py-2 border-b border-border/50">
+                  <span className="text-sm font-medium text-muted-foreground">Gender</span>
+                  <span className="text-sm text-foreground capitalize">{personal.gender}</span>
+                </div>
+              )}
+
+              {personal.dob && (
+                <div className="flex justify-between items-center py-2 border-b border-border/50">
+                  <span className="text-sm font-medium text-muted-foreground">Date of Birth</span>
+                  <span className="text-sm text-foreground">{personal.dob}</span>
+                </div>
+              )}
+
+              {personal.marital_status && (
+                <div className="flex justify-between items-center py-2 border-b border-border/50">
+                  <span className="text-sm font-medium text-muted-foreground">Marital Status</span>
+                  <span className="text-sm text-foreground capitalize">{personal.marital_status}</span>
+                </div>
+              )}
+
+              {personal.contact?.address && (
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-sm font-medium text-muted-foreground">Address</span>
+                  <span className="text-sm text-foreground">{personal.contact.address}</span>
+                </div>
+              )}
+            </div>
+          </CardContent>
         </Card>
 
-        {/* Work Profiles */}
-        <Card className="p-6 shadow-md rounded-xl bg-white border border-gray-200">
-          <div className="flex items-center gap-2 mb-4 text-gray-800">
-            <Briefcase className="w-5 h-5 text-blue-600" />
-            <h3 className="font-semibold text-lg">Work Profiles</h3>
-          </div>
-          {work_profiles && work_profiles.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff Number</th>
-                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grade</th>
-                    {/* <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th> */}
-                    {/* <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th> */}
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {work_profiles.map((workProfile: any, index: number) => (
-                    <tr key={index}>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{workProfile.staff_no || '-'}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{workProfile.department || '-'}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{workProfile.grade || '-'}</td>
-                      {/* <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{workProfile.start_date || '-'}</td> */}
-                      {/* <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{workProfile.end_date || '-'}</td> */}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-gray-400">No work profiles found.</div>
-          )}
-        </Card>
+        {/* Work Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Briefcase className="h-5 w-5 text-primary" />
+              Work Information
+            </CardTitle>
+            <CardDescription>
+              Your work profile and employment details
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {work_profiles && work_profiles.length > 0 ? (
+              <div className="space-y-4">
+                {work_profiles.map((workProfile: any, index: number) => (
+                  <div key={index} className="p-4 bg-muted/30 rounded-lg">
+                    <div className="grid grid-cols-1 gap-2">
+                      {workProfile.staff_no && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-muted-foreground">Staff Number</span>
+                          <span className="text-sm text-foreground font-mono">{workProfile.staff_no}</span>
+                        </div>
+                      )}
 
-        {/* Contacts (e.g., Emergency Contacts) */}
-        <Card className="p-6 shadow-md rounded-xl bg-white border border-gray-200 md:col-span-2">
-          <div className="flex items-center gap-2 mb-4 text-gray-800">
-            <Users className="w-5 h-5 text-blue-600" />
-            <h3 className="font-semibold text-lg">Other Contacts</h3>
-          </div>
-          {contacts && contacts.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Relationship</th>
-                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th scope="col" className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {contacts.map((contact: any, index: number) => (
-                    <tr key={index}>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{contact.name || (contact.surname && contact.other_names ? `${contact.surname} ${contact.other_names}` : '-')}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{contact.relationship || '-'}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{contact.phone_no || '-'}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{contact.email || '-'}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{contact.address || '-'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-gray-400">No additional contacts found.</div>
-          )}
+                      {workProfile.department && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-muted-foreground">Department</span>
+                          <span className="text-sm text-foreground">{workProfile.department}</span>
+                        </div>
+                      )}
+
+                      {workProfile.grade && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-muted-foreground">Grade</span>
+                          <span className="text-sm text-foreground">{workProfile.grade}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-muted-foreground">
+                <Briefcase className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No work profile information available</p>
+              </div>
+            )}
+          </CardContent>
         </Card>
       </div>
-      {/* Exeat Role  */}
-      <Card className="p-6 shadow-md rounded-xl bg-white border border-gray-200 md:col-span-2">
-        <div className="flex items-center gap-2 mb-4 text-gray-800">
-          <Building2 className="w-5 h-5 text-blue-600" />
-          <h3 className="font-semibold text-lg">Assign Exeat Role I have been assigned</h3>
-        </div>
-        <div className="flex flex-col md:flex-row gap-4 items-center">
 
-        </div>
-      </Card>
+      {/* Emergency Contacts */}
+      {contacts && contacts.length > 0 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Emergency Contacts
+            </CardTitle>
+            <CardDescription>
+              Important contacts for emergency situations
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {contacts.map((contact: any, index: number) => (
+                <div key={index} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">
+                      {contact.name || (contact.surname && contact.other_names ? `${contact.surname} ${contact.other_names}` : 'Unknown Contact')}
+                    </p>
+                    {contact.relationship && (
+                      <p className="text-xs text-muted-foreground capitalize">{contact.relationship}</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    {contact.phone_no && (
+                      <p className="text-sm font-medium">{contact.phone_no}</p>
+                    )}
+                    {contact.email && (
+                      <p className="text-xs text-muted-foreground">{contact.email}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

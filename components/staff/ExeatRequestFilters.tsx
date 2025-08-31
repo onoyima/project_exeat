@@ -47,7 +47,7 @@ export const ExeatRequestFilters: React.FC<ExeatRequestFiltersProps> = ({
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
                     {/* Search */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Search</label>
@@ -64,54 +64,54 @@ export const ExeatRequestFilters: React.FC<ExeatRequestFiltersProps> = ({
 
                     {/* Status Filter */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Status</label>
+                        <label className="text-sm font-medium">Approval Status</label>
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
                             <SelectTrigger>
-                                <SelectValue placeholder="All Status" />
+                                <SelectValue placeholder="All statuses" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Status</SelectItem>
-                                <SelectItem value="pending">Pending</SelectItem>
-                                <SelectItem value="approved">Approved</SelectItem>
-                                <SelectItem value="rejected">Rejected</SelectItem>
-                                <SelectItem value="signed_out">Signed Out</SelectItem>
-                                <SelectItem value="signed_in">Signed In</SelectItem>
-                                <SelectItem value="cmd_review">CMD Review</SelectItem>
-                                <SelectItem value="deputy-dean_review">Deputy Dean Review</SelectItem>
+                                <SelectItem value="all">All statuses</SelectItem>
+                                <SelectItem value="pending">⏳ Pending Review</SelectItem>
+                                <SelectItem value="medical">🏥 Medical Review</SelectItem>
+                                <SelectItem value="dean">🎓 Dean Review</SelectItem>
+                                <SelectItem value="approved">✅ Approved & Ready</SelectItem>
+                                <SelectItem value="active">📍 Student Away</SelectItem>
+                                <SelectItem value="rejected">❌ Not Approved</SelectItem>
+                                <SelectItem value="completed">🎉 Request Completed</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
                     {/* Category Filter */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Category</label>
+                        <label className="text-sm font-medium">Leave Type</label>
                         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                             <SelectTrigger>
-                                <SelectValue placeholder="All Categories" />
+                                <SelectValue placeholder="All leave types" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Categories</SelectItem>
-                                <SelectItem value="medical">Medical</SelectItem>
-                                <SelectItem value="casual">Casual</SelectItem>
-                                <SelectItem value="emergency">Emergency</SelectItem>
-                                <SelectItem value="official">Official</SelectItem>
+                                <SelectItem value="all">All leave types</SelectItem>
+                                <SelectItem value="medical">🏥 Medical Leave</SelectItem>
+                                <SelectItem value="casual">🌴 Casual Leave</SelectItem>
+                                <SelectItem value="emergency">🚨 Emergency Leave</SelectItem>
+                                <SelectItem value="official">💼 Official Business</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
                     {/* Date Filter */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Date Range</label>
+                        <label className="text-sm font-medium">Request Date</label>
                         <Select value={dateFilter} onValueChange={setDateFilter}>
                             <SelectTrigger>
-                                <SelectValue placeholder="All Dates" />
+                                <SelectValue placeholder="All time periods" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Dates</SelectItem>
-                                <SelectItem value="today">Today</SelectItem>
-                                <SelectItem value="week">This Week</SelectItem>
-                                <SelectItem value="month">This Month</SelectItem>
-                                <SelectItem value="quarter">This Quarter</SelectItem>
+                                <SelectItem value="all">All time periods</SelectItem>
+                                <SelectItem value="today">📅 Today</SelectItem>
+                                <SelectItem value="week">📊 This Week</SelectItem>
+                                <SelectItem value="month">📈 This Month</SelectItem>
+                                <SelectItem value="quarter">📉 This Quarter</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -120,31 +120,34 @@ export const ExeatRequestFilters: React.FC<ExeatRequestFiltersProps> = ({
                 {/* Active Filters Display */}
                 {hasActiveFilters && (
                     <div className="mt-4 pt-4 border-t">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-medium">Active Filters:</span>
+                                <span className="text-sm font-medium text-slate-700 whitespace-nowrap">🔍 Active Filters:</span>
                                 {searchTerm && (
-                                    <Badge variant="secondary" className="flex items-center gap-1">
-                                        <Search className="h-4 w-4" />
-                                        {searchTerm}
+                                    <Badge variant="secondary" className="flex items-center gap-1 bg-blue-100 text-blue-800 text-xs">
+                                        <Search className="h-3 w-3" />
+                                        "{searchTerm}"
                                     </Badge>
                                 )}
                                 {statusFilter !== 'all' && (
-                                    <Badge variant="secondary" className="flex items-center gap-1">
-                                        <Clock className="h-4 w-4" />
-                                        {statusFilter}
+                                    <Badge variant="secondary" className="flex items-center gap-1 bg-orange-100 text-orange-800 text-xs">
+                                        <Clock className="h-3 w-3" />
+                                        {statusFilter.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                     </Badge>
                                 )}
                                 {categoryFilter !== 'all' && (
-                                    <Badge variant="secondary" className="flex items-center gap-1">
-                                        <MapPin className="h-4 w-4" />
-                                        {categoryFilter}
+                                    <Badge variant="secondary" className="flex items-center gap-1 bg-green-100 text-green-800 text-xs">
+                                        <MapPin className="h-3 w-3" />
+                                        {categoryFilter.charAt(0).toUpperCase() + categoryFilter.slice(1)} Leave
                                     </Badge>
                                 )}
                                 {dateFilter !== 'all' && (
-                                    <Badge variant="secondary" className="flex items-center gap-1">
-                                        <Calendar className="h-4 w-4" />
-                                        {dateFilter}
+                                    <Badge variant="secondary" className="flex items-center gap-1 bg-purple-100 text-purple-800 text-xs">
+                                        <Calendar className="h-3 w-3" />
+                                        {dateFilter === 'today' ? 'Today' :
+                                            dateFilter === 'week' ? 'This Week' :
+                                                dateFilter === 'month' ? 'This Month' :
+                                                    dateFilter === 'quarter' ? 'This Quarter' : dateFilter}
                                     </Badge>
                                 )}
                             </div>
@@ -152,8 +155,9 @@ export const ExeatRequestFilters: React.FC<ExeatRequestFiltersProps> = ({
                                 variant="outline"
                                 size="sm"
                                 onClick={onClearFilters}
+                                className="border-slate-300 hover:bg-slate-100 self-start sm:self-auto"
                             >
-                                Clear All
+                                ✕ Clear All
                             </Button>
                         </div>
                     </div>

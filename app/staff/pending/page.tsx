@@ -15,6 +15,10 @@ import {
     Filter,
     FileText,
     Stethoscope,
+    CheckCircle2,
+    MapPin,
+    XCircle,
+    CheckCircle,
 } from 'lucide-react';
 import { useStaff, useStaffExeatRequests } from '@/hooks/use-staff';
 import { ExeatRequestsTable } from '@/components/staff/ExeatRequestsTable';
@@ -39,7 +43,7 @@ export default function PendingExeatRequestsPage() {
         signStudentIn
     } = useStaff();
 
-    const { data: allRequests, isLoading, refetch } = useStaffExeatRequests(statusFilter);
+    const { data: allRequests, isLoading, refetch } = useStaffExeatRequests();
 
     // Derive filtered and dated requests
     const requests = (allRequests || [])
@@ -55,6 +59,24 @@ export default function PendingExeatRequestsPage() {
                 request.parent_surname.toLowerCase().includes(s) ||
                 request.parent_othernames.toLowerCase().includes(s)
             );
+        })
+        .filter((request: StaffExeatRequest) => {
+            // Status filter - using grouped logic matching the stats cards
+            if (statusFilter !== 'all') {
+                const status = request.status;
+                const statusGroups = {
+                    pending: ['pending', 'recommendation1', 'recommendation2'],
+                    medical: ['cmd_review'],
+                    dean: ['deputy-dean_review', 'parent_consent', 'dean_review'],
+                    approved: ['approved', 'hostel_signin', 'hostel_signout', 'security_signout'],
+                    active: ['signed_out', 'security_signin'],
+                    rejected: ['rejected'],
+                    completed: ['completed']
+                };
+
+                return statusGroups[statusFilter as keyof typeof statusGroups]?.includes(status) ?? true;
+            }
+            return true;
         })
         .filter((request: StaffExeatRequest) => {
             if (dateFilter === 'all') return true;
@@ -152,16 +174,59 @@ export default function PendingExeatRequestsPage() {
         return roleMap[roleName] || roleName.replace('_', ' ').toUpperCase();
     };
 
-    const getStatusCounts = () => {
-        if (!requests) return { pending: 0, approved: 0, rejected: 0, signed_out: 0, cmd_review: 0, 'deputy-dean_review': 0 };
+    const getGroupedStatusCounts = () => {
+        if (!allRequests) return {
+            total: 0,
+            pending: 0,
+            medical: 0,
+            dean: 0,
+            approved: 0,
+            active: 0,
+            rejected: 0,
+            completed: 0
+        };
 
-        return requests.reduce((acc: Record<string, number>, request: StaffExeatRequest) => {
-            acc[request.status as keyof typeof acc] = (acc[request.status as keyof typeof acc] || 0) + 1;
+        const counts = allRequests.reduce((acc: Record<string, number>, request: StaffExeatRequest) => {
+            const status = request.status;
+
+            // Total count
+            acc.total += 1;
+
+            // Grouped status counts
+            if (['pending', 'recommendation1', 'recommendation2'].includes(status)) {
+                acc.pending += 1;
+            } else if (status === 'cmd_review') {
+                acc.medical += 1;
+            } else if (['deputy-dean_review', 'parent_consent', 'dean_review'].includes(status)) {
+                acc.dean += 1;
+            } else if (['approved', 'hostel_signin', 'hostel_signout', 'security_signout'].includes(status)) {
+                acc.approved += 1;
+            } else if (['signed_out', 'security_signin'].includes(status)) {
+                acc.active += 1;
+            } else if (status === 'rejected') {
+                acc.rejected += 1;
+            } else if (status === 'completed') {
+                acc.completed += 1;
+            }
+
             return acc;
-        }, { pending: 0, approved: 0, rejected: 0, signed_out: 0, cmd_review: 0, 'deputy-dean_review': 0 });
+        }, {
+            total: 0,
+            pending: 0,
+            medical: 0,
+            dean: 0,
+            approved: 0,
+            active: 0,
+            rejected: 0,
+            completed: 0
+        });
+
+        return counts;
     };
 
-    const statusCounts = getStatusCounts();
+    const groupedStatusCounts = getGroupedStatusCounts();
+
+    const hasActiveFilters = searchTerm || statusFilter !== 'all' || dateFilter !== 'all' || categoryFilter !== 'all';
 
     const handleClearFilters = () => {
         setSearchTerm('');
@@ -179,25 +244,27 @@ export default function PendingExeatRequestsPage() {
         <ProtectedRoute requiredRole="staff">
             <div className="w-full px-4 sm:px-6 lg:px-8 h-full min-h-screen">
                 {/* Header */}
-                <div className="mb-8 pt-6">
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-2">
-                            <h1 className="text-4xl font-bold">
-                                Pending Exeat Requests
+                <div className="mb-6 lg:mb-8 pt-4 lg:pt-6">
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 lg:gap-6">
+                        <div className="space-y-2 flex-1 min-w-0">
+                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">
+                                My Exeat Requests
                             </h1>
-                            <p className="text-lg text-slate-600 max-w-2xl">
-                                Review and manage exeat requests based on your roles. Filter, search, and take actions on student requests efficiently.
+                            <p className="text-base lg:text-lg text-slate-600 max-w-4xl">
+                                Review and manage exeat requests assigned to your roles. Monitor request progress, approve or reject applications,
+                                sign students in/out, and track student accommodation details. Use the filters below to narrow down requests by status,
+                                leave type, or time period for efficient management.
                             </p>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 lg:flex-shrink-0">
                             <Button
                                 variant="outline"
-                                size="lg"
+                                size="default"
                                 onClick={() => refetch()}
                                 disabled={isLoading}
-                                className="border-slate-300 hover:bg-slate-100 transition-colors"
+                                className="border-slate-300 hover:bg-slate-100 transition-colors w-full sm:w-auto"
                             >
-                                <RefreshCw className={`h-5 w-5 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                                 Refresh
                             </Button>
                         </div>
@@ -205,70 +272,142 @@ export default function PendingExeatRequestsPage() {
 
                     {/* Role Badges */}
                     {profile?.exeat_roles && (
-                        <div className="flex gap-3 mt-6">
-                            <span className="text-sm font-medium text-slate-600">Your Roles:</span>
-                            {profile.exeat_roles.map((role: any) => (
-                                <Badge key={role.id} variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
-                                    {getRoleDisplayName(extractRoleName(role))}
-                                </Badge>
-                            ))}
+                        <div className="mt-4 lg:mt-6">
+                            <div className="flex flex-wrap items-center gap-2 lg:gap-3">
+                                <span className="text-sm font-medium text-slate-600 whitespace-nowrap">Your Roles:</span>
+                                <div className="flex flex-wrap gap-2">
+                                    {profile.exeat_roles.map((role: any) => (
+                                        <Badge
+                                            key={role.id}
+                                            variant="secondary"
+                                            className="bg-blue-100 text-blue-800 border-blue-200 px-2 lg:px-3 py-1 text-xs lg:text-sm"
+                                        >
+                                            {getRoleDisplayName(extractRoleName(role))}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
 
                 {/* Statistics Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-8 gap-3 lg:gap-4 mb-6 lg:mb-8">
                     <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                        <CardContent className="p-6">
+                        <CardContent className="p-3 lg:p-4">
                             <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-slate-600">Total Requests</p>
-                                    <p className="text-3xl font-bold text-slate-800">{requests?.length || 0}</p>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">Total</p>
+                                    <p className="text-xl lg:text-2xl font-bold text-slate-800">{groupedStatusCounts.total}</p>
+                                    <p className="text-xs text-slate-500 mt-1 hidden sm:block">All requests</p>
                                 </div>
-                                <div className="p-3 bg-blue-100 rounded-full">
-                                    <FileText className="h-6 w-6 text-blue-600" />
+                                <div className="p-1.5 lg:p-2 bg-blue-100 rounded-full flex-shrink-0">
+                                    <FileText className="h-4 w-4 lg:h-5 lg:w-5 text-blue-600" />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                        <CardContent className="p-6">
+                        <CardContent className="p-3 lg:p-4">
                             <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-slate-600">Pending</p>
-                                    <p className="text-3xl font-bold text-orange-600">{statusCounts.pending}</p>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">Pending</p>
+                                    <p className="text-xl lg:text-2xl font-bold text-orange-600">{groupedStatusCounts.pending}</p>
+                                    <p className="text-xs text-slate-500 mt-1 hidden sm:block">Awaiting review</p>
                                 </div>
-                                <div className="p-3 bg-orange-100 rounded-full">
-                                    <Clock className="h-6 w-6 text-orange-600" />
+                                <div className="p-1.5 lg:p-2 bg-orange-100 rounded-full flex-shrink-0">
+                                    <Clock className="h-4 w-4 lg:h-5 lg:w-5 text-orange-600" />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                        <CardContent className="p-6">
+                        <CardContent className="p-3 lg:p-4">
                             <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-slate-600">CMD Review</p>
-                                    <p className="text-3xl font-bold text-purple-600">{statusCounts.cmd_review}</p>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">Medical</p>
+                                    <p className="text-xl lg:text-2xl font-bold text-purple-600">{groupedStatusCounts.medical}</p>
+                                    <p className="text-xs text-slate-500 mt-1 hidden sm:block">CMD review</p>
                                 </div>
-                                <div className="p-3 bg-purple-100 rounded-full">
-                                    <Stethoscope className="h-6 w-6 text-purple-600" />
+                                <div className="p-1.5 lg:p-2 bg-purple-100 rounded-full flex-shrink-0">
+                                    <Stethoscope className="h-4 w-4 lg:h-5 lg:w-5 text-purple-600" />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                        <CardContent className="p-6">
+                        <CardContent className="p-3 lg:p-4">
                             <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-slate-600">Deputy Dean</p>
-                                    <p className="text-3xl font-bold text-indigo-600">{statusCounts['deputy-dean_review']}</p>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">Dean</p>
+                                    <p className="text-xl lg:text-2xl font-bold text-indigo-600">{groupedStatusCounts.dean}</p>
+                                    <p className="text-xs text-slate-500 mt-1 hidden sm:block">Academic review</p>
                                 </div>
-                                <div className="p-3 bg-indigo-100 rounded-full">
-                                    <User className="h-6 w-6 text-indigo-600" />
+                                <div className="p-1.5 lg:p-2 bg-indigo-100 rounded-full flex-shrink-0">
+                                    <User className="h-4 w-4 lg:h-5 lg:w-5 text-indigo-600" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        <CardContent className="p-3 lg:p-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">Approved</p>
+                                    <p className="text-xl lg:text-2xl font-bold text-green-600">{groupedStatusCounts.approved}</p>
+                                    <p className="text-xs text-slate-500 mt-1 hidden sm:block">Ready to depart</p>
+                                </div>
+                                <div className="p-1.5 lg:p-2 bg-green-100 rounded-full flex-shrink-0">
+                                    <CheckCircle2 className="h-4 w-4 lg:h-5 lg:w-5 text-green-600" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        <CardContent className="p-3 lg:p-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">Active</p>
+                                    <p className="text-xl lg:text-2xl font-bold text-blue-600">{groupedStatusCounts.active}</p>
+                                    <p className="text-xs text-slate-500 mt-1 hidden sm:block">Students away</p>
+                                </div>
+                                <div className="p-1.5 lg:p-2 bg-blue-100 rounded-full flex-shrink-0">
+                                    <MapPin className="h-4 w-4 lg:h-5 lg:w-5 text-blue-600" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        <CardContent className="p-3 lg:p-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">Rejected</p>
+                                    <p className="text-xl lg:text-2xl font-bold text-red-600">{groupedStatusCounts.rejected}</p>
+                                    <p className="text-xs text-slate-500 mt-1 hidden sm:block">Not approved</p>
+                                </div>
+                                <div className="p-1.5 lg:p-2 bg-red-100 rounded-full flex-shrink-0">
+                                    <XCircle className="h-4 w-4 lg:h-5 lg:w-5 text-red-600" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        <CardContent className="p-3 lg:p-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">Completed</p>
+                                    <p className="text-xl lg:text-2xl font-bold text-emerald-600">{groupedStatusCounts.completed}</p>
+                                    <p className="text-xs text-slate-500 mt-1 hidden sm:block">Request finished</p>
+                                </div>
+                                <div className="p-1.5 lg:p-2 bg-emerald-100 rounded-full flex-shrink-0">
+                                    <CheckCircle className="h-4 w-4 lg:h-5 lg:w-5 text-emerald-600" />
                                 </div>
                             </div>
                         </CardContent>
@@ -276,7 +415,7 @@ export default function PendingExeatRequestsPage() {
                 </div>
 
                 {/* Filters Toolbar */}
-                <div className="mb-6">
+                <div className="mb-4 lg:mb-6">
                     <div className="flex-1 w-full">
                         <ExeatRequestFilters
                             searchTerm={searchTerm}
@@ -290,36 +429,25 @@ export default function PendingExeatRequestsPage() {
                             onClearFilters={handleClearFilters}
                         />
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleClearFilters}
-                            className="border-slate-300 hover:bg-slate-100"
-                        >
-                            <Filter className="h-4 w-4 mr-2" />
-                            Clear Filters
-                        </Button>
-                    </div>
                 </div>
 
                 {/* Content */}
-                <div className="space-y-6">
+                <div className="space-y-4 lg:space-y-6">
                     {isLoading ? (
-                        <div className="space-y-4">
+                        <div className="space-y-3 lg:space-y-4">
                             {[...Array(5)].map((_, i) => (
                                 <Card key={i} className="bg-white/80 backdrop-blur-sm border-slate-200">
-                                    <CardContent className="p-6">
+                                    <CardContent className="p-4 lg:p-6">
                                         <div className="flex items-center space-x-4">
-                                            <Skeleton className="h-12 w-12 rounded-full" />
+                                            <Skeleton className="h-10 w-10 lg:h-12 lg:w-12 rounded-full" />
                                             <div className="space-y-2 flex-1">
                                                 <Skeleton className="h-4 w-1/4" />
                                                 <Skeleton className="h-4 w-1/2" />
                                                 <Skeleton className="h-4 w-3/4" />
                                             </div>
                                             <div className="space-y-2">
-                                                <Skeleton className="h-8 w-20" />
-                                                <Skeleton className="h-8 w-20" />
+                                                <Skeleton className="h-6 lg:h-8 w-16 lg:w-20" />
+                                                <Skeleton className="h-6 lg:h-8 w-16 lg:w-20" />
                                             </div>
                                         </div>
                                     </CardContent>
@@ -328,10 +456,10 @@ export default function PendingExeatRequestsPage() {
                         </div>
                     ) : requests && requests.length > 0 ? (
                         <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-sm">
-                            <CardHeader className="pb-4">
-                                <div className="flex items-center justify-between">
+                            <CardHeader className="pb-3 lg:pb-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                     <div>
-                                        <CardDescription className="text-slate-600">
+                                        <CardDescription className="text-slate-600 text-sm">
                                             Showing {requests.length} request{requests.length !== 1 ? 's' : ''}
                                             {statusFilter !== 'all' && ` with status "${statusFilter}"`}
                                         </CardDescription>
@@ -351,27 +479,39 @@ export default function PendingExeatRequestsPage() {
                         </Card>
                     ) : (
                         <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-sm">
-                            <CardContent className="flex flex-col items-center justify-center py-16">
-                                <div className="p-4 bg-slate-100 rounded-full mb-6">
-                                    <AlertCircle className="h-12 w-12 text-slate-400" />
+                            <CardContent className="flex flex-col items-center justify-center py-12 lg:py-16 px-4">
+                                <div className="p-4 bg-slate-100 rounded-full mb-4 lg:mb-6">
+                                    <AlertCircle className="h-10 w-10 lg:h-12 lg:w-12 text-slate-400" />
                                 </div>
-                                <h3 className="text-xl font-semibold text-slate-800 mb-2">No requests found</h3>
-                                <p className="text-slate-600 text-center max-w-md mb-6">
-                                    {statusFilter !== 'all'
-                                        ? `No requests with status "${statusFilter}" found. Try adjusting your filters or check back later.`
-                                        : 'No exeat requests are currently available for your role. Check back later for new requests.'
+                                <h3 className="text-lg lg:text-xl font-semibold text-slate-800 mb-2 text-center">
+                                    {hasActiveFilters ? 'No requests match your filters' : 'All caught up! 🎉'}
+                                </h3>
+                                <p className="text-slate-600 text-center max-w-lg mb-4 lg:mb-6 text-sm lg:text-base">
+                                    {hasActiveFilters
+                                        ? 'No requests match your current search criteria. Try adjusting your filters to see more results, or clear all filters to view all requests.'
+                                        : 'You currently have no exeat requests requiring your attention. All requests have been processed or are being handled by other staff members. New requests will appear here automatically.'
                                     }
                                 </p>
-                                {statusFilter !== 'all' && (
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    {hasActiveFilters && (
+                                        <Button
+                                            variant="outline"
+                                            onClick={handleClearFilters}
+                                            className="border-slate-300 hover:bg-slate-100 w-full sm:w-auto"
+                                        >
+                                            <Filter className="h-4 w-4 mr-2" />
+                                            Clear Filters
+                                        </Button>
+                                    )}
                                     <Button
                                         variant="outline"
-                                        onClick={() => setStatusFilter('all')}
-                                        className="border-slate-300 hover:bg-slate-100"
+                                        onClick={() => refetch()}
+                                        className="border-slate-300 hover:bg-slate-100 w-full sm:w-auto"
                                     >
-                                        <Filter className="h-4 w-4 mr-2" />
-                                        Clear Filters
+                                        <RefreshCw className="h-4 w-4 mr-2" />
+                                        Refresh
                                     </Button>
-                                )}
+                                </div>
                             </CardContent>
                         </Card>
                     )}

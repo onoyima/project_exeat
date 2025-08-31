@@ -24,6 +24,7 @@ export function DashboardSkeleton() {
   return (
     <div className="space-y-4 md:space-y-6" role="status" aria-label="Loading dashboard content">
       <WelcomeSectionSkeleton />
+      <ReturnCountdownSkeleton />
       <StatisticsGridSkeleton />
       <ActionableInsightsSkeleton />
       <QuickActionsAndInfoSkeleton />
@@ -51,6 +52,61 @@ export function WelcomeSectionSkeleton() {
         </div>
         {/* Enhanced button skeleton matching responsive size with proper mobile width */}
         <Skeleton className="h-12 md:h-14 w-full sm:w-48 md:w-56 rounded-md" />
+      </div>
+    </Card>
+  );
+}
+
+// Return Countdown Skeleton
+export function ReturnCountdownSkeleton() {
+  return (
+    <Card className={cn(
+      "p-4 md:p-6 border-2 transition-all duration-300",
+      "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-green-100"
+    )}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          {/* Icon skeleton */}
+          <div className="p-3 rounded-full bg-green-100">
+            <Skeleton className="h-6 w-6 rounded" />
+          </div>
+          <div className="space-y-2">
+            {/* Title skeleton */}
+            <Skeleton className="h-6 md:h-7 w-48 md:w-56" />
+            {/* Description skeleton */}
+            <Skeleton className="h-4 md:h-5 w-64 md:w-80" />
+          </div>
+        </div>
+
+        {/* Countdown timer skeleton */}
+        <div className="text-right">
+          <div className="grid grid-cols-3 gap-2 md:gap-4">
+            <div className="text-center">
+              <Skeleton className="h-8 md:h-9 w-8 md:w-10 mx-auto mb-1" />
+              <div className="text-xs md:text-sm text-muted-foreground">
+                <Skeleton className="h-3 w-8 mx-auto" />
+              </div>
+            </div>
+            <div className="text-center">
+              <Skeleton className="h-8 md:h-9 w-8 md:w-10 mx-auto mb-1" />
+              <div className="text-xs md:text-sm text-muted-foreground">
+                <Skeleton className="h-3 w-10 mx-auto" />
+              </div>
+            </div>
+            <div className="text-center">
+              <Skeleton className="h-8 md:h-9 w-8 md:w-10 mx-auto mb-1" />
+              <div className="text-xs md:text-sm text-muted-foreground">
+                <Skeleton className="h-3 w-12 mx-auto" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress bar skeleton */}
+      <div className="mt-4">
+        <Skeleton className="w-full h-2 rounded-full" />
+        <Skeleton className="h-3 w-48 mt-1 mx-auto" />
       </div>
     </Card>
   );
@@ -118,12 +174,12 @@ export function OutcomeStatsCardSkeleton() {
 }
 
 // Actionable Insights Skeleton
-export function ActionableInsightsSkeleton({ 
-  className, 
-  itemCount = 2 
-}: { 
-  className?: string; 
-  itemCount?: number; 
+export function ActionableInsightsSkeleton({
+  className,
+  itemCount = 2
+}: {
+  className?: string;
+  itemCount?: number;
 }) {
   return (
     <Card className={cn("p-4 md:p-6", className)} role="region" aria-label="Loading actionable insights">
@@ -147,10 +203,10 @@ export function ActionableInsightsSkeleton({
 }
 
 // Actionable Item Skeleton
-export function ActionableItemSkeleton({ 
-  priority = 'medium' 
-}: { 
-  priority?: 'high' | 'medium' | 'low'; 
+export function ActionableItemSkeleton({
+  priority = 'medium'
+}: {
+  priority?: 'high' | 'medium' | 'low';
 }) {
   const priorityColors = {
     high: 'border-l-red-500 bg-red-50/50',
@@ -189,7 +245,7 @@ export function ActionableItemSkeleton({
               <Skeleton className="h-4 md:h-5 w-6 md:w-8 rounded-full" />
             </div>
           </div>
-          
+
           {/* Enhanced description skeleton matching responsive text-sm md:text-base leading-relaxed */}
           <Skeleton className="h-4 md:h-5 w-full" />
           <Skeleton className="h-4 md:h-5 w-3/4" /> {/* Second line for longer descriptions */}
@@ -256,7 +312,7 @@ export function StudentInfoSkeleton() {
             <InfoItemSkeleton key={`essential-${i}`} />
           ))}
         </div>
-        
+
         {/* Progressive Disclosure Section Skeleton - Level 2 */}
         <div className="pt-4 md:pt-6 space-y-4 border-t border-border/50" role="region" aria-label="Loading additional student details">
           {[...Array(2)].map((_, i) => (
@@ -380,11 +436,11 @@ export function ExeatRequestCardSkeleton() {
 // Additional Utility Skeleton Components for Enhanced Loading States
 
 // Generic Card Skeleton for consistent loading states
-export function GenericCardSkeleton({ 
+export function GenericCardSkeleton({
   className,
   hasHeader = true,
   hasDescription = true,
-  contentLines = 3 
+  contentLines = 3
 }: {
   className?: string;
   hasHeader?: boolean;
@@ -412,9 +468,9 @@ export function GenericCardSkeleton({
 }
 
 // Button Skeleton for consistent button loading states
-export function ButtonSkeleton({ 
+export function ButtonSkeleton({
   size = 'default',
-  className 
+  className
 }: {
   size?: 'sm' | 'default' | 'lg';
   className?: string;
@@ -435,9 +491,9 @@ export function ButtonSkeleton({
 }
 
 // Badge Skeleton for consistent badge loading states
-export function BadgeSkeleton({ 
+export function BadgeSkeleton({
   size = 'default',
-  className 
+  className
 }: {
   size?: 'sm' | 'default' | 'lg';
   className?: string;
@@ -458,9 +514,9 @@ export function BadgeSkeleton({
 }
 
 // Avatar Skeleton for consistent avatar loading states
-export function AvatarSkeleton({ 
+export function AvatarSkeleton({
   size = 'default',
-  className 
+  className
 }: {
   size?: 'sm' | 'default' | 'lg' | 'xl';
   className?: string;
@@ -482,7 +538,7 @@ export function AvatarSkeleton({
 }
 
 // Text Skeleton for consistent text loading states
-export function TextSkeleton({ 
+export function TextSkeleton({
   lines = 1,
   className,
   variant = 'body'
@@ -505,12 +561,12 @@ export function TextSkeleton({
   return (
     <div className={cn("space-y-2", className)}>
       {[...Array(lines)].map((_, i) => (
-        <Skeleton 
-          key={i} 
+        <Skeleton
+          key={i}
           className={cn(
             variantClasses[variant],
             i === lines - 1 ? "w-3/4" : "w-full"
-          )} 
+          )}
         />
       ))}
     </div>

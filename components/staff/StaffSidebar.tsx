@@ -57,9 +57,29 @@ export default function StaffSidebar({
   };
 
   // Determine if user has admin privileges
-  const isAdmin = user?.role === 'admin' ||
-    (user as any)?.roles?.includes('admin') ||
-    user?.role === 'super-admin';
+  const hasAdminRole = (user: any): boolean => {
+    // Check top-level role
+    if (user?.role === 'admin' || user?.role === 'super-admin') {
+      return true;
+    }
+
+    // Check roles array (should contain string role names)
+    if (Array.isArray(user?.roles) && user.roles.includes('admin')) {
+      return true;
+    }
+
+    // Check exeat_roles for admin role (fallback for older data structures)
+    if (Array.isArray(user?.exeat_roles)) {
+      return user.exeat_roles.some((roleObj: any) =>
+        roleObj?.role?.name === 'admin' ||
+        roleObj?.role?.display_name?.toLowerCase() === 'super admin'
+      );
+    }
+
+    return false;
+  };
+
+  const isAdmin = hasAdminRole(user);
 
   const NavLink = ({ href, icon: Icon, children }: { href: string; icon: any; children: React.ReactNode }) => {
     const active = isLinkActive(href);
@@ -130,7 +150,7 @@ export default function StaffSidebar({
             </NavLink>
 
             <NavLink href="/staff/pending" icon={Clock}>
-              Pending Exeats
+              Exeat Requests
             </NavLink>
 
             <NavLink href="/staff/history" icon={History}>
@@ -150,9 +170,6 @@ export default function StaffSidebar({
                 </NavLink>
                 <NavLink href="/staff/assign-exeat-role" icon={UserCog}>
                   Assign Exeat Role
-                </NavLink>
-                <NavLink href="/staff/admin/exeats" icon={FileText}>
-                  All Exeat Requests
                 </NavLink>
                 <NavLink href="/staff/admin/analytics" icon={BarChart3}>
                   Analytics

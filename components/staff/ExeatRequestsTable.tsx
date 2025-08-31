@@ -62,7 +62,6 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
     onViewDetails,
 }) => {
     const getInitials = (fname: string, lname: string) => `${(fname || '').charAt(0)}${(lname || '').charAt(0)}`.toUpperCase();
-    const [hoveredAvatar, setHoveredAvatar] = useState<number | null>(null);
     const [actionDialog, setActionDialog] = useState<{
         isOpen: boolean;
         type: 'approve' | 'reject' | null;
@@ -102,71 +101,33 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
     return (
         <>
             {/* Mobile Card View */}
-            <div className="lg:hidden space-y-4">
+            <div className="lg:hidden space-y-3">
                 {requests.map((r) => {
-                    const isApproved = r.status === 'approved';
-                    const isSignedOut = r.status === 'signed_out';
-                    const durationDays = Math.max(
-                        1,
-                        Math.ceil(
-                            (new Date(r.return_date).getTime() - new Date(r.departure_date).getTime()) /
-                            (1000 * 60 * 60 * 24)
-                        )
-                    );
-
                     const avatarUrl = r.student.passport ? `data:image/jpeg;base64,${r.student.passport}` : '';
 
                     return (
-                        <Card key={r.id} className="p-4 space-y-4">
-                            {/* Header with Student Info */}
-                            <div className="flex items-start gap-3">
-                                <Avatar className="h-12 w-12">
-                                    <AvatarImage src={avatarUrl} alt={`${r.student.fname} ${r.student.lname}`} />
-                                    <AvatarFallback>{getInitials(r.student.fname, r.student.lname)}</AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-semibold text-lg truncate">
-                                        {r.student.fname} {r.student.lname}
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground font-mono">{r.matric_no}</p>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <span className="text-lg">{getCategoryIcon(r.category_id || 0, Boolean(r.is_medical))}</span>
-                                        <Badge variant="outline" className="text-xs px-2 py-1">
-                                            {getCategoryName(r.category_id || 0, Boolean(r.is_medical))}
-                                        </Badge>
+                        <Card key={r.id} className="p-4">
+                            {/* Student Info and Status */}
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <Avatar className="h-10 w-10 flex-shrink-0">
+                                        <AvatarImage src={avatarUrl} alt={`${r.student.fname} ${r.student.lname}`} />
+                                        <AvatarFallback className="text-xs">{getInitials(r.student.fname, r.student.lname)}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-semibold text-base truncate">
+                                            {r.student.fname} {r.student.lname}
+                                        </h3>
+                                        <p className="text-sm text-muted-foreground font-mono">{r.matric_no}</p>
                                     </div>
                                 </div>
-                                <StatusPill status={r.status} size="sm" />
-                            </div>
-
-                            {/* Request Details */}
-                            <div className="space-y-3">
-                                <div>
-                                    <h4 className="font-medium text-sm text-muted-foreground mb-1">Reason</h4>
-                                    <p className="text-sm">{r.reason}</p>
-                                </div>
-                                <div>
-                                    <h4 className="font-medium text-sm text-muted-foreground mb-1">Destination</h4>
-                                    <p className="text-sm">{r.destination}</p>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <h4 className="font-medium text-sm text-muted-foreground mb-1">Departure</h4>
-                                        <p className="text-sm">{formatDate(r.departure_date)}</p>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-medium text-sm text-muted-foreground mb-1">Return</h4>
-                                        <p className="text-sm">{formatDate(r.return_date)}</p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 className="font-medium text-sm text-muted-foreground mb-1">Duration</h4>
-                                    <p className="text-sm">{durationDays} day{durationDays > 1 ? 's' : ''}</p>
+                                <div className="ml-2">
+                                    <StatusPill status={r.status} size="sm" />
                                 </div>
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex flex-wrap gap-2 pt-2 border-t">
+                            <div className="flex flex-wrap gap-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -260,86 +221,26 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                     <TableHeader className="sticky top-0 z-10 bg-background">
                         <TableRow className="bg-muted/50">
                             <TableHead className="whitespace-nowrap text-sm md:text-base">Student</TableHead>
-                            <TableHead className="whitespace-nowrap text-sm md:text-base">Matric No</TableHead>
-                            <TableHead className="whitespace-nowrap text-sm md:text-base">Destination</TableHead>
-                            <TableHead className="whitespace-nowrap text-sm md:text-base">Dates</TableHead>
-                            <TableHead className="whitespace-nowrap text-sm md:text-base">Duration</TableHead>
-                            <TableHead className="whitespace-nowrap text-sm md:text-base">Category</TableHead>
                             <TableHead className="whitespace-nowrap text-sm md:text-base">Status</TableHead>
                             <TableHead className="text-right whitespace-nowrap text-sm md:text-base">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {requests.map((r) => {
-                            const isApproved = r.status === 'approved';
-                            const isSignedOut = r.status === 'signed_out';
-                            const durationDays = Math.max(
-                                1,
-                                Math.ceil(
-                                    (new Date(r.return_date).getTime() - new Date(r.departure_date).getTime()) /
-                                    (1000 * 60 * 60 * 24)
-                                )
-                            );
-
                             const avatarUrl = r.student.passport ? `data:image/jpeg;base64,${r.student.passport}` : '';
 
                             return (
                                 <TableRow key={r.id} className="align-middle">
                                     <TableCell className="font-medium">
-                                        <div className="flex items-center gap-3 relative">
-                                            <div
-                                                className="relative"
-                                                onMouseEnter={() => setHoveredAvatar(r.id)}
-                                                onMouseLeave={() => setHoveredAvatar(null)}
-                                            >
-                                                <Avatar className="size-14 cursor-pointer">
-                                                    <AvatarImage src={avatarUrl} alt={`${r.student.fname} ${r.student.lname}`} />
-                                                    <AvatarFallback>{getInitials(r.student.fname, r.student.lname)}</AvatarFallback>
-                                                </Avatar>
-
-                                                {/* Custom Hover Preview */}
-                                                {hoveredAvatar === r.id && (
-                                                    <div className="absolute left-12 top-0 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-3 min-w-[140px]">
-                                                        <div className="text-center">
-                                                            {avatarUrl ? (
-                                                                <img
-                                                                    src={avatarUrl}
-                                                                    alt={`${r.student.fname} ${r.student.lname}`}
-                                                                    className="w-32 h-32 rounded-lg object-cover border-2 border-white shadow-lg"
-                                                                />
-                                                            ) : (
-                                                                <div className="w-32 h-32 rounded-lg bg-primary/10 flex items-center justify-center border-2 border-white shadow-lg">
-                                                                    <span className="text-2xl font-bold text-primary">
-                                                                        {getInitials(r.student.fname, r.student.lname)}
-                                                                    </span>
-                                                                </div>
-                                                            )}
-                                                            <p className="mt-2 text-sm font-medium text-foreground">
-                                                                {r.student.fname} {r.student.lname}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                )}
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="size-10">
+                                                <AvatarImage src={avatarUrl} alt={`${r.student.fname} ${r.student.lname}`} />
+                                                <AvatarFallback className="text-xs">{getInitials(r.student.fname, r.student.lname)}</AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex flex-col">
+                                                <span className="font-medium">{r.student.fname} {r.student.lname}</span>
+                                                <span className="text-muted-foreground font-mono text-xs">{r.matric_no}</span>
                                             </div>
-                                            <span>{r.student.fname} {r.student.lname}</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground font-mono text-sm">{r.matric_no}</TableCell>
-                                    <TableCell className="max-w-[18rem] truncate">{r.destination}</TableCell>
-                                    <TableCell>
-                                        <div className="flex flex-col md:flex-row md:items-center md:gap-1">
-                                            <span>{formatDate(r.departure_date)}</span>
-                                            <span className="hidden md:inline">—</span>
-                                            <span>{formatDate(r.return_date)}</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>{durationDays} day{durationDays > 1 ? 's' : ''}</TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-lg">{getCategoryIcon(r.category_id || 0, Boolean(r.is_medical))}</span>
-                                            <Badge variant="outline" className="text-xs px-2 py-1">
-                                                {getCategoryName(r.category_id || 0, Boolean(r.is_medical))}
-                                            </Badge>
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -354,7 +255,7 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                                 onClick={() => onViewDetails(r)}
                                             >
                                                 <FileText className="h-4 w-4 mr-2" />
-                                                View
+                                                View Details
                                             </Button>
 
                                             {/* Show approve/reject for pending and review statuses */}

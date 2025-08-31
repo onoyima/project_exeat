@@ -16,10 +16,15 @@ export const authApi = api.injectEndpoints({
                 method: 'POST',
             }),
         }),
+        getProfile: builder.query<any, void>({
+            query: () => '/me',
+            providesTags: ['Profile'],
+        }),
     }),
 });
 
 export const {
     useLoginMutation,
     useLogoutMutation,
+    useGetProfileQuery,
 } = authApi;

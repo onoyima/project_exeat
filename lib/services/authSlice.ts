@@ -29,7 +29,14 @@ const getStoredUser = () => {
         const parsed = storedUser ? JSON.parse(storedUser) : null;
         // If the stored user has exeat_roles but no roles, migrate it
         if (parsed && parsed.exeat_roles && !parsed.roles) {
-            const roleNames = parsed.exeat_roles.map((role: any) => role.role?.name || role.name);
+            const roleNames = parsed.exeat_roles.map((role: any) => {
+                // Safely extract role name from different possible structures
+                if (role?.role?.name) return role.role.name;
+                if (role?.name) return role.name;
+                if (role?.display_name) return role.display_name;
+                if (typeof role === 'string') return role;
+                return 'Unknown Role';
+            });
             parsed.roles = roleNames;
         }
         return parsed;
@@ -68,7 +75,20 @@ const authSlice = createSlice({
             const { user, role, token } = action.payload;
             // Handle both 'roles' and 'exeat_roles' field names
             const exeatRoles = (user as any)?.exeat_roles || (action.payload as any).roles;
-            const userData = { ...user, role, roles: exeatRoles };
+
+            // Extract role names from exeat_roles objects if they exist
+            const roleNames = Array.isArray(exeatRoles)
+                ? exeatRoles.map((roleObj: any) => {
+                    // Handle different role object structures
+                    if (roleObj?.role?.name) return roleObj.role.name;
+                    if (roleObj?.name) return roleObj.name;
+                    if (roleObj?.display_name) return roleObj.display_name;
+                    if (typeof roleObj === 'string') return roleObj;
+                    return 'Unknown Role';
+                })
+                : [];
+
+            const userData = { ...user, role, roles: roleNames };
             state.user = userData;
             state.token = token;
             state.isAuthenticated = true;
@@ -91,7 +111,20 @@ const authSlice = createSlice({
                 (state, { payload }) => {
                     // Handle both 'roles' and 'exeat_roles' field names
                     const exeatRoles = (payload.user as any)?.exeat_roles || (payload as any).roles;
-                    const user = { ...payload.user, role: payload.role, roles: exeatRoles };
+
+                    // Extract role names from exeat_roles objects if they exist
+                    const roleNames = Array.isArray(exeatRoles)
+                        ? exeatRoles.map((roleObj: any) => {
+                            // Handle different role object structures
+                            if (roleObj?.role?.name) return roleObj.role.name;
+                            if (roleObj?.name) return roleObj.name;
+                            if (roleObj?.display_name) return roleObj.display_name;
+                            if (typeof roleObj === 'string') return roleObj;
+                            return 'Unknown Role';
+                        })
+                        : [];
+
+                    const user = { ...payload.user, role: payload.role, roles: roleNames };
                     state.user = user;
                     state.token = payload.token;
                     state.isAuthenticated = true;

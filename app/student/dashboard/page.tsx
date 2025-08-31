@@ -41,14 +41,14 @@ import { extractMatricFromEmail, formatMatricNumber } from '@/lib/utils/student'
 
 
 export default function StudentDashboard() {
-  const { user } = useGetCurrentUser();
+  const { user, isLoading: userLoading } = useGetCurrentUser();
   const router = useRouter()
 
   const { data: exeatData, isLoading: loadingExeats } = useGetExeatRequestsQuery();
   const exeatRequests = exeatData?.exeat_requests || [];
 
-  // Show skeleton loading if exeat data is still loading
-  if (loadingExeats) {
+  // Show skeleton loading if user data or exeat data is still loading
+  if (userLoading || loadingExeats) {
     return <DashboardSkeleton />;
   }
 

@@ -32,23 +32,37 @@ export const getStatusColor = (status: string) => {
 export const getStatusText = (status: string) => {
     switch (status) {
         case 'pending':
-            return 'Awaiting Review';
-        case 'recommendation1':
-            return 'Under Review';
-        case 'recommendation2':
-            return 'Under Review';
+            return 'Awaiting Initial Review';
+        case 'cmd_review':
+            return 'Medical Director Review';
+        case 'deputy-dean_review':
+            return 'Deputy Dean Review';
         case 'parent_consent':
-            return 'Awaiting Parent';
-        case 'dean_approval':
-            return 'Dean Review';
-        case 'hostel_approval':
-            return 'Processing';
-        case 'approved':
-            return 'Approved';
-        case 'rejected':
-            return 'Not Approved';
+            return 'Awaiting Parent Approval';
+        case 'dean_review':
+            return 'Dean of Students Review';
+        case 'hostel_signin':
+            return 'Ready for Hostel Sign-In';
+        case 'hostel_signout':
+            return 'Ready for Hostel Sign-Out';
         case 'security_signin':
-            return 'Awaiting Return';
+            return 'Student Away - Awaiting Return';
+        case 'security_signout':
+            return 'Ready for Security Sign-Out';
+        case 'recommendation1':
+            return 'Under Initial Review';
+        case 'recommendation2':
+            return 'Under Final Review';
+        case 'dean_approval':
+            return 'Awaiting Dean Approval';
+        case 'hostel_approval':
+            return 'Hostel Processing';
+        case 'approved':
+            return 'Request Approved';
+        case 'rejected':
+            return 'Request Not Approved';
+        case 'completed':
+            return 'Request Completed';
         default:
             return status.split('_').map(word =>
                 word.charAt(0).toUpperCase() + word.slice(1)
