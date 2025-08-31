@@ -246,6 +246,31 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
             return workflowStages.length - 1; // Final stage (return & sign in completed)
         }
 
+        // Handle deputy dean review status specifically
+        if (exeatRequest.status === 'deputy_dean_review') {
+            const deputyDeanIndex = workflowStages.findIndex(s => s.key === 'deputy_dean_review');
+            return deputyDeanIndex >= 0 ? deputyDeanIndex : (exeatRequest.is_medical ? 2 : 1);
+        }
+
+        // Handle other review statuses
+        if (exeatRequest.status.includes('_review')) {
+            // Find the stage that matches the current status
+            const statusStageIndex = workflowStages.findIndex(s => s.key === exeatRequest.status);
+            if (statusStageIndex >= 0) {
+                return statusStageIndex;
+            }
+        }
+
+        // For review statuses that don't have specific handling above,
+        // don't show security_signin stage unless student has actually departed
+        if (exeatRequest.status.includes('_review') && !hasDepartedSchool) {
+            // Don't show security_signin as current stage if student hasn't departed
+            const securitySigninIndex = workflowStages.findIndex(s => s.key === 'security_signin');
+            if (lastApprovedIndex + 1 === securitySigninIndex) {
+                return lastApprovedIndex; // Stay at the last approved stage
+            }
+        }
+
         // If we found approved stages, return the next stage as current
         if (lastApprovedIndex >= 0) {
             const nextStageIndex = lastApprovedIndex + 1;
@@ -265,6 +290,73 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
     const getStaffName = (staff: { fname: string; lname: string } | null) => {
         if (!staff) return null;
         return `${staff.fname} ${staff.lname}`.trim();
+    };
+
+    const getDynamicDescription = (stage: any, status: string, approval: any) => {
+        const baseDescriptions = {
+            submitted: {
+                completed: 'Exeat request has been submitted',
+                current: 'Request is being processed',
+                pending: 'Submit exeat request to begin approval process'
+            },
+            cmd_review: {
+                completed: 'Chief Medical Director approval received',
+                current: 'Awaiting Chief Medical Director review',
+                pending: 'Chief Medical Director review required'
+            },
+            deputy_dean_review: {
+                completed: 'Deputy Dean approval received',
+                current: 'Awaiting Deputy Dean approval',
+                pending: 'Deputy Dean approval required'
+            },
+            parent_consent: {
+                completed: 'Parent/Guardian consent received',
+                current: 'Awaiting parent/guardian approval',
+                pending: 'Parent/Guardian consent required'
+            },
+            dean_review: {
+                completed: 'Dean final approval received',
+                current: 'Awaiting Dean final approval',
+                pending: 'Dean final approval required'
+            },
+            hostel_signout: {
+                completed: 'Successfully signed out from hostel',
+                current: 'Ready for hostel sign-out',
+                pending: 'Hostel sign-out required before departure'
+            },
+            security_signout: {
+                completed: 'Security clearance granted - departure authorized',
+                current: 'Awaiting final security clearance',
+                pending: 'Security clearance required for departure'
+            },
+            departed_school: {
+                completed: 'Student has successfully left school premises',
+                current: 'Student is preparing to depart school',
+                pending: 'Departure from school premises'
+            },
+            security_signin: {
+                completed: 'Student has returned and signed back in',
+                current: 'Student has departed - awaiting return and security sign-in',
+                pending: 'Return to school and security sign-in required'
+            }
+        };
+
+        const stageKey = stage.key;
+        const descriptions = baseDescriptions[stageKey as keyof typeof baseDescriptions];
+
+        if (!descriptions) {
+            return stage.description; // Fallback to original description
+        }
+
+        if (status === 'completed') {
+            return descriptions.completed;
+        } else if (status === 'current') {
+            return descriptions.current;
+        } else if (status === 'rejected') {
+            return `${descriptions.current} - Request was rejected`;
+        } else {
+            return descriptions.pending;
+        }
     };
 
     const getStageStatus = (index: number, stageKey: string) => {
@@ -434,7 +526,7 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
                                                             </div>
                                                             <div>
                                                                 <h4 className="font-semibold text-sm text-gray-900">{stage.label}</h4>
-                                                                <p className="text-xs text-gray-500">{stage.description}</p>
+                                                                <p className="text-xs text-gray-500">{getDynamicDescription(stage, status, approval)}</p>
                                                             </div>
                                                         </div>
 
@@ -485,7 +577,7 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
                                                                             </div>
                                                                         )}
                                                                     </>
-                                                                ) : stage.key === 'security_signin' ? (
+                                                                ) : stage.key === 'security_signin' && approval ? (
                                                                     <>
                                                                         <Badge
                                                                             variant="secondary"
@@ -515,7 +607,7 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
                                                                     {format(new Date(approval.updated_at), 'PPp')}
                                                                 </p>
                                                             ) : (
-                                                                stage.key === 'security_signin' && (
+                                                                stage.key === 'security_signin' && status === 'current' && (
                                                                     <p className="text-xs text-gray-500 flex items-center gap-1">
                                                                         <Clock className="h-3 w-3" />
                                                                         {format(new Date(exeatRequest.created_at), 'PPp')}
