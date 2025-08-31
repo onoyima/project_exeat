@@ -1,12 +1,11 @@
 "use client";
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -31,11 +30,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { AlertCircle, CheckCircle, Search, UserPlus, Users, Shield, Trash2, Loader2, X } from "lucide-react";
-import { getExeatRoles, assignExeatRoleToStaff, getStaffList, getExeatRoleAssignments } from "@/lib/api";
-import { unassignExeatRoleFromStaff } from "@/lib/api";
+import { AlertCircle, Search, UserPlus, Trash2, Loader2, X, Users, Shield } from "lucide-react";
+import {
+  useGetStaffAssignmentsQuery,
+  useAssignExeatRoleMutation,
+  useUnassignExeatRoleMutation,
+  useGetRolesQuery,
+  useGetStaffListQuery,
+} from '@/lib/services/adminApi';
 import { useToast } from "@/hooks/use-toast";
 import { extractRoleName } from "@/lib/utils/csrf";
 
@@ -57,26 +60,47 @@ function useDebouncedValue<T>(value: T, delay: number): T {
 }
 
 export default function AssignExeatRolePage() {
-  const [staffList, setStaffList] = useState<Staff[]>([]);
-  const [exeatRoles, setExeatRoles] = useState<ExeatRole[]>([]);
+  // RTK Query hooks
+  const {
+    data: staffList,
+    isLoading: staffListLoading,
+    error: staffListError
+  } = useGetStaffListQuery();
+
+  const {
+    data: staffAssignments,
+    isLoading: assignmentsLoading,
+    error: assignmentsError,
+    refetch: refetchAssignments
+  } = useGetStaffAssignmentsQuery();
+
+  const {
+    data: roles,
+    isLoading: rolesLoading,
+    error: rolesError
+  } = useGetRolesQuery();
+
+  const [assignRole, {
+    isLoading: assigning,
+    error: assignError,
+    isSuccess: assignSuccess
+  }] = useAssignExeatRoleMutation();
+
+  const [unassignRole, {
+    isLoading: unassigningRole,
+    error: unassignError,
+    isSuccess: unassignSuccess
+  }] = useUnassignExeatRoleMutation();
+
+  // Local state
   const [selectedStaff, setSelectedStaff] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
-  const [assigning, setAssigning] = useState(false);
-  const [assignError, setAssignError] = useState("");
-  const [assignSuccess, setAssignSuccess] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [assignmentHistory, setAssignmentHistory] = useState<any[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(true);
-  const [historyError, setHistoryError] = useState("");
   const [staffSearch, setStaffSearch] = useState("");
   const [roleSearch, setRoleSearch] = useState("");
-  const [unassigning, setUnassigning] = useState<{ [key: string]: boolean }>({});
-  const [unassignError, setUnassignError] = useState("");
 
   // Confirmation dialog state
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [roleToUnassign, setRoleToUnassign] = useState<{ staffEmail: string; roleName: string; staffName: string } | null>(null);
+  const [roleToUnassign, setRoleToUnassign] = useState<{ staffEmail: string; roleName: string; staffName: string; staffId: number; roleId: number } | null>(null);
 
   // Refs for managing focus
   const staffSearchRef = useRef<HTMLInputElement>(null);
@@ -89,91 +113,210 @@ export default function AssignExeatRolePage() {
   const debouncedStaffSearch = useDebouncedValue(staffSearch, 300);
   const debouncedRoleSearch = useDebouncedValue(roleSearch, 300);
 
-  useEffect(() => {
-    let isMounted = true;
-    async function fetchData() {
-      setLoading(true);
-      setError("");
-      try {
-        const [staffRes, rolesRes] = await Promise.all([
-          getStaffList(),
-          getExeatRoles()
-        ]);
-        if (!isMounted) return;
-        if (staffRes.success && Array.isArray(staffRes.data.staff)) {
-          setStaffList(staffRes.data.staff);
-        } else {
-          setError("Failed to load staff list");
-        }
-        if (rolesRes.success && Array.isArray(rolesRes.data.roles)) {
-          setExeatRoles(rolesRes.data.roles);
-        } else {
-          setError(rolesRes.error || "Failed to load exeat roles");
-        }
-      } catch (e) {
-        if (isMounted) setError("Failed to load data");
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    }
-    fetchData();
-    return () => { isMounted = false; };
-  }, []);
+  // Combined loading state
+  const loading = assignmentsLoading || rolesLoading || staffListLoading;
 
+  // Combined error state
+  const error = assignmentsError || rolesError || staffListError;
+
+  // Helper function to get error message
+  const getErrorMessage = (error: any) => {
+    if (!error) return null;
+
+    if (error?.data?.message) return error.data.message;
+    if (error?.message) return error.message;
+    if (error?.error) return error.error;
+    if (typeof error === 'string') return error;
+
+    return 'An unexpected error occurred';
+  };
+
+  // Use staff list from RTK Query
+  const staffMembers = useMemo(() => {
+    console.log('Processing staffList:', staffList);
+    if (!staffList) return [];
+    const processed = staffList.map(staff => ({
+      id: staff.id,
+      fname: staff.fname,
+      lname: staff.lname,
+      middle_name: staff.middle_name,
+      email: staff.email
+    }));
+    console.log('Processed staffMembers:', processed);
+    return processed;
+  }, [staffList]);
+
+  // Convert roles data to expected format
+  const exeatRoles = useMemo(() => {
+    console.log('Processing roles:', roles);
+    if (!roles) return [];
+    const processed = roles.map(role => ({
+      id: role.id,
+      name: role.name,
+      display_name: role.display_name,
+      description: role.description
+    }));
+    console.log('Processed exeatRoles:', processed);
+    return processed;
+  }, [roles]);
+
+  // Debug logging for data states
+  console.log('Data states:', {
+    staffListLoading,
+    rolesLoading,
+    assignmentsLoading,
+    staffList: !!staffList,
+    roles: !!roles,
+    staffAssignments: !!staffAssignments,
+    staffMembersCount: staffMembers?.length || 0,
+    exeatRolesCount: exeatRoles?.length || 0,
+    staffAssignmentsCount: staffAssignments?.length || 0,
+    loading,
+    error: !!error
+  });
+
+  // Debug staff assignments data structure
+  console.log('Staff assignments data:', staffAssignments);
+  console.log('First assignment sample:', staffAssignments?.[0]);
+  console.log('Staff members IDs:', staffMembers?.map((s: any) => s.id));
+  console.log('Staff assignments staff IDs:', staffAssignments?.map((a: any) => a.staff_id));
+  console.log('Staff assignments role IDs:', staffAssignments?.map((a: any) => a.exeat_role_id));
+
+  // More detailed debugging of the data structure
+  if (staffAssignments && staffAssignments.length > 0) {
+    const firstItem = staffAssignments[0];
+    console.log('First assignment item keys:', Object.keys(firstItem));
+    console.log('First assignment item values:', firstItem);
+    console.log('staff_id value:', firstItem.staff_id, 'type:', typeof firstItem.staff_id);
+    console.log('exeat_role_id value:', firstItem.exeat_role_id, 'type:', typeof firstItem.exeat_role_id);
+  }
+
+  // Handle assignment success
   useEffect(() => {
-    let isMounted = true;
-    fetchHistory();
-    return () => { isMounted = false; };
-  }, []);
+    if (assignSuccess) {
+      setSelectedStaff("");
+      setSelectedRole("");
+      setStaffSearch("");
+      setRoleSearch("");
+      refetchAssignments();
+      toast({
+        title: "Role Assigned Successfully",
+        description: "Role has been assigned to the staff member.",
+        variant: "success",
+      });
+    }
+  }, [assignSuccess, refetchAssignments, toast]);
+
+  // Handle unassignment success
+  useEffect(() => {
+    if (unassignSuccess) {
+      refetchAssignments();
+      toast({
+        title: "Role Removed Successfully",
+        description: "Role has been removed from the staff member.",
+        variant: "success",
+      });
+    }
+  }, [unassignSuccess, refetchAssignments, toast]);
 
   async function handleAssignRole() {
-    setAssigning(true);
-    setAssignError("");
-    setAssignSuccess("");
+    const staffId = Number(selectedStaff);
+    const roleId = Number(selectedRole);
+
     try {
-      const staffId = Number(selectedStaff);
-      const roleId = Number(selectedRole);
-      const result = await assignExeatRoleToStaff(staffId, roleId);
-      if (result.success) {
-        setAssignSuccess("Role assigned successfully.");
-        setSelectedStaff("");
-        setSelectedRole("");
-        setStaffSearch("");
-        setRoleSearch("");
-
-        // Show success toast
-        toast({
-          title: "Role Assigned Successfully",
-          description: `Role has been assigned to the staff member.`,
-          variant: "success",
-        });
-      } else {
-        setAssignError(result.error || "Failed to assign role.");
-
-        // Show error toast
-        toast({
-          title: "Assignment Failed",
-          description: result.error || "Failed to assign role.",
-          variant: "destructive",
-        });
-      }
-    } catch (e) {
-      setAssignError("Failed to assign role.");
-
-      // Show error toast
+      await assignRole({
+        staffId,
+        exeatRoleId: roleId
+      }).unwrap();
+    } catch (error: any) {
       toast({
         title: "Assignment Failed",
-        description: "Failed to assign role. Please try again.",
+        description: error?.data?.message || error?.message || "Failed to assign role.",
         variant: "destructive",
       });
-    } finally {
-      setAssigning(false);
     }
   }
 
   // Function to show confirmation dialog
-  function handleUnassignClick(staffEmail: string, roleName: string, staffName: string) {
-    setRoleToUnassign({ staffEmail, roleName, staffName });
+  function handleUnassignClick(staffId: number, roleId: number, staffEmail: string, roleName: string, staffName: string) {
+    console.log('handleUnassignClick called with:', { staffId, roleId, staffEmail, roleName, staffName });
+    console.log('Role ID type and value:', typeof roleId, roleId);
+
+    // Check if roleId is valid
+    let actualRoleId = roleId;
+    if (!actualRoleId || actualRoleId === undefined || actualRoleId === null) {
+      console.error('Invalid roleId:', roleId, 'Trying to find by role name:', roleName);
+
+      // Try to find role ID by name if the direct ID is not available
+      const foundRole = exeatRoles.find((role: any) =>
+        (role.display_name?.toLowerCase() === roleName?.toLowerCase()) ||
+        (role.name?.toLowerCase() === roleName?.toLowerCase())
+      );
+
+      if (foundRole) {
+        actualRoleId = foundRole.id;
+        console.log('Found role ID by name:', actualRoleId);
+      } else {
+        console.error('Could not find role by name:', roleName);
+        console.log('Available roles:', exeatRoles.map((r: any) => ({ id: r.id, name: r.name, display_name: r.display_name })));
+        toast({
+          title: "Error",
+          description: "Could not find role. Please refresh the page and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Double-check we have a valid role ID
+    if (!actualRoleId) {
+      console.error('Still no valid roleId after lookup');
+      toast({
+        title: "Error",
+        description: "Invalid role ID. Cannot unassign role.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let actualStaffId = staffId;
+
+    // If staffId is not valid, try to find it from the staff list using email
+    if (!actualStaffId || actualStaffId === undefined || actualStaffId === null) {
+      console.log('staffId is invalid, trying to find by email:', staffEmail);
+
+      // Find staff member by email
+      const foundStaff = staffMembers.find((staff: any) =>
+        staff.email?.toLowerCase() === staffEmail?.toLowerCase()
+      );
+
+      if (foundStaff) {
+        actualStaffId = foundStaff.id;
+        console.log('Found staff ID by email:', actualStaffId);
+      } else {
+        console.error('Could not find staff member with email:', staffEmail);
+        console.log('Available staff emails:', staffMembers.map((s: any) => s.email));
+        toast({
+          title: "Error",
+          description: "Could not find staff member. Please refresh the page and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    // Double-check we have a valid staff ID
+    if (!actualStaffId) {
+      console.error('Still no valid staffId after lookup');
+      toast({
+        title: "Error",
+        description: "Invalid staff ID. Cannot unassign role.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setRoleToUnassign({ staffId: actualStaffId, roleId: actualRoleId, staffEmail, roleName, staffName });
     setConfirmDialogOpen(true);
   }
 
@@ -181,61 +324,49 @@ export default function AssignExeatRolePage() {
   async function handleConfirmUnassign() {
     if (!roleToUnassign) return;
 
-    const { staffEmail, roleName } = roleToUnassign;
+    const { staffId, roleId, staffName, roleName } = roleToUnassign;
     setConfirmDialogOpen(false);
-    setUnassignError("");
-    setUnassigning(u => ({ ...u, [staffEmail + roleName]: true }));
 
-    try {
-      const staff = staffList.find((s: Staff) => s.email === staffEmail);
-      const role = exeatRoles.find((r: ExeatRole) => r.name === roleName);
-      if (!staff || !role) throw new Error("Staff or role not found");
+    console.log('Unassigning role with resolved IDs:', { staffId, roleId, staffName, roleName });
+    console.log('Staff ID type and value:', typeof staffId, staffId);
+    console.log('Role ID type and value:', typeof roleId, roleId);
 
-      const result = await unassignExeatRoleFromStaff(staff.id, role.id);
-      if (!result.success) throw new Error(result.error || "Failed to unassign role");
-
-      setAssignSuccess("Role unassigned successfully.");
-
-      // Show success toast
-      toast({
-        title: "Role Removed Successfully",
-        description: `Role "${roleName}" has been removed from ${roleToUnassign.staffName}.`,
-        variant: "success",
-      });
-
-      // Refresh assignment history
-      fetchHistory();
-
-    } catch (e: any) {
-      setUnassignError(e.message || "Failed to unassign role.");
-
-      // Show error toast
+    // Verify we have a valid staff ID (should be resolved by handleUnassignClick)
+    if (!staffId) {
+      console.error('No valid staffId in roleToUnassign');
       toast({
         title: "Removal Failed",
-        description: e.message || "Failed to unassign role. Please try again.",
+        description: "Invalid staff ID. Please try again.",
+        variant: "destructive",
+      });
+      setRoleToUnassign(null);
+      return;
+    }
+
+    // Verify staff exists in our staff list
+    const staffExists = staffMembers.some((staff: any) => staff.id === staffId);
+    console.log('Staff exists in list:', staffExists, 'Staff ID:', staffId);
+
+    // Verify role exists in our roles list
+    const roleExists = exeatRoles.some((role: any) => role.id === roleId);
+    console.log('Role exists in list:', roleExists, 'Role ID:', roleId);
+
+    try {
+      const result = await unassignRole({
+        staffId,
+        exeatRoleId: roleId
+      }).unwrap();
+
+      console.log('Unassign successful:', result);
+    } catch (error: any) {
+      console.error('Unassign error:', error);
+      toast({
+        title: "Removal Failed",
+        description: error?.data?.message || error?.message || "Failed to unassign role.",
         variant: "destructive",
       });
     } finally {
-      setUnassigning(u => ({ ...u, [staffEmail + roleName]: false }));
       setRoleToUnassign(null);
-    }
-  }
-
-  // Function to fetch history (extracted for reuse)
-  async function fetchHistory() {
-    setHistoryLoading(true);
-    setHistoryError("");
-    try {
-      const res = await getExeatRoleAssignments();
-      if (res.success && Array.isArray(res.data.history)) {
-        setAssignmentHistory(res.data.history);
-      } else {
-        setHistoryError("Failed to load assignment history");
-      }
-    } catch (e) {
-      setHistoryError("Failed to load assignment history");
-    } finally {
-      setHistoryLoading(false);
     }
   }
 
@@ -298,7 +429,7 @@ export default function AssignExeatRolePage() {
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Error Loading Data</AlertTitle>
         <AlertDescription className="space-y-2">
-          <p>{error}</p>
+          <p>{getErrorMessage(error)}</p>
           <Button
             variant="outline"
             onClick={() => window.location.reload()}
@@ -373,13 +504,13 @@ export default function AssignExeatRolePage() {
                       </div>
                     </div>
                     <div className="max-h-60 overflow-y-auto">
-                      {staffList
+                      {staffMembers
                         .filter((staff: any) => {
                           const search = debouncedStaffSearch.toLowerCase();
                           return (
                             (staff.fname && staff.fname.toLowerCase().includes(search)) ||
                             (staff.lname && staff.lname.toLowerCase().includes(search)) ||
-                            (staff.middle_name && staff.middle_name.toLowerCase().includes(search)) ||
+                            (staff.email && staff.email.toLowerCase().includes(search)) ||
                             (`${staff.fname} ${staff.lname}`.toLowerCase().includes(search))
                           );
                         })
@@ -483,14 +614,7 @@ export default function AssignExeatRolePage() {
           {assignError && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{assignError}</AlertDescription>
-            </Alert>
-          )}
-
-          {assignSuccess && (
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription className="text-green-800">{assignSuccess}</AlertDescription>
+              <AlertDescription>{getErrorMessage(assignError)}</AlertDescription>
             </Alert>
           )}
         </CardContent>
@@ -507,7 +631,7 @@ export default function AssignExeatRolePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {historyLoading ? (
+          {assignmentsLoading ? (
             <div className="space-y-4">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="flex items-center justify-between p-4 border rounded-lg">
@@ -520,13 +644,13 @@ export default function AssignExeatRolePage() {
                 </div>
               ))}
             </div>
-          ) : historyError ? (
+          ) : assignmentsError ? (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Failed to Load History</AlertTitle>
-              <AlertDescription>{historyError}</AlertDescription>
+              <AlertTitle>Failed to Load Assignments</AlertTitle>
+              <AlertDescription>{getErrorMessage(assignmentsError)}</AlertDescription>
             </Alert>
-          ) : assignmentHistory.length === 0 ? (
+          ) : !staffAssignments || staffAssignments.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="text-lg font-medium">No assignments found</p>
@@ -536,7 +660,7 @@ export default function AssignExeatRolePage() {
             <div className="space-y-4">
               {/* Mobile View */}
               <div className="md:hidden space-y-4">
-                {assignmentHistory.map((item: any, idx: number) => (
+                {staffAssignments.map((item: any, idx: number) => (
                   <Card key={idx} className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="space-y-1">
@@ -544,7 +668,7 @@ export default function AssignExeatRolePage() {
                         <p className="text-sm text-muted-foreground">{item.staff_email}</p>
                       </div>
                       <Badge variant="secondary">
-                        {extractRoleName(item)}
+                        {item.role_display_name || item.role_name}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
@@ -554,11 +678,17 @@ export default function AssignExeatRolePage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        disabled={unassigning[item.staff_email + extractRoleName(item)]}
-                        onClick={() => handleUnassignClick(item.staff_email, extractRoleName(item), item.staff_name || item.staff_email)}
+                        disabled={unassigningRole}
+                        onClick={() => handleUnassignClick(
+                          item.staff_id,
+                          item.exeat_role_id,
+                          item.staff_email,
+                          item.role_display_name || item.role_name,
+                          item.staff_name || item.staff_email
+                        )}
                         className="text-red-600 border-red-200 hover:bg-red-50"
                       >
-                        {unassigning[item.staff_email + extractRoleName(item)] ? (
+                        {unassigningRole ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Removing...
@@ -587,7 +717,7 @@ export default function AssignExeatRolePage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {assignmentHistory.map((item: any, idx: number) => (
+                    {staffAssignments.map((item: any, idx: number) => (
                       <TableRow key={idx}>
                         <TableCell>
                           <div>
@@ -597,7 +727,7 @@ export default function AssignExeatRolePage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary">
-                            {extractRoleName(item)}
+                            {item.role_display_name || item.role_name}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
@@ -607,11 +737,17 @@ export default function AssignExeatRolePage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            disabled={unassigning[item.staff_email + extractRoleName(item)]}
-                            onClick={() => handleUnassignClick(item.staff_email, extractRoleName(item), item.staff_name || item.staff_email)}
+                            disabled={unassigningRole}
+                            onClick={() => handleUnassignClick(
+                              item.staff_id,
+                              item.exeat_role_id,
+                              item.staff_email,
+                              item.role_display_name || item.role_name,
+                              item.staff_name || item.staff_email
+                            )}
                             className="text-red-600 border-red-200 hover:bg-red-50"
                           >
-                            {unassigning[item.staff_email + extractRoleName(item)] ? (
+                            {unassigningRole ? (
                               <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 Removing...
@@ -703,14 +839,7 @@ export default function AssignExeatRolePage() {
         </CardContent>
       </Card>
 
-      {/* Error Alert for Unassignment */}
-      {unassignError && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Failed to Remove Role</AlertTitle>
-          <AlertDescription>{unassignError}</AlertDescription>
-        </Alert>
-      )}
+
 
       {/* Confirmation Dialog */}
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
@@ -732,9 +861,9 @@ export default function AssignExeatRolePage() {
             <AlertDialogAction
               onClick={handleConfirmUnassign}
               className="bg-red-600 hover:bg-red-700"
-              disabled={roleToUnassign ? unassigning[roleToUnassign.staffEmail + roleToUnassign.roleName] : false}
+              disabled={unassigningRole}
             >
-              {roleToUnassign && unassigning[roleToUnassign.staffEmail + roleToUnassign.roleName] ? (
+              {unassigningRole ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Removing...

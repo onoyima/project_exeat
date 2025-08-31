@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useGetStaffAssignmentsQuery } from '@/lib/services/adminApi';
 import { useGetExeatRequestsQuery } from '@/lib/services/exeatApi';
 import { useGetCurrentUser } from '@/hooks/use-current-user';
+import { useRouter } from 'next/navigation';
 import {
     Users,
     Shield,
@@ -25,6 +26,7 @@ import { extractRoleName } from '@/lib/utils/csrf';
 
 export default function AdminDashboard() {
     const { user } = useGetCurrentUser();
+    const router = useRouter();
     const { data: staffAssignments, isLoading: staffLoading } = useGetStaffAssignmentsQuery();
     const { data: exeatData, isLoading: exeatLoading } = useGetExeatRequestsQuery();
 
@@ -237,7 +239,7 @@ export default function AdminDashboard() {
                             </CardDescription>
                         </div>
                         <Button asChild variant="outline" size="sm">
-                            <Link href="/staff/admin/exeats">
+                            <Link href="/staff/pending">
                                 <ArrowRight className="mr-2 h-4 w-4" />
                                 View All
                             </Link>
@@ -267,7 +269,7 @@ export default function AdminDashboard() {
                                     <div
                                         key={request.id}
                                         className="flex items-center gap-3 p-3 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors cursor-pointer"
-                                        onClick={() => window.open(`/staff/admin/exeats/${request.id}`, '_blank')}
+                                        onClick={() => router.push(`/staff/exeat-requests/${request.id}`)}
                                     >
                                         <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                                             <FileText className="h-5 w-5 text-primary" />
@@ -328,7 +330,7 @@ export default function AdminDashboard() {
                             </Link>
                         </Button>
                         <Button asChild variant="outline" className="h-20 flex-col gap-2">
-                            <Link href="/staff/admin/exeats">
+                            <Link href="/staff/pending">
                                 <FileText className="h-6 w-6" />
                                 <span>View Exeats</span>
                             </Link>

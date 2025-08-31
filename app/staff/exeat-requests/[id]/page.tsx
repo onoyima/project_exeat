@@ -37,6 +37,7 @@ import { useStaff } from '@/hooks/use-staff';
 import { useGetExeatRequestByIdQuery } from '@/lib/services/staffApi';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StatusPill } from '@/components/ui/status-pill';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ExeatRequestDetailPage() {
     const router = useRouter();
@@ -115,22 +116,175 @@ export default function ExeatRequestDetailPage() {
         setPendingAction(null);
     };
 
-    if (isLoadingRequest) {
-        return (
-            <ProtectedRoute requiredRole="staff">
-                <div className="w-full px-4 sm:px-6 lg:px-8 h-full min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-                    <div className="flex items-center justify-center h-64">
-                        <div className="text-center space-y-4">
-                            <div className="relative">
-                                <RefreshCw className="h-12 w-12 animate-spin mx-auto text-primary" />
-                                <div className="absolute inset-0 rounded-full border-4 border-primary/20 animate-pulse"></div>
-                            </div>
-                            <p className="text-slate-600 font-medium">Loading exeat request details...</p>
+    // Loading skeleton component
+    const LoadingSkeleton = () => (
+        <ProtectedRoute requiredRole="staff">
+            <div className="w-full px-4 sm:px-6 lg:px-8 h-full min-h-screen">
+                {/* Header with Navigation Skeleton */}
+                <div className="mb-8 pt-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Skeleton className="h-10 w-32" />
+                            <Skeleton className="h-10 w-24" />
                         </div>
                     </div>
+
+                    <div className="mt-6">
+                        <div className="flex items-center gap-3 mb-2">
+                            <Skeleton className="h-16 w-16 rounded-full" />
+                            <div className="space-y-2">
+                                <Skeleton className="h-9 w-64" />
+                                <div className="flex items-center gap-3">
+                                    <Skeleton className="h-8 w-20" />
+                                    <Skeleton className="h-6 w-24" />
+                                </div>
+                            </div>
+                        </div>
+                        <Skeleton className="h-5 w-96" />
+                    </div>
                 </div>
-            </ProtectedRoute>
-        );
+
+                {/* Request Summary Skeleton */}
+                <div className="mb-6">
+                    <Card className="bg-white/95 backdrop-blur-sm border-slate-200 shadow-sm">
+                        <CardContent className="p-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {[...Array(4)].map((_, i) => (
+                                    <div key={i} className="space-y-2">
+                                        <Skeleton className="h-4 w-16" />
+                                        <Skeleton className="h-6 w-24" />
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Priority Action Section Skeleton */}
+                <div className="mb-8">
+                    <Card className="bg-gradient-to-r from-orange-50 to-indigo-50 border-orange-200 shadow-lg">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="flex items-center gap-2">
+                                <Skeleton className="h-6 w-32" />
+                            </CardTitle>
+                            <CardDescription>
+                                <Skeleton className="h-4 w-80" />
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Skeleton className="h-5 w-40" />
+                                <Skeleton className="h-24 w-full" />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                                <Skeleton className="h-12 w-full" />
+                                <Skeleton className="h-12 w-full" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Main Content Skeleton */}
+                    <div className="lg:col-span-2 space-y-6">
+                        {/* Student Information Skeleton */}
+                        <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Skeleton className="h-6 w-40" />
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {[...Array(4)].map((_, i) => (
+                                        <div key={i} className="space-y-1">
+                                            <Skeleton className="h-4 w-20" />
+                                            <Skeleton className="h-5 w-32" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Request Details Skeleton */}
+                        <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Skeleton className="h-6 w-36" />
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {[...Array(6)].map((_, i) => (
+                                        <div key={i} className="space-y-1">
+                                            <Skeleton className="h-4 w-24" />
+                                            <Skeleton className="h-5 w-28" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Parent Information Skeleton */}
+                        <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Skeleton className="h-6 w-48" />
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {[...Array(4)].map((_, i) => (
+                                        <div key={i} className="space-y-1">
+                                            <Skeleton className="h-4 w-20" />
+                                            <Skeleton className="h-5 w-32" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Sidebar Skeleton */}
+                    <div className="space-y-6">
+                        {/* Student Photo Skeleton */}
+                        <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm">
+                            <CardHeader>
+                                <CardTitle className="text-center">
+                                    <Skeleton className="h-6 w-28 mx-auto" />
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex justify-center">
+                                <Skeleton className="h-48 w-48 rounded-full" />
+                            </CardContent>
+                        </Card>
+
+                        {/* Request Metadata Skeleton */}
+                        <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm">
+                            <CardHeader>
+                                <CardTitle className="text-lg">
+                                    <Skeleton className="h-6 w-32" />
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-3">
+                                    {[...Array(2)].map((_, i) => (
+                                        <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                                            <Skeleton className="h-4 w-16" />
+                                            <Skeleton className="h-4 w-24" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </div>
+        </ProtectedRoute>
+    );
+
+    if (isLoadingRequest) {
+        return <LoadingSkeleton />;
     }
 
     if (error || !request) {
@@ -152,7 +306,7 @@ export default function ExeatRequestDetailPage() {
                                 onClick={() => router.push('/staff/pending')}
                             >
                                 <ArrowLeft className="h-4 w-4 mr-2" />
-                                Back to Pending Requests
+                                Back
                             </Button>
                         </div>
                     </div>
@@ -195,17 +349,9 @@ export default function ExeatRequestDetailPage() {
                                 className="border-slate-300 hover:bg-slate-100 transition-all duration-200 hover:scale-105"
                             >
                                 <ArrowLeft className="h-4 w-4 mr-2" />
-                                Back to Pending
+                                Back
                             </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => router.push('/staff/dashboard')}
-                                className="border-slate-300 hover:bg-slate-100 transition-all duration-200 hover:scale-105"
-                            >
-                                <Home className="h-4 w-4 mr-2" />
-                                Dashboard
-                            </Button>
+
                         </div>
                     </div>
 

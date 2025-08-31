@@ -27,62 +27,6 @@ const StaffDashboard = () => {
             <div className="flex flex-col gap-4">
                 <h1 className="text-3xl font-bold">Staff Dashboard</h1>
 
-                {/* Debug Card - Remove this after fixing the issue */}
-                {process.env.NODE_ENV === 'development' && (
-                    <Card className="border-orange-200 bg-orange-50">
-                        <CardHeader>
-                            <CardTitle className="text-orange-800">🔧 Debug Information</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-2 text-sm">
-                                <div><strong>User ID:</strong> {currentUser?.id}</div>
-                                <div><strong>Role:</strong> <Badge variant="outline">{currentUser?.role}</Badge></div>
-                                <div><strong>Roles Array:</strong> {(currentUser as any)?.roles ? (
-                                    <div className="flex gap-1 mt-1">
-                                        {(currentUser as any).roles.map((role: string) => (
-                                            <Badge key={role} variant={role === 'admin' ? 'default' : 'secondary'}>
-                                                {role}
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                ) : 'No roles array found'}</div>
-                                <div><strong>Exeat Roles (Raw):</strong> {(currentUser as any)?.exeat_roles ? (
-                                    <div className="flex gap-1 mt-1">
-                                        {(currentUser as any).exeat_roles.map((role: any) => {
-                                            const roleName = extractRoleName(role);
-                                            const isAdmin = roleName === 'admin';
-                                            return (
-                                                <Badge key={role.id} variant={isAdmin ? 'default' : 'secondary'}>
-                                                    {roleName}
-                                                </Badge>
-                                            );
-                                        })}
-                                    </div>
-                                ) : 'No exeat_roles found'}</div>
-                                <div><strong>Has Admin Role:</strong>
-                                    <Badge variant={debugInfo.hasAdminRole ? 'default' : 'destructive'}>
-                                        {debugInfo.hasAdminRole ? 'Yes' : 'No'}
-                                    </Badge>
-                                </div>
-                                <div><strong>Admin in Exeat Roles:</strong>
-                                    <Badge variant={debugInfo.hasAdminInExeatRoles ? 'default' : 'destructive'}>
-                                        {debugInfo.hasAdminInExeatRoles ? 'Yes' : 'No'}
-                                    </Badge>
-                                </div>
-                                <div><strong>Should Show Admin Routes:</strong>
-                                    <Badge variant={debugInfo.isAdmin ? 'default' : 'destructive'}>
-                                        {debugInfo.isAdmin ? 'Yes' : 'No'}
-                                    </Badge>
-                                </div>
-                            </div>
-                            <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
-                                <strong>Raw User Data:</strong>
-                                <pre>{JSON.stringify(currentUser, null, 2)}</pre>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
                 <Card>
                     <CardHeader>
                         <CardTitle>Welcome to your Staff Dashboard</CardTitle>

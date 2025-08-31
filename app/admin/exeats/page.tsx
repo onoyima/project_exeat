@@ -12,6 +12,7 @@ import { FileText, Search, Filter, Calendar, MapPin, User, Clock, CheckCircle2, 
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const statuses = [
     { value: "all", label: "All Statuses" },
@@ -38,6 +39,7 @@ export default function AdminExeatsPage() {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [categoryFilter, setCategoryFilter] = useState('all');
+    const router = useRouter();
 
     const { data: exeatData, isLoading } = useGetExeatRequestsQuery();
     const exeatRequests = exeatData?.exeat_requests || [];
@@ -257,7 +259,7 @@ export default function AdminExeatsPage() {
                                         {/* Actions */}
                                         <div className="pt-2 border-t">
                                             <Button asChild variant="outline" size="sm" className="w-full">
-                                                <Link href={`/staff/admin/exeats/${request.id}`}>
+                                                <Link href={`/staff/exeat-requests/${request.id}`}>
                                                     <FileText className="mr-2 h-4 w-4" />
                                                     View Details
                                                 </Link>
@@ -274,7 +276,7 @@ export default function AdminExeatsPage() {
                                         <div
                                             key={request.id}
                                             className="flex items-center gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
-                                            onClick={() => window.open(`/staff/admin/exeats/${request.id}`, '_blank')}
+                                            onClick={() => router.push(`/staff/exeat-requests/${request.id}`)}
                                         >
                                             {/* Category Icon */}
                                             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -318,7 +320,7 @@ export default function AdminExeatsPage() {
                                             {/* Actions */}
                                             <div className="flex items-center gap-2">
                                                 <Button asChild variant="outline" size="sm">
-                                                    <Link href={`/staff/admin/exeats/${request.id}`}>
+                                                    <Link href={`/staff/exeat-requests/${request.id}`}>
                                                         <FileText className="mr-2 h-4 w-4" />
                                                         View Details
                                                     </Link>
