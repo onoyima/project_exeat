@@ -61,7 +61,6 @@ export default function LoginPage() {
 
       // Redirect based on role
       const role = response.role.toLowerCase();
-      console.log('Login successful - User role:', response.role, 'Normalized:', role);
 
       if (role === "student") {
         router.push("/student/dashboard");
@@ -133,9 +132,9 @@ export default function LoginPage() {
           <CardHeader className="text-center space-y-4 pb-8">
             {/* University Logo */}
             <div className="mx-auto w-20 h-20 mb-4 flex items-center justify-center">
-              <img 
-                src="/logo.svg" 
-                alt="Veritas University Logo" 
+              <img
+                src="/logo.svg"
+                alt="Veritas University Logo"
                 className="w-full h-full object-contain"
               />
             </div>
@@ -174,9 +173,9 @@ export default function LoginPage() {
         <CardHeader className="text-center space-y-4 pb-8">
           {/* University Logo */}
           <div className="mx-auto w-20 h-20 mb-4 flex items-center justify-center">
-            <img 
-              src="/logo.svg" 
-              alt="Veritas University Logo" 
+            <img
+              src="/logo.svg"
+              alt="Veritas University Logo"
               className="w-full h-full object-contain"
             />
           </div>
