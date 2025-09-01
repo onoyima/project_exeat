@@ -547,7 +547,7 @@ export default function ExeatRequestDetailPage() {
                                         </div>
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Preferred Contact</Label>
+                                        <Label className="text-sm font-medium text-slate-600">Preferred Parent Contact Method</Label>
                                         <p className="text-slate-800">{request.preferred_mode_of_contact}</p>
                                     </div>
                                 </div>
