@@ -19,7 +19,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
           currentUser={currentUser}
         />
 
-        <div className="flex-1 flex">
+        <div className="flex-1 flex pt-14">
           <StudentSidebar
             open={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
@@ -27,7 +27,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
             currentUser={currentUser}
           />
 
-          <main className="flex-1 relative overflow-x-hidden">
+          <main className="flex-1 relative overflow-x-hidden lg:ml-[280px]">
             <div className="p-4 md:p-6 max-w-full overflow-x-hidden">
               {children}
             </div>

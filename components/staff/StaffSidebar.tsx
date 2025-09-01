@@ -123,8 +123,8 @@ export default function StaffSidebar({
           "fixed top-14 left-0 z-40 w-[280px] h-[calc(100vh-3.5rem)]",
           "bg-white border-r border-border",
           "transition-all duration-300 ease-in-out",
-          "lg:sticky lg:top-0 lg:h-screen",
-          !open && "-translate-x-full lg:translate-x-0"
+          !open && "-translate-x-full",
+          "lg:translate-x-0" // Always visible on large screens
         )}
       >
         {/* Mobile Close Button */}

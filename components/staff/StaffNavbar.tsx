@@ -46,7 +46,7 @@ export default function StaffNavbar({
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white">
+    <header className="fixed top-0 z-50 w-full border-b bg-white">
       <div className="flex h-14 items-center px-4 lg:px-6">
         {/* Mobile Menu Button */}
         <Button
