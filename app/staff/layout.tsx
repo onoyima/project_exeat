@@ -68,9 +68,9 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     <div className="h-screen bg-gray-100 overflow-hidden">
       <div className="flex flex-col h-full">
         <StaffNavbar onMenuClick={() => setSidebarOpen(true)} />
-        <div className="flex flex-1 relative overflow-hidden">
+        <div className="flex flex-1 relative overflow-hidden pt-14">
           <StaffSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:ml-0 bg-gray-100">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:ml-[280px] bg-gray-100">
             {children}
           </main>
         </div>
