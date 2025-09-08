@@ -106,9 +106,9 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                     const avatarUrl = r.student.passport ? `data:image/jpeg;base64,${r.student.passport}` : '';
 
                     return (
-                        <Card key={r.id} className="p-4">
-                            {/* Student Info and Status */}
-                            <div className="flex items-center justify-between mb-4">
+                        <Card key={r.id} className="p-4 hover:shadow-md transition-shadow duration-200">
+                            {/* Header with Avatar and Status */}
+                            <div className="flex items-start justify-between mb-3">
                                 <div className="flex items-center gap-3 flex-1 min-w-0">
                                     <Avatar className="h-10 w-10 flex-shrink-0">
                                         <AvatarImage src={avatarUrl} alt={`${r.student.fname} ${r.student.lname}`} />
@@ -118,97 +118,103 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                         <h3 className="font-semibold text-base truncate">
                                             {r.student.fname} {r.student.lname}
                                         </h3>
-                                        <p className="text-sm text-muted-foreground font-mono">{r.matric_no}</p>
+                                        <p className="text-sm text-muted-foreground font-mono truncate">{r.matric_no}</p>
                                     </div>
                                 </div>
-                                <div className="ml-2">
+                                <div className="flex-shrink-0">
                                     <StatusPill status={r.status} size="sm" />
                                 </div>
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex flex-wrap gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="flex-1"
-                                    onClick={() => onViewDetails(r)}
-                                >
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    View Details
-                                </Button>
-
-                                {/* Show approve/reject for pending and review statuses */}
-                                {(r.status === 'pending' || r.status === 'cmd_review' || r.status === 'deputy-dean_review') && (
-                                    <>
-                                        <Button
-                                            size="sm"
-                                            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                                            onClick={() => handleAction('approve', r.id)}
-                                        >
-                                            <CheckCircle className="h-4 w-4 mr-2" />
-                                            Approve
-                                        </Button>
-                                        <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            className="flex-1"
-                                            onClick={() => handleAction('reject', r.id)}
-                                        >
-                                            <XCircle className="h-4 w-4 mr-2" />
-                                            Reject
-                                        </Button>
-                                    </>
-                                )}
-
-                                {/* Show action buttons for other actionable statuses */}
-                                {r.status === 'dean_review' && (
-                                    <>
-                                        <Button
-                                            size="sm"
-                                            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                                            onClick={() => handleAction('approve', r.id)}
-                                        >
-                                            <CheckCircle className="h-4 w-4 mr-2" />
-                                            Approve
-                                        </Button>
-                                        <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            className="flex-1"
-                                            onClick={() => handleAction('reject', r.id)}
-                                        >
-                                            <XCircle className="h-4 w-4 mr-2" />
-                                            Reject
-                                        </Button>
-                                    </>
-                                )}
-
-                                {/* Show sign out for approved requests */}
-                                {!!onSignOut && r.status === 'approved' && (
+                            <div className="space-y-2">
+                                {/* Primary Action Row */}
+                                <div className="flex gap-2">
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="flex-1"
-                                        onClick={() => onSignOut(r.id)}
+                                        className="flex-1 min-w-0"
+                                        onClick={() => onViewDetails(r)}
                                     >
-                                        <LogOut className="h-4 w-4 mr-2" />
-                                        Sign Out
+                                        <FileText className="h-4 w-4 mr-1 sm:mr-2" />
+                                        <span className="truncate">View Details</span>
                                     </Button>
-                                )}
 
-                                {/* Show sign in for signed out requests */}
-                                {!!onSignIn && r.status === 'signed_out' && (
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="flex-1"
-                                        onClick={() => onSignIn(r.id)}
-                                    >
-                                        <LogIn className="h-4 w-4 mr-2" />
-                                        Sign In
-                                    </Button>
-                                )}
+                                    {/* Show approve/reject for pending and review statuses */}
+                                    {(r.status === 'pending' || r.status === 'cmd_review' || r.status === 'deputy-dean_review') && (
+                                        <>
+                                            <Button
+                                                size="sm"
+                                                className="flex-1 min-w-0 bg-green-600 hover:bg-green-700 text-white"
+                                                onClick={() => handleAction('approve', r.id)}
+                                            >
+                                                <CheckCircle className="h-4 w-4 mr-1 sm:mr-2" />
+                                                <span className="truncate">Approve</span>
+                                            </Button>
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                className="flex-1 min-w-0"
+                                                onClick={() => handleAction('reject', r.id)}
+                                            >
+                                                <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
+                                                <span className="truncate">Reject</span>
+                                            </Button>
+                                        </>
+                                    )}
+
+                                    {/* Show action buttons for other actionable statuses */}
+                                    {r.status === 'dean_review' && (
+                                        <>
+                                            <Button
+                                                size="sm"
+                                                className="flex-1 min-w-0 bg-green-600 hover:bg-green-700 text-white"
+                                                onClick={() => handleAction('approve', r.id)}
+                                            >
+                                                <CheckCircle className="h-4 w-4 mr-1 sm:mr-2" />
+                                                <span className="truncate">Approve</span>
+                                            </Button>
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                className="flex-1 min-w-0"
+                                                onClick={() => handleAction('reject', r.id)}
+                                            >
+                                                <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
+                                                <span className="truncate">Reject</span>
+                                            </Button>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Secondary Action Row */}
+                                <div className="flex gap-2">
+                                    {/* Show sign out for approved requests */}
+                                    {!!onSignOut && r.status === 'approved' && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="flex-1 min-w-0"
+                                            onClick={() => onSignOut(r.id)}
+                                        >
+                                            <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
+                                            <span className="truncate">Sign Out</span>
+                                        </Button>
+                                    )}
+
+                                    {/* Show sign in for signed out requests */}
+                                    {!!onSignIn && r.status === 'signed_out' && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="flex-1 min-w-0"
+                                            onClick={() => onSignIn(r.id)}
+                                        >
+                                            <LogIn className="h-4 w-4 mr-1 sm:mr-2" />
+                                            <span className="truncate">Sign In</span>
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         </Card>
                     );

@@ -41,6 +41,7 @@ import {
 } from '@/lib/services/adminApi';
 import { useToast } from "@/hooks/use-toast";
 import { extractRoleName } from "@/lib/utils/csrf";
+import AssignExeatRoleSkeleton from "@/components/skeletons/assign-exeat-role-skeleton";
 
 // Custom debounced hook
 function useDebouncedValue<T>(value: T, delay: number): T {
@@ -133,7 +134,6 @@ export default function AssignExeatRolePage() {
 
   // Use staff list from RTK Query
   const staffMembers = useMemo(() => {
-    console.log('Processing staffList:', staffList);
     if (!staffList) return [];
     const processed = staffList.map(staff => ({
       id: staff.id,
@@ -142,13 +142,11 @@ export default function AssignExeatRolePage() {
       middle_name: staff.middle_name,
       email: staff.email
     }));
-    console.log('Processed staffMembers:', processed);
     return processed;
   }, [staffList]);
 
   // Convert roles data to expected format
   const exeatRoles = useMemo(() => {
-    console.log('Processing roles:', roles);
     if (!roles) return [];
     const processed = roles.map(role => ({
       id: role.id,
@@ -156,40 +154,8 @@ export default function AssignExeatRolePage() {
       display_name: role.display_name,
       description: role.description
     }));
-    console.log('Processed exeatRoles:', processed);
     return processed;
   }, [roles]);
-
-  // Debug logging for data states
-  console.log('Data states:', {
-    staffListLoading,
-    rolesLoading,
-    assignmentsLoading,
-    staffList: !!staffList,
-    roles: !!roles,
-    staffAssignments: !!staffAssignments,
-    staffMembersCount: staffMembers?.length || 0,
-    exeatRolesCount: exeatRoles?.length || 0,
-    staffAssignmentsCount: staffAssignments?.length || 0,
-    loading,
-    error: !!error
-  });
-
-  // Debug staff assignments data structure
-  console.log('Staff assignments data:', staffAssignments);
-  console.log('First assignment sample:', staffAssignments?.[0]);
-  console.log('Staff members IDs:', staffMembers?.map((s: any) => s.id));
-  console.log('Staff assignments staff IDs:', staffAssignments?.map((a: any) => a.staff_id));
-  console.log('Staff assignments role IDs:', staffAssignments?.map((a: any) => a.exeat_role_id));
-
-  // More detailed debugging of the data structure
-  if (staffAssignments && staffAssignments.length > 0) {
-    const firstItem = staffAssignments[0];
-    console.log('First assignment item keys:', Object.keys(firstItem));
-    console.log('First assignment item values:', firstItem);
-    console.log('staff_id value:', firstItem.staff_id, 'type:', typeof firstItem.staff_id);
-    console.log('exeat_role_id value:', firstItem.exeat_role_id, 'type:', typeof firstItem.exeat_role_id);
-  }
 
   // Handle assignment success
   useEffect(() => {
@@ -239,13 +205,10 @@ export default function AssignExeatRolePage() {
 
   // Function to show confirmation dialog
   function handleUnassignClick(staffId: number, roleId: number, staffEmail: string, roleName: string, staffName: string) {
-    console.log('handleUnassignClick called with:', { staffId, roleId, staffEmail, roleName, staffName });
-    console.log('Role ID type and value:', typeof roleId, roleId);
 
     // Check if roleId is valid
     let actualRoleId = roleId;
     if (!actualRoleId || actualRoleId === undefined || actualRoleId === null) {
-      console.error('Invalid roleId:', roleId, 'Trying to find by role name:', roleName);
 
       // Try to find role ID by name if the direct ID is not available
       const foundRole = exeatRoles.find((role: any) =>
@@ -255,10 +218,8 @@ export default function AssignExeatRolePage() {
 
       if (foundRole) {
         actualRoleId = foundRole.id;
-        console.log('Found role ID by name:', actualRoleId);
       } else {
         console.error('Could not find role by name:', roleName);
-        console.log('Available roles:', exeatRoles.map((r: any) => ({ id: r.id, name: r.name, display_name: r.display_name })));
         toast({
           title: "Error",
           description: "Could not find role. Please refresh the page and try again.",
@@ -270,7 +231,6 @@ export default function AssignExeatRolePage() {
 
     // Double-check we have a valid role ID
     if (!actualRoleId) {
-      console.error('Still no valid roleId after lookup');
       toast({
         title: "Error",
         description: "Invalid role ID. Cannot unassign role.",
@@ -283,7 +243,6 @@ export default function AssignExeatRolePage() {
 
     // If staffId is not valid, try to find it from the staff list using email
     if (!actualStaffId || actualStaffId === undefined || actualStaffId === null) {
-      console.log('staffId is invalid, trying to find by email:', staffEmail);
 
       // Find staff member by email
       const foundStaff = staffMembers.find((staff: any) =>
@@ -292,10 +251,8 @@ export default function AssignExeatRolePage() {
 
       if (foundStaff) {
         actualStaffId = foundStaff.id;
-        console.log('Found staff ID by email:', actualStaffId);
       } else {
         console.error('Could not find staff member with email:', staffEmail);
-        console.log('Available staff emails:', staffMembers.map((s: any) => s.email));
         toast({
           title: "Error",
           description: "Could not find staff member. Please refresh the page and try again.",
@@ -307,7 +264,6 @@ export default function AssignExeatRolePage() {
 
     // Double-check we have a valid staff ID
     if (!actualStaffId) {
-      console.error('Still no valid staffId after lookup');
       toast({
         title: "Error",
         description: "Invalid staff ID. Cannot unassign role.",
@@ -327,13 +283,9 @@ export default function AssignExeatRolePage() {
     const { staffId, roleId, staffName, roleName } = roleToUnassign;
     setConfirmDialogOpen(false);
 
-    console.log('Unassigning role with resolved IDs:', { staffId, roleId, staffName, roleName });
-    console.log('Staff ID type and value:', typeof staffId, staffId);
-    console.log('Role ID type and value:', typeof roleId, roleId);
 
     // Verify we have a valid staff ID (should be resolved by handleUnassignClick)
     if (!staffId) {
-      console.error('No valid staffId in roleToUnassign');
       toast({
         title: "Removal Failed",
         description: "Invalid staff ID. Please try again.",
@@ -345,21 +297,16 @@ export default function AssignExeatRolePage() {
 
     // Verify staff exists in our staff list
     const staffExists = staffMembers.some((staff: any) => staff.id === staffId);
-    console.log('Staff exists in list:', staffExists, 'Staff ID:', staffId);
 
     // Verify role exists in our roles list
     const roleExists = exeatRoles.some((role: any) => role.id === roleId);
-    console.log('Role exists in list:', roleExists, 'Role ID:', roleId);
 
     try {
       const result = await unassignRole({
         staffId,
         exeatRoleId: roleId
       }).unwrap();
-
-      console.log('Unassign successful:', result);
     } catch (error: any) {
-      console.error('Unassign error:', error);
       toast({
         title: "Removal Failed",
         description: error?.data?.message || error?.message || "Failed to unassign role.",
@@ -371,56 +318,7 @@ export default function AssignExeatRolePage() {
   }
 
   if (loading) return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header Skeleton */}
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-4 w-96" />
-        </CardHeader>
-      </Card>
-
-      {/* Form Skeleton */}
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-48" />
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-10 w-full" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* History Table Skeleton */}
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-40" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex items-center space-x-4">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-8 w-20" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <AssignExeatRoleSkeleton />
   );
 
   if (error) return (
@@ -839,8 +737,6 @@ export default function AssignExeatRolePage() {
         </CardContent>
       </Card>
 
-
-
       {/* Confirmation Dialog */}
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
@@ -881,25 +777,3 @@ export default function AssignExeatRolePage() {
     </div>
   );
 }
-
-// Define types for staff and role
-interface Staff {
-  id: number;
-  fname: string;
-  lname: string;
-  middle_name?: string;
-  email: string;
-  status?: string;
-}
-interface ExeatRole {
-  id: number;
-  name: string;
-  display_name: string;
-  description?: string;
-}
-
-// Update usages of 'any' for staff and role in map/filter/find
-// Example:
-// staffList.filter((staff: Staff) => ...)
-// staffList.find((s: Staff) => ...)
-// exeatRoles.find((r: ExeatRole) => ...)
