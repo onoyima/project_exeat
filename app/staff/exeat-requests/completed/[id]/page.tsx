@@ -1,64 +1,43 @@
-"use client";
+'use client';
+
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import {
     UserIcon,
-    AlertCircle,
-    CheckCircle,
-    XCircle,
     FileText,
     UserCheck,
-    RefreshCw,
     ArrowLeft,
-    Home,
     Calendar,
     MapPin,
     Clock,
-    MessageSquare
+    CheckCircle2,
+    AlertTriangle
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { useToast } from '@/hooks/use-toast';
-import { useStaff } from '@/hooks/use-staff';
-import { useGetExeatRequestByIdQuery } from '@/lib/services/staffApi';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { StatusPill } from '@/components/ui/status-pill';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useGetCompletedExeatRequestDetailsQuery } from '@/lib/services/staffApi';
+import type { StaffExeatRequest } from '@/lib/services/staffApi';
 
-export default function ExeatRequestDetailPage() {
+export default function CompletedExeatRequestDetailsPage() {
     const router = useRouter();
     const params = useParams();
     const exeatId = parseInt(params.id as string);
 
-    const [comment, setComment] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-    const [pendingAction, setPendingAction] = useState<'approve' | 'reject' | null>(null);
-
-    const { toast } = useToast();
-    const {
-        approveExeatRequest,
-        rejectExeatRequest,
-    } = useStaff();
-
-    // Fetch the exeat request data using RTK Query
-    const { data: request, isLoading: isLoadingRequest, error } = useGetExeatRequestByIdQuery(exeatId, {
+    // Fetch the completed exeat request data
+    const { data: response, isLoading: isLoadingRequest, error } = useGetCompletedExeatRequestDetailsQuery(exeatId, {
         skip: !exeatId || isNaN(exeatId),
     });
+
+    const request = response?.exeat_request;
+
+    const avatarUrl = request?.student?.passport ? `data:image/jpeg;base64,${request.student.passport}` : '';
 
     // Extract error message from API response
     const getErrorMessage = (error: any) => {
@@ -75,62 +54,6 @@ export default function ExeatRequestDetailPage() {
         return 'An unexpected error occurred while loading the request.';
     };
 
-    const avatarUrl = request?.student?.passport ? `data:image/jpeg;base64,${request.student.passport}` : '';
-
-    const handleActionClick = (action: 'approve' | 'reject') => {
-        // For rejections, require a comment
-        if (action === 'reject' && !comment.trim()) {
-            toast({
-                title: 'Comment Required',
-                description: 'Please provide a reason for rejection.',
-                variant: 'destructive',
-            });
-            return;
-        }
-
-        setPendingAction(action);
-        setShowConfirmDialog(true);
-    };
-
-    const handleConfirmAction = async () => {
-        if (!request || !pendingAction) return;
-
-        setIsLoading(true);
-        try {
-            if (pendingAction === 'approve') {
-                await approveExeatRequest[0]({ exeat_request_id: request.id, comment: comment.trim() || undefined });
-                toast({
-                    title: 'Success',
-                    description: 'Exeat request approved successfully.',
-                });
-            } else {
-                await rejectExeatRequest[0]({ exeat_request_id: request.id, comment: comment.trim() });
-                toast({
-                    title: 'Success',
-                    description: 'Exeat request rejected successfully.',
-                });
-            }
-            setComment('');
-            setShowConfirmDialog(false);
-            setPendingAction(null);
-            // Redirect back to pending page after action
-            router.push('/staff/pending');
-        } catch (error) {
-            toast({
-                title: 'Error',
-                description: `Failed to ${pendingAction} request. Please try again.`,
-                variant: 'destructive',
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleCancelAction = () => {
-        setShowConfirmDialog(false);
-        setPendingAction(null);
-    };
-
     // Loading skeleton component
     const LoadingSkeleton = () => (
         <ProtectedRoute requiredRole="staff">
@@ -140,7 +63,6 @@ export default function ExeatRequestDetailPage() {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <Skeleton className="h-10 w-32" />
-                            <Skeleton className="h-10 w-24" />
                         </div>
                     </div>
 
@@ -151,7 +73,6 @@ export default function ExeatRequestDetailPage() {
                                 <Skeleton className="h-9 w-64" />
                                 <div className="flex items-center gap-3">
                                     <Skeleton className="h-8 w-20" />
-                                    <Skeleton className="h-6 w-24" />
                                 </div>
                             </div>
                         </div>
@@ -170,30 +91,6 @@ export default function ExeatRequestDetailPage() {
                                         <Skeleton className="h-6 w-24" />
                                     </div>
                                 ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Priority Action Section Skeleton */}
-                <div className="mb-8">
-                    <Card className="bg-gradient-to-r from-orange-50 to-indigo-50 border-orange-200 shadow-lg">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="flex items-center gap-2">
-                                <Skeleton className="h-6 w-32" />
-                            </CardTitle>
-                            <CardDescription>
-                                <Skeleton className="h-4 w-80" />
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Skeleton className="h-5 w-40" />
-                                <Skeleton className="h-24 w-full" />
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                                <Skeleton className="h-12 w-full" />
-                                <Skeleton className="h-12 w-full" />
                             </div>
                         </CardContent>
                     </Card>
@@ -234,25 +131,6 @@ export default function ExeatRequestDetailPage() {
                                         <div key={i} className="space-y-1">
                                             <Skeleton className="h-4 w-24" />
                                             <Skeleton className="h-5 w-28" />
-                                        </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Parent Information Skeleton */}
-                        <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Skeleton className="h-6 w-48" />
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {[...Array(4)].map((_, i) => (
-                                        <div key={i} className="space-y-1">
-                                            <Skeleton className="h-4 w-20" />
-                                            <Skeleton className="h-5 w-32" />
                                         </div>
                                     ))}
                                 </div>
@@ -311,7 +189,7 @@ export default function ExeatRequestDetailPage() {
                     <div className="flex items-center justify-center h-64">
                         <div className="text-center space-y-4">
                             <div className="relative">
-                                <AlertCircle className="h-12 w-12 mx-auto text-red-500" />
+                                <AlertTriangle className="h-12 w-12 mx-auto text-red-500" />
                                 <div className="absolute inset-0 rounded-full border-4 border-red-200 animate-pulse"></div>
                             </div>
                             <div className="space-y-2">
@@ -319,16 +197,16 @@ export default function ExeatRequestDetailPage() {
                                     {error ? 'Access Denied' : 'Request Not Found'}
                                 </h2>
                                 <p className="text-slate-600 max-w-md">
-                                    {errorMessage || 'Unable to load the exeat request details.'}
+                                    {errorMessage || 'Unable to load the completed exeat request details.'}
                                 </p>
                             </div>
                             <Button
                                 variant="outline"
                                 className="mt-4 hover:bg-slate-100 transition-colors"
-                                onClick={() => router.push('/staff/pending')}
+                                onClick={() => router.push('/staff/history')}
                             >
                                 <ArrowLeft className="h-4 w-4 mr-2" />
-                                Back to Requests
+                                Back to History
                             </Button>
                         </div>
                     </div>
@@ -341,21 +219,23 @@ export default function ExeatRequestDetailPage() {
         (new Date(request.return_date).getTime() - new Date(request.departure_date).getTime()) / (1000 * 60 * 60 * 24)
     );
 
-    const getCategoryIcon = (categoryId: number, isMedical: boolean) => {
-        if (isMedical || categoryId === 1) return '🏥';
-        if (categoryId === 2) return '🌴';
-        if (categoryId === 3) return '🚨';
-        if (categoryId === 4) return '💼';
+    const getCategoryIcon = (request: StaffExeatRequest) => {
+        if (request.is_medical || request.category_id === 1) return '🏥';
+        if (request.category_id === 2 || request.category?.name === 'casual') return '🌴';
+        if (request.category_id === 3) return '🚨';
+        if (request.category_id === 4) return '💼';
         return '📋';
     };
 
-    const getCategoryName = (categoryId: number, isMedical: boolean) => {
-        if (isMedical || categoryId === 1) return 'Medical';
-        if (categoryId === 2) return 'Casual';
-        if (categoryId === 3) return 'Emergency';
-        if (categoryId === 4) return 'Official';
-        return 'General';
+    const getCategoryName = (request: StaffExeatRequest) => {
+        if (request.is_medical || request.category_id === 1) return 'Medical';
+        if (request.category_id === 2 || request.category?.name === 'casual') return 'Casual';
+        if (request.category_id === 3) return 'Emergency';
+        if (request.category_id === 4) return 'Official';
+        return request.category?.name || 'General';
     };
+
+    const getInitials = (fname: string, lname: string) => `${(fname || '').charAt(0)}${(lname || '').charAt(0)}`.toUpperCase();
 
     return (
         <ProtectedRoute requiredRole="staff">
@@ -367,35 +247,41 @@ export default function ExeatRequestDetailPage() {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => router.push('/staff/pending')}
+                                onClick={() => router.push('/staff/history')}
                                 className="border-slate-300 hover:bg-slate-100 transition-all duration-200 hover:scale-105"
                             >
                                 <ArrowLeft className="h-4 w-4 mr-2" />
-                                Back
+                                Back to History
                             </Button>
-
                         </div>
                     </div>
 
                     <div className="mt-6">
                         <div className="flex items-center gap-3 mb-2">
                             <span className="text-4xl">
-                                {getCategoryIcon(request.category_id || 0, Boolean(request.is_medical))}
+                                {getCategoryIcon(request)}
                             </span>
                             <div>
                                 <h1 className="text-3xl font-bold text-slate-800">
-                                    Exeat Request Review
+                                    Completed Exeat Request
                                 </h1>
                                 <div className="flex items-center gap-3 mt-1">
-                                    <StatusPill status={request.status} size="lg" />
-                                    <Badge variant="outline" className="text-sm">
-                                        {getCategoryName(request.category_id || 0, Boolean(request.is_medical))}
+                                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                        {request.status}
                                     </Badge>
+                                    <Badge variant="outline" className="text-sm">
+                                        {getCategoryName(request)}
+                                    </Badge>
+                                    {request.is_expired && (
+                                        <Badge variant="outline" className="text-xs border-orange-300 text-orange-700">
+                                            Expired
+                                        </Badge>
+                                    )}
                                 </div>
                             </div>
                         </div>
                         <p className="text-slate-600 mt-2">
-                            Review and take action on this exeat request from {request.student.fname} {request.student.lname}
+                            View details for completed exeat request from {request.student.fname} {request.student.lname}
                         </p>
                     </div>
                 </div>
@@ -438,61 +324,6 @@ export default function ExeatRequestDetailPage() {
                     </Card>
                 </div>
 
-                {/* Priority Action Section - Prominently Displayed */}
-                <div className="mb-8">
-                    <Card className="bg-gradient-to-r from-orange-50 to-indigo-50 border-orange-200 shadow-lg">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="flex items-center gap-2 text-orange-900">
-                                <AlertCircle className="h-5 w-5" />
-                                Take Action
-                            </CardTitle>
-                            <CardDescription className="text-orange-700">
-                                This request requires your decision. Please review carefully and provide appropriate feedback.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {/* Comment Input */}
-                            <div className="space-y-2">
-                                <Label htmlFor="comment" className="text-orange-900 font-medium">
-                                    <MessageSquare className="h-4 w-4 inline mr-2" />
-                                    Decision Comment
-                                    <span className="text-orange-600 text-sm font-normal ml-2">
-                                        (required for rejection, optional for approval)
-                                    </span>
-                                </Label>
-                                <Textarea
-                                    id="comment"
-                                    placeholder="Provide context for your decision..."
-                                    value={comment}
-                                    onChange={(e) => setComment(e.target.value)}
-                                    className="min-h-[100px] border-orange-200 focus:border-orange-400 focus:ring-orange-400 transition-all duration-200"
-                                />
-                            </div>
-
-                            {/* Action Buttons - Prominently Displayed */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                                <Button
-                                    onClick={() => handleActionClick('approve')}
-                                    disabled={isLoading}
-                                    className="w-full h-12 text-lg font-semibold bg-green-600 hover:bg-green-700 text-white transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
-                                >
-                                    <CheckCircle className="h-5 w-5 mr-2" />
-                                    Approve Request
-                                </Button>
-                                <Button
-                                    variant="destructive"
-                                    onClick={() => handleActionClick('reject')}
-                                    disabled={isLoading}
-                                    className="w-full h-12 text-lg font-semibold transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
-                                >
-                                    <XCircle className="h-5 w-5 mr-2" />
-                                    Reject Request
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-6">
@@ -517,6 +348,10 @@ export default function ExeatRequestDetailPage() {
                                     <div className="space-y-1">
                                         <Label className="text-sm font-medium text-slate-600">Student ID</Label>
                                         <p className="text-slate-800 font-medium">{request.student_id}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-sm font-medium text-slate-600">Email</Label>
+                                        <p className="text-slate-800">{request.student.email || 'Not provided'}</p>
                                     </div>
                                     <div className="space-y-1">
                                         <Label className="text-sm font-medium text-slate-600">Accommodation</Label>
@@ -623,7 +458,7 @@ export default function ExeatRequestDetailPage() {
                                             className="object-cover"
                                         />
                                         <AvatarFallback className="bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 text-4xl font-bold">
-                                            {request.student.fname?.[0] || request.student.lname?.[0] || 'S'}
+                                            {getInitials(request.student.fname, request.student.lname)}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="absolute inset-0 rounded-full border-4 border-transparent group-hover:border-blue-200/50 transition-all duration-300"></div>
@@ -643,8 +478,31 @@ export default function ExeatRequestDetailPage() {
                                         <span className="text-sm text-slate-800 font-medium">{format(new Date(request.created_at), 'PPp')}</span>
                                     </div>
                                     <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                                        <span className="text-sm text-slate-600">Last Updated:</span>
+                                        <span className="text-sm text-slate-600">Completed:</span>
                                         <span className="text-sm text-slate-800 font-medium">{format(new Date(request.updated_at), 'PPp')}</span>
+                                    </div>
+                                    {request.is_expired && (
+                                        <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
+                                            <span className="text-sm text-orange-700">Expired:</span>
+                                            <span className="text-sm text-orange-800 font-medium">
+                                                {request.expired_at ? format(new Date(request.expired_at), 'PPp') : 'Unknown'}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Completion Status */}
+                        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-lg">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-center gap-3">
+                                    <CheckCircle2 className="h-8 w-8 text-green-600" />
+                                    <div className="text-center">
+                                        <h3 className="text-lg font-semibold text-green-800">Request Completed</h3>
+                                        <p className="text-sm text-green-700 mt-1">
+                                            This exeat request has been successfully processed
+                                        </p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -652,74 +510,6 @@ export default function ExeatRequestDetailPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Confirmation Dialog */}
-            <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            {pendingAction === 'approve' ? (
-                                <CheckCircle className="h-5 w-5 text-green-600" />
-                            ) : (
-                                <XCircle className="h-5 w-5 text-red-600" />
-                            )}
-                            {pendingAction === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
-                        </DialogTitle>
-                        <DialogDescription className="text-slate-600">
-                            {pendingAction === 'approve' ? (
-                                <>
-                                    Are you sure you want to approve this exeat request?
-                                    <br />
-                                    <span className="font-medium text-green-700">This action cannot be undone.</span>
-                                </>
-                            ) : (
-                                <>
-                                    Are you sure you want to reject this exeat request?
-                                    <br />
-                                    <span className="font-medium text-red-700">This action cannot be undone.</span>
-                                </>
-                            )}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter className="gap-3">
-                        <Button
-                            variant="outline"
-                            onClick={handleCancelAction}
-                            disabled={isLoading}
-                            className="hover:bg-slate-100 transition-colors"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleConfirmAction}
-                            disabled={isLoading || (pendingAction === 'reject' && !comment.trim())}
-                            variant={pendingAction === 'approve' ? 'default' : 'destructive'}
-                            className="transition-all duration-200 hover:scale-105"
-                        >
-                            {isLoading ? (
-                                <>
-                                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                                    Processing...
-                                </>
-                            ) : (
-                                <>
-                                    {pendingAction === 'approve' ? (
-                                        <>
-                                            <CheckCircle className="h-4 w-4 mr-2" />
-                                            Confirm Approve
-                                        </>
-                                    ) : (
-                                        <>
-                                            <XCircle className="h-4 w-4 mr-2" />
-                                            Confirm Reject
-                                        </>
-                                    )}
-                                </>
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </ProtectedRoute>
     );
 }

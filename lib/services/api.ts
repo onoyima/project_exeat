@@ -27,6 +27,6 @@ export const api = createApi({
         },
         // credentials: 'include',
     }),
-    tagTypes: ['Profile', 'ExeatCategories', 'ExeatRequests', 'ExeatRoles', 'Staff'],
+    tagTypes: ['Profile', 'ExeatCategories', 'ExeatRequests', 'ExeatRoles', 'Staff', 'ExeatRequests', 'DashboardStats', 'Admin'],
     endpoints: () => ({}),
 });

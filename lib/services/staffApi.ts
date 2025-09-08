@@ -7,7 +7,10 @@ import type {
     StaffProfile,
     StaffApprovalAction,
     StudentSignAction,
-    ExeatStatistics
+    ExeatStatistics,
+    CompletedExeatRequestsResponse,
+    RejectedExeatRequestsResponse,
+    StaffDashboardStats
 } from '@/types/staff';
 import type { ExeatRequest } from '@/types/student';
 
@@ -16,7 +19,7 @@ export interface StaffExeatRequest {
     id: number;
     student_id: number;
     matric_no: string;
-    category_id: number;
+    category_id?: number;
     reason: string;
     destination: string;
     departure_date: string;
@@ -29,14 +32,21 @@ export interface StaffExeatRequest {
     parent_email: string;
     student_accommodation: string | null;
     status: string;
-    is_medical: number;
+    is_medical: number | boolean;
+    is_expired?: boolean;
+    expired_at?: string | null;
     created_at: string;
     updated_at: string;
     student: {
         id: number;
         fname: string;
         lname: string;
-        passport: string;
+        email?: string;
+        passport?: string;
+    };
+    category?: {
+        id: number;
+        name: string;
     };
 }
 
@@ -68,7 +78,20 @@ export const staffApi = api.injectEndpoints({
         // Get a single exeat request by ID
         getExeatRequestById: builder.query<StaffExeatRequest, number>({
             query: (id) => `/staff/exeat-requests/${id}`,
-            transformResponse: (response: { exeat_request: StaffExeatRequest }) => response.exeat_request,
+            transformResponse: (response: any) => {
+                // Handle permission error response
+                if (response?.message && response.message.includes('permission')) {
+                    throw new Error(response.message);
+                }
+
+                // Handle normal success response
+                if (response?.exeat_request) {
+                    return response.exeat_request;
+                }
+
+                // If response structure is unexpected, throw error
+                throw new Error('Invalid response format from server');
+            },
             providesTags: (result, error, id) => [{ type: 'ExeatRequests', id }],
         }),
 
@@ -118,6 +141,32 @@ export const staffApi = api.injectEndpoints({
             transformResponse: (response: ApiResponse<ExeatStatistics>) => response.data!,
             providesTags: ['Staff'],
         }),
+
+        getCompletedExeatRequests: builder.query<CompletedExeatRequestsResponse, void>({
+            query: () => '/exeats/by-status/completed',
+            transformResponse: (response: CompletedExeatRequestsResponse) => response,
+            providesTags: ['ExeatRequests'],
+        }),
+        getCompletedExeatRequestDetails: builder.query<{ exeat_request: StaffExeatRequest }, number>({
+            query: (id) => `/exeats/by-status/completed/${id}`,
+            transformResponse: (response: { exeat_request: StaffExeatRequest }) => response,
+            providesTags: ['ExeatRequests'],
+        }),
+        getStaffDashboardStats: builder.query<StaffDashboardStats, void>({
+            query: () => '/staff/dashboard',
+            transformResponse: (response: StaffDashboardStats) => response,
+            providesTags: ['DashboardStats'],
+        }),
+        getRejectedExeatRequests: builder.query<RejectedExeatRequestsResponse, void>({
+            query: () => '/exeats/by-status/rejected',
+            transformResponse: (response: RejectedExeatRequestsResponse) => response,
+            providesTags: ['ExeatRequests'],
+        }),
+        getRejectedExeatRequestDetails: builder.query<{ exeat_request: StaffExeatRequest }, number>({
+            query: (id) => `/exeats/by-status/rejected/${id}`,
+            transformResponse: (response: { exeat_request: StaffExeatRequest }) => response,
+            providesTags: ['ExeatRequests'],
+        }),
     }),
 });
 
@@ -131,4 +180,9 @@ export const {
     useSignStudentOutMutation,
     useSignStudentInMutation,
     useGetExeatStatisticsQuery,
+    useGetCompletedExeatRequestsQuery,
+    useGetCompletedExeatRequestDetailsQuery,
+    useGetRejectedExeatRequestsQuery,
+    useGetRejectedExeatRequestDetailsQuery,
+    useGetStaffDashboardStatsQuery,
 } = staffApi;

@@ -21,6 +21,7 @@ import {
   BarChart3,
   FileText,
   Home,
+  XCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -150,11 +151,15 @@ export default function StaffSidebar({
             </NavLink>
 
             <NavLink href="/staff/pending" icon={Clock}>
-              Exeat Requests
+              Pending Exeats
             </NavLink>
 
             <NavLink href="/staff/history" icon={History}>
-              Exeat History
+              Completed Exeats
+            </NavLink>
+
+            <NavLink href="/staff/rejected" icon={XCircle}>
+              Rejected Exeats
             </NavLink>
 
             {/* Admin-only navigation */}
@@ -170,6 +175,9 @@ export default function StaffSidebar({
                 </NavLink>
                 <NavLink href="/staff/assign-exeat-role" icon={UserCog}>
                   Assign Exeat Role
+                </NavLink>
+                <NavLink href="/staff/admin/audit-trail" icon={History}>
+                  Audit Trail
                 </NavLink>
                 <NavLink href="/staff/admin/analytics" icon={BarChart3}>
                   Analytics
