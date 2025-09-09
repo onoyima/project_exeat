@@ -19,6 +19,7 @@ import {
 import { format } from 'date-fns';
 import { FileText, LogOut, LogIn, CheckCircle, XCircle, MessageSquare } from 'lucide-react';
 import type { StaffExeatRequest } from '@/lib/services/staffApi';
+import { CountdownTimer } from '@/components/staff/CountdownTimer';
 
 interface ExeatRequestsTableProps {
     requests: StaffExeatRequest[];
@@ -125,6 +126,16 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                     <StatusPill status={r.status} size="sm" />
                                 </div>
                             </div>
+
+                            {/* Countdown Timer for Active Requests */}
+                            {(r.status === 'approved' || r.status === 'security_signin') && (
+                                <div className="mb-3">
+                                    <CountdownTimer
+                                        returnDate={r.return_date}
+                                        className="text-xs"
+                                    />
+                                </div>
+                            )}
 
                             {/* Action Buttons */}
                             <div className="space-y-2">
@@ -246,6 +257,15 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                             <div className="flex flex-col">
                                                 <span className="font-medium">{r.student.fname} {r.student.lname}</span>
                                                 <span className="text-muted-foreground font-mono text-xs">{r.matric_no}</span>
+                                                {/* Countdown Timer for Active Requests */}
+                                                {(r.status === 'approved' || r.status === 'security_signin') && (
+                                                    <div className="mt-1">
+                                                        <CountdownTimer
+                                                            returnDate={r.return_date}
+                                                            className="text-xs scale-90 origin-left"
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </TableCell>

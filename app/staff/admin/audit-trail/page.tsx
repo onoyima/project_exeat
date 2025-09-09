@@ -169,7 +169,7 @@ export default function AdminAuditTrailPage() {
                         <CardDescription>Distribution of actions performed in the system</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+                        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
                             {Object.entries(actionSummary).map(([action, count]) => (
                                 <div key={action} className="flex items-center gap-3 p-4 border rounded-lg">
                                     {getActionIcon(action)}

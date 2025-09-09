@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import {
     Dialog,
     DialogContent,
@@ -38,6 +37,17 @@ import { useGetExeatRequestByIdQuery } from '@/lib/services/staffApi';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StatusPill } from '@/components/ui/status-pill';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CountdownTimer } from '@/components/staff/CountdownTimer';
+import {
+    getDynamicActionTitle,
+    getDynamicActionDescription,
+    getDynamicCommentLabel,
+    getDynamicCommentPlaceholder,
+    getDynamicCommentRequirement,
+    canTakeAction,
+    getCategoryIcon,
+    getCategoryName
+} from '@/lib/utils/exeat-ui';
 
 export default function ExeatRequestDetailPage() {
     const router = useRouter();
@@ -341,21 +351,6 @@ export default function ExeatRequestDetailPage() {
         (new Date(request.return_date).getTime() - new Date(request.departure_date).getTime()) / (1000 * 60 * 60 * 24)
     );
 
-    const getCategoryIcon = (categoryId: number, isMedical: boolean) => {
-        if (isMedical || categoryId === 1) return '🏥';
-        if (categoryId === 2) return '🌴';
-        if (categoryId === 3) return '🚨';
-        if (categoryId === 4) return '💼';
-        return '📋';
-    };
-
-    const getCategoryName = (categoryId: number, isMedical: boolean) => {
-        if (isMedical || categoryId === 1) return 'Medical';
-        if (categoryId === 2) return 'Casual';
-        if (categoryId === 3) return 'Emergency';
-        if (categoryId === 4) return 'Official';
-        return 'General';
-    };
 
     return (
         <ProtectedRoute requiredRole="staff">
@@ -438,57 +433,82 @@ export default function ExeatRequestDetailPage() {
                     </Card>
                 </div>
 
+                {/* Countdown Timer - Show for active exeats */}
+                {(request.status === 'security_signin' || request.status === 'approved') && (
+                    <div className="mb-6">
+                        <CountdownTimer returnDate={request.return_date} />
+                    </div>
+                )}
+
                 {/* Priority Action Section - Prominently Displayed */}
                 <div className="mb-8">
-                    <Card className="bg-gradient-to-r from-orange-50 to-indigo-50 border-orange-200 shadow-lg">
+                    <Card className="shadow-lg">
                         <CardHeader className="pb-4">
-                            <CardTitle className="flex items-center gap-2 text-orange-900">
+                            <CardTitle className="flex items-center gap-2">
                                 <AlertCircle className="h-5 w-5" />
-                                Take Action
+                                {getDynamicActionTitle(request.status)}
                             </CardTitle>
-                            <CardDescription className="text-orange-700">
-                                This request requires your decision. Please review carefully and provide appropriate feedback.
+                            <CardDescription>
+                                {getDynamicActionDescription(request.status)}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {/* Comment Input */}
-                            <div className="space-y-2">
-                                <Label htmlFor="comment" className="text-orange-900 font-medium">
-                                    <MessageSquare className="h-4 w-4 inline mr-2" />
-                                    Decision Comment
-                                    <span className="text-orange-600 text-sm font-normal ml-2">
-                                        (required for rejection, optional for approval)
-                                    </span>
-                                </Label>
-                                <Textarea
-                                    id="comment"
-                                    placeholder="Provide context for your decision..."
-                                    value={comment}
-                                    onChange={(e) => setComment(e.target.value)}
-                                    className="min-h-[100px] border-orange-200 focus:border-orange-400 focus:ring-orange-400 transition-all duration-200"
-                                />
-                            </div>
+                            {/* Comment Input - Show for actionable statuses */}
+                            {canTakeAction(request.status) && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="comment" className="font-medium">
+                                        <MessageSquare className="h-4 w-4 inline mr-2" />
+                                        {getDynamicCommentLabel(request.status)}
+                                        <span className="text-sm font-normal ml-2">
+                                            {getDynamicCommentRequirement(request.status)}
+                                        </span>
+                                    </Label>
+                                    <Textarea
+                                        id="comment"
+                                        placeholder={getDynamicCommentPlaceholder(request.status)}
+                                        value={comment}
+                                        onChange={(e) => setComment(e.target.value)}
+                                        className="min-h-[100px] transition-all duration-200"
+                                    />
+                                </div>
+                            )}
 
-                            {/* Action Buttons - Prominently Displayed */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                            {/* Action Buttons - Always show approve, conditional reject */}
+                            <div className={`grid gap-4 pt-2 ${canTakeAction(request.status) ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                                 <Button
                                     onClick={() => handleActionClick('approve')}
                                     disabled={isLoading}
-                                    className="w-full h-12 text-lg font-semibold bg-green-600 hover:bg-green-700 text-white transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
+                                    className="w-full h-12 text-lg font-semibold transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
                                 >
                                     <CheckCircle className="h-5 w-5 mr-2" />
                                     Approve Request
                                 </Button>
-                                <Button
-                                    variant="destructive"
-                                    onClick={() => handleActionClick('reject')}
-                                    disabled={isLoading}
-                                    className="w-full h-12 text-lg font-semibold transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
-                                >
-                                    <XCircle className="h-5 w-5 mr-2" />
-                                    Reject Request
-                                </Button>
+                                {canTakeAction(request.status) && (
+                                    <Button
+                                        variant="destructive"
+                                        onClick={() => handleActionClick('reject')}
+                                        disabled={isLoading}
+                                        className="w-full h-12 text-lg font-semibold transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
+                                    >
+                                        <XCircle className="h-5 w-5 mr-2" />
+                                        Reject Request
+                                    </Button>
+                                )}
                             </div>
+
+                            {/* Status-specific content for non-actionable statuses */}
+                            {!canTakeAction(request.status) && (
+                                <div className="text-center py-4">
+                                    <div className="text-sm">
+                                        {request.status === 'security_signin' && 'Student is currently away from campus.'}
+                                        {request.status === 'approved' && 'This request has been approved and is active.'}
+                                        {request.status === 'rejected' && 'This request has been rejected.'}
+                                        {request.status === 'completed' && 'This request has been completed successfully.'}
+                                        {request.status === 'parent_consent' && 'Awaiting parent/guardian consent.'}
+                                        {(request.status === 'hostel_signin' || request.status === 'hostel_signout') && 'Hostel procedures in progress.'}
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
@@ -500,7 +520,7 @@ export default function ExeatRequestDetailPage() {
                         <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-slate-800">
-                                    <UserIcon className="h-5 w-5 text-blue-600" />
+                                    <UserIcon className="h-5 w-5" />
                                     Student Information
                                 </CardTitle>
                             </CardHeader>
@@ -530,7 +550,7 @@ export default function ExeatRequestDetailPage() {
                         <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-slate-800">
-                                    <FileText className="h-5 w-5 text-blue-600" />
+                                    <FileText className="h-5 w-5" />
                                     Request Details
                                 </CardTitle>
                             </CardHeader>
@@ -580,7 +600,7 @@ export default function ExeatRequestDetailPage() {
                         <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-slate-800">
-                                    <UserCheck className="h-5 w-5 text-blue-600" />
+                                    <UserCheck className="h-5 w-5" />
                                     Parent/Guardian Information
                                 </CardTitle>
                             </CardHeader>
@@ -622,7 +642,7 @@ export default function ExeatRequestDetailPage() {
                                             alt={`${request.student.fname} ${request.student.lname}`}
                                             className="object-cover"
                                         />
-                                        <AvatarFallback className="bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 text-4xl font-bold">
+                                        <AvatarFallback className="text-4xl font-bold">
                                             {request.student.fname?.[0] || request.student.lname?.[0] || 'S'}
                                         </AvatarFallback>
                                     </Avatar>

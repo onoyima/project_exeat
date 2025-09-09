@@ -52,47 +52,42 @@ export default function StudentDashboard() {
     return <DashboardSkeleton />;
   }
 
-  // Helper function to determine if an exeat is effectively approved
-  const isEffectivelyApproved = (exeat: any) => {
-    // If status is explicitly approved or completed
-    if (['approved', 'completed'].includes(exeat.status)) {
-      return true;
-    }
+  // Helper function to determine if an exeat is currently approved (ready for departure)
+  const isCurrentlyApproved = (exeat: any) => {
+    // Only count exeats that are approved but not yet departed
+    return exeat.status === 'approved';
+  };
 
-    // If status indicates the user has departed and is out of school
-    // (security sign out completed OR security sign in pending - user is away)
-    if (exeat.status === 'hostel_signout' ||
-      exeat.status === 'security_signout' ||
-      exeat.status === 'security_signin') {  // User has left school, needs to sign in on return
-      return true;
-    }
+  // Helper function to determine if an exeat is active (user is currently out)
+  const isActiveExeat = (exeat: any) => {
+    // User has departed and is currently away from school
+    return ['hostel_signout', 'security_signout', 'security_signin'].includes(exeat.status);
+  };
 
-    // If status is in final stages of approval process
-    if (['dean_review', 'hostel_signout', 'security_signout', 'security_signin'].includes(exeat.status)) {
-      return true;
-    }
-
-    return false;
+  // Helper function to determine if an exeat is completed
+  const isCompletedExeat = (exeat: any) => {
+    return exeat.status === 'completed';
   };
 
   // Calculate counts for different statuses with progressive disclosure priority
   const inReviewCount = exeatRequests.filter(r =>
-    ['cmd_review', 'deputy-dean_review', 'dean_review'].includes(r.status) && !isEffectivelyApproved(r)
+    ['cmd_review', 'deputy-dean_review', 'dean_review'].includes(r.status)
   ).length;
-  const parentConsentCount = exeatRequests.filter(r => r.status === 'parent_consent' && !isEffectivelyApproved(r)).length;
+  const parentConsentCount = exeatRequests.filter(r => r.status === 'parent_consent').length;
   const hostelCount = exeatRequests.filter(r =>
-    ['hostel_signin', 'hostel_signout'].includes(r.status) && !isEffectivelyApproved(r)
+    ['hostel_signin', 'hostel_signout'].includes(r.status)
   ).length;
-  const approvedCount = exeatRequests.filter(r => isEffectivelyApproved(r)).length;
-  const completedCount = exeatRequests.filter(r => r.status === 'completed').length;
+  const approvedCount = exeatRequests.filter(r => isCurrentlyApproved(r)).length;
+  const activeOutCount = exeatRequests.filter(r => isActiveExeat(r)).length;
+  const completedCount = exeatRequests.filter(r => isCompletedExeat(r)).length;
   const rejectedCount = exeatRequests.filter(r => r.status === 'rejected').length;
 
-  // Calculate active requests (all except completed, approved, and rejected) - Priority metric
+  // Calculate active requests (all except completed and rejected) - Priority metric
   const activeCount = exeatRequests.filter(r =>
-    !['completed', 'approved', 'rejected'].includes(r.status) && !isEffectivelyApproved(r)
+    !['completed', 'rejected'].includes(r.status)
   ).length;
 
-  // Find active exeat (approved but not completed - user is currently out)
+  // Find active exeat (user is currently out of school)
   const activeExeat = exeatRequests.find(r => {
     try {
       // Skip completed exeats - they shouldn't show countdown
@@ -103,7 +98,6 @@ export default function StudentDashboard() {
       const currentDate = new Date();
       const departureDate = new Date(r.departure_date);
       const returnDate = new Date(r.return_date);
-      const isEffectivelyApprovedStatus = isEffectivelyApproved(r);
       const isBeforeReturn = returnDate > currentDate;
       const isAfterDeparture = currentDate >= departureDate;
 
@@ -113,10 +107,10 @@ export default function StudentDashboard() {
         return false;
       }
 
-      // Check if user has effectively departed and hasn't returned yet
-      const hasDeparted = isEffectivelyApprovedStatus && currentDate >= departureDate;
+      // Check if user has departed and is currently away from school
+      const hasDeparted = isActiveExeat(r) && currentDate >= departureDate;
 
-      return (isEffectivelyApprovedStatus && isBeforeReturn && isAfterDeparture) || (hasDeparted && isBeforeReturn);
+      return (isActiveExeat(r) && isBeforeReturn && isAfterDeparture) || (hasDeparted && isBeforeReturn);
     } catch (error) {
       console.error('Error processing exeat dates:', error, r);
       return false;
@@ -211,13 +205,21 @@ export default function StudentDashboard() {
         </div>
 
         {/* Outcome Stats - Secondary Information - Mobile-First Grid */}
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
           <StatsCard
             title="Approved"
             value={approvedCount}
             description="Ready for departure"
             icon={CheckCircle2}
             className="border-l-4 border-l-green-500 h-full"
+            priority="medium"
+          />
+          <StatsCard
+            title="Currently Out"
+            value={activeOutCount}
+            description="Student away from school"
+            icon={MapPinned}
+            className="border-l-4 border-l-indigo-500 h-full"
             priority="medium"
           />
           <StatsCard

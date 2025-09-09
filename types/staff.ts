@@ -295,6 +295,8 @@ export interface AdminDashboardOverview {
     pending_approvals: number;
     total_requests_today: number;
     system_uptime: string;
+    student_away: number;
+    approved_exeats: number;
 }
 
 /**
