@@ -37,28 +37,8 @@ export default function AdminDashboard() {
         isLoading: boolean;
     };
 
-
-    const exeatRequests = exeatData?.exeat_requests || [];
-    const totalStaff = staffAssignments?.length || 0;
-    const totalRoles = staffAssignments?.reduce((acc, assignment) => {
-        const roleName = extractRoleName(assignment);
-        if (!acc.includes(roleName)) {
-            acc.push(roleName);
-        }
-        return acc;
-    }, [] as string[]).length || 0;
-
-    // Calculate exeat statistics
-    const pendingCount = exeatRequests.filter(r => r.status === 'pending').length;
-    const approvedCount = exeatRequests.filter(r => r.status === 'approved').length;
-    const rejectedCount = exeatRequests.filter(r => r.status === 'rejected').length;
-    const completedCount = exeatRequests.filter(r => r.status === 'completed').length;
-
     // Get recent staff assignments
     const recentAssignments = staffAssignments?.slice(0, 5) || [];
-
-    // Get recent exeat requests
-    const recentExeats = exeatRequests.slice(0, 5);
 
     return (
         <div className="space-y-6 p-4">
@@ -87,16 +67,16 @@ export default function AdminDashboard() {
                             className="border-l-4 border-l-green-500"
                         />
                         <StatsCard
-                            title="Active Exeats"
+                            title="Pending Exeats"
                             value={dashboardStats.overview.active_exeats}
                             description="Currently active"
                             icon={Activity}
                             className="border-l-4 border-l-blue-500"
                         />
                         <StatsCard
-                            title="System Uptime"
-                            value={dashboardStats.overview.system_uptime}
-                            description="Service availability"
+                            title="Students on Exeat"
+                            value={dashboardStats.overview.student_away}
+                            description="Students on exeat"
                             icon={Server}
                             className="border-l-4 border-l-purple-500"
                         />
@@ -118,7 +98,7 @@ export default function AdminDashboard() {
                         />
                         <StatsCard
                             title="Approved Requests"
-                            value={dashboardStats.exeat_statistics.approved_requests}
+                            value={dashboardStats.overview.approved_exeats}
                             description="Successfully approved"
                             icon={CheckCircle2}
                             className="border-l-4 border-l-green-500"
@@ -331,83 +311,6 @@ export default function AdminDashboard() {
                         )}
                     </CardContent>
                 </Card>
-
-                {/* Recent Exeat Requests */}
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle className="text-xl">Recent Exeat Requests</CardTitle>
-                            <CardDescription>
-                                Latest student exeat applications
-                            </CardDescription>
-                        </div>
-                        <Button asChild variant="outline" size="sm">
-                            <Link href="/staff/pending">
-                                <ArrowRight className="mr-2 h-4 w-4" />
-                                View All
-                            </Link>
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        {exeatLoading ? (
-                            <div className="space-y-4">
-                                {[...Array(3)].map((_, i) => (
-                                    <div key={i} className="flex items-center gap-3">
-                                        <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
-                                        <div className="space-y-2 flex-1">
-                                            <div className="h-4 bg-muted rounded animate-pulse" />
-                                            <div className="h-3 bg-muted rounded w-2/3 animate-pulse" />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : recentExeats.length === 0 ? (
-                            <div className="text-center py-8 text-muted-foreground">
-                                <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-                                <p>No exeat requests yet</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {recentExeats.map((request) => (
-                                    <div
-                                        key={request.id}
-                                        className="flex items-center gap-3 p-3 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors cursor-pointer"
-                                        onClick={() => router.push(`/staff/exeat-requests/${request.id}`)}
-                                    >
-                                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                            <FileText className="h-5 w-5 text-primary" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-sm truncate">
-                                                {request.reason}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground truncate">
-                                                {request.destination}
-                                            </p>
-                                        </div>
-                                        <div className="flex flex-col items-end gap-1">
-                                            <Badge
-                                                variant="outline"
-                                                className={cn(
-                                                    "text-xs",
-                                                    request.status === 'approved' ? 'border-green-200 text-green-700' :
-                                                        request.status === 'rejected' ? 'border-red-200 text-red-700' :
-                                                            request.status === 'pending' ? 'border-yellow-200 text-yellow-700' :
-                                                                'border-primary/20 text-primary'
-                                                )}
-                                            >
-                                                {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                                            </Badge>
-                                            <p className="text-xs text-muted-foreground">
-                                                {format(new Date(request.created_at), 'MMM d')}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
             </div>
 
             {/* Quick Actions */}
@@ -424,12 +327,6 @@ export default function AdminDashboard() {
                             <Link href="/staff/assign-exeat-role">
                                 <Users className="h-6 w-6" />
                                 <span>Assign Roles</span>
-                            </Link>
-                        </Button>
-                        <Button asChild variant="outline" className="h-20 flex-col gap-2">
-                            <Link href="/staff/admin/roles">
-                                <Shield className="h-6 w-6" />
-                                <span>Manage Roles</span>
                             </Link>
                         </Button>
                         <Button asChild variant="outline" className="h-20 flex-col gap-2">

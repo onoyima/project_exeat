@@ -73,3 +73,77 @@ export const getStatusText = (status: string) => {
 export const isActiveStatus = (status: string) => {
     return ['pending', 'recommendation1', 'recommendation2', 'parent_consent', 'dean_approval', 'hostel_approval', 'security_signin'].includes(status);
 };
+
+/**
+ * Calculate time remaining until return date
+ * @param returnDate - The return date string or Date object
+ * @returns Object with time remaining details
+ */
+export const getTimeRemaining = (returnDate: string | Date) => {
+    const now = new Date().getTime();
+    const returnTime = new Date(returnDate).getTime();
+    const timeRemaining = returnTime - now;
+
+    const isOverdue = timeRemaining < 0;
+    const absTimeRemaining = Math.abs(timeRemaining);
+
+    const days = Math.floor(absTimeRemaining / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((absTimeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((absTimeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((absTimeRemaining % (1000 * 60)) / 1000);
+
+    return {
+        isOverdue,
+        days,
+        hours,
+        minutes,
+        seconds,
+        totalMs: timeRemaining,
+    };
+};
+
+/**
+ * Format time remaining as a human-readable string
+ * @param timeData - The time remaining object from getTimeRemaining
+ * @returns Formatted string
+ */
+export const formatTimeRemaining = (timeData: ReturnType<typeof getTimeRemaining>) => {
+    const { isOverdue, days, hours, minutes, seconds } = timeData;
+
+    if (isOverdue) {
+        return `Overdue by ${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }
+
+    if (days > 0) {
+        return `${days}d ${hours}h ${minutes}m remaining`;
+    } else if (hours > 0) {
+        return `${hours}h ${minutes}m ${seconds}s remaining`;
+    } else if (minutes > 0) {
+        return `${minutes}m ${seconds}s remaining`;
+    } else {
+        return `${seconds}s remaining`;
+    }
+};
+
+/**
+ * Get countdown color based on time remaining
+ * @param timeData - The time remaining object from getTimeRemaining
+ * @returns Tailwind CSS color classes
+ */
+export const getCountdownColor = (timeData: ReturnType<typeof getTimeRemaining>) => {
+    const { isOverdue, days, hours } = timeData;
+
+    if (isOverdue) {
+        return 'text-red-600 bg-red-50 border-red-200';
+    }
+
+    if (days === 0 && hours < 6) {
+        return 'text-orange-600 bg-orange-50 border-orange-200';
+    }
+
+    if (days === 0 && hours < 24) {
+        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+    }
+
+    return 'text-green-600 bg-green-50 border-green-200';
+};
