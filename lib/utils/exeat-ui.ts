@@ -187,3 +187,4 @@ export const getCategoryName = (categoryId: number, isMedical: boolean) => {
     if (categoryId === 4) return 'Official';
     return 'General';
 };
+

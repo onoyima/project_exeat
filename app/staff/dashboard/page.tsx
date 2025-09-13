@@ -6,7 +6,7 @@ import StaffDashboard from '@/components/staff/StaffDashboard';
 export default function StaffDashboardPage() {
   return (
     <ProtectedRoute requiredRole="staff">
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 h-full">
+      <div className="w-full px-4 sm:px-6 h-full">
         <StaffDashboard />
       </div>
     </ProtectedRoute>
