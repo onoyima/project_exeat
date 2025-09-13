@@ -58,7 +58,7 @@ export function CountdownTimer({ returnDate, className = '' }: CountdownTimerPro
     };
 
     return (
-        <Card className={`${getCountdownColor(timeData)} border-2 transition-all duration-300 ${timeData.isOverdue ? 'animate-pulse shadow-lg' : ''
+        <Card className={`${getCountdownColor(timeData)} border-2 transition-all duration-300 ${timeData.isOverdue ? 'shadow-lg' : ''
             } ${className}`}>
             <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -72,7 +72,7 @@ export function CountdownTimer({ returnDate, className = '' }: CountdownTimerPro
                         </div>
                     </div>
                     <div className="text-right">
-                        <div className={`text-2xl font-bold font-mono ${timeData.isOverdue ? 'text-red-700 animate-pulse' : ''
+                        <div className={`text-2xl font-bold font-mono ${timeData.isOverdue ? 'text-red-700' : ''
                             }`}>
                             {formattedTime}
                         </div>
@@ -88,10 +88,10 @@ export function CountdownTimer({ returnDate, className = '' }: CountdownTimerPro
                         <div className="w-full bg-white/50 rounded-full h-2 overflow-hidden">
                             <div
                                 className={`h-2 rounded-full transition-all duration-1000 ${timeData.days === 0 && timeData.hours < 6
-                                        ? 'bg-orange-500 animate-pulse'
-                                        : timeData.days === 0 && timeData.hours < 24
-                                            ? 'bg-yellow-500'
-                                            : 'bg-green-500'
+                                    ? 'bg-orange-500'
+                                    : timeData.days === 0 && timeData.hours < 24
+                                        ? 'bg-yellow-500'
+                                        : 'bg-green-500'
                                     }`}
                                 style={{
                                     width: `${Math.min(100, Math.max(0, (timeData.totalMs / (24 * 60 * 60 * 1000)) * 100))}%`
@@ -106,7 +106,7 @@ export function CountdownTimer({ returnDate, className = '' }: CountdownTimerPro
                     <div className="mt-3">
                         <div className="w-full bg-red-200 rounded-full h-2 overflow-hidden">
                             <div
-                                className="h-2 bg-red-600 rounded-full animate-pulse"
+                                className="h-2 bg-red-600 rounded-full"
                                 style={{ width: '100%' }}
                             />
                         </div>
