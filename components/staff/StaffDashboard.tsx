@@ -4,7 +4,6 @@ import { selectCurrentUser } from '@/lib/services/authSlice';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { extractRoleName } from '@/lib/utils/csrf';
 import { getStatusColor, getStatusText } from '@/lib/utils/exeat';
 import { useGetStaffDashboardStatsQuery } from '@/lib/services/staffApi';
 import {
@@ -14,10 +13,8 @@ import {
     XCircle,
     TrendingUp,
     Users,
-    Calendar,
     BarChart3
 } from 'lucide-react';
-import type { StaffDashboardStats } from '@/types/staff';
 
 const StaffDashboard = () => {
     const currentUser = useSelector(selectCurrentUser);
@@ -169,34 +166,6 @@ const StaffDashboard = () => {
                                             <span className="font-semibold bg-primary/10 text-primary px-2 py-1 rounded text-xs">
                                                 {item.count}
                                             </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Date Analytics */}
-                        <Card className="lg:col-span-2">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Calendar className="h-5 w-5" />
-                                    Recent Activity by Date
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                                    {dashboardStats.data.analytics.by_date.map((item, index) => (
-                                        <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                                            <span className="text-sm font-medium">
-                                                {new Date(item.date).toLocaleDateString('en-US', {
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    year: 'numeric'
-                                                })}
-                                            </span>
-                                            <Badge variant="secondary" className="font-semibold">
-                                                {item.count}
-                                            </Badge>
                                         </div>
                                     ))}
                                 </div>
