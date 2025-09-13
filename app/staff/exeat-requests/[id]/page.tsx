@@ -46,7 +46,9 @@ import {
     getDynamicCommentRequirement,
     canTakeAction,
     getCategoryIcon,
-    getCategoryName
+    getCategoryName,
+    getApprovalConfirmationText,
+    getRejectionConfirmationText
 } from '@/lib/utils/exeat-ui';
 
 export default function ExeatRequestDetailPage() {
@@ -688,13 +690,25 @@ export default function ExeatRequestDetailPage() {
                         <DialogDescription className="text-slate-600">
                             {pendingAction === 'approve' ? (
                                 <>
-                                    Are you sure you want to approve this exeat request?
+                                    {getApprovalConfirmationText(
+                                        request.status,
+                                        `${request.student.fname} ${request.student.lname}`,
+                                        request.reason,
+                                        request.destination,
+                                        duration
+                                    )}
                                     <br />
                                     <span className="font-medium text-green-700">This action cannot be undone.</span>
                                 </>
                             ) : (
                                 <>
-                                    Are you sure you want to reject this exeat request?
+                                    {getRejectionConfirmationText(
+                                        request.status,
+                                        `${request.student.fname} ${request.student.lname}`,
+                                        request.reason,
+                                        request.destination,
+                                        duration
+                                    )}
                                     <br />
                                     <span className="font-medium text-red-700">This action cannot be undone.</span>
                                 </>
