@@ -37,8 +37,14 @@ export const getDynamicActionTitle = (status: string) => {
             return 'Under Review';
         case 'dean_approval':
             return 'Awaiting Dean Approval';
-        case 'hostel_approval':
-            return 'Hostel Processing';
+        case 'security_signin':
+            return 'Security Sign-In Required';
+        case 'security_signout':
+            return 'Security Sign-Out Required';
+        case 'hostel_signin':
+            return 'Hostel Sign-In Required';
+        case 'hostel_signout':
+            return 'Hostel Sign-Out Required';
         default:
             return 'Take Action';
     }
@@ -208,10 +214,10 @@ export const getApprovalConfirmationText = (
 
     switch (status) {
         case 'pending':
-            return `You are about to approve ${studentName}'s exeat request to ${destination} for ${durationText}. This will allow the student to leave campus for the stated reason: "${reason}". The student will be able to proceed with their departure once approved.`;
+            return `You are about to approve ${studentName}'s exeat request to ${destination} for ${durationText}. This will allow the student to leave campus for the stated reason: "${reason}". The student will be able to proceed to the next stage once approved.`;
 
         case 'cmd_review':
-            return `You are approving ${studentName}'s medical exeat request to ${destination} for ${durationText}. As the Medical Director, your approval confirms that the medical reason "${reason}" is valid and the student may proceed with their medical leave.`;
+            return `You are approving ${studentName}'s medical exeat request to ${destination} for ${durationText}. As the Medical Director, your approval confirms that the medical reason "${reason}" is valid and the student may move to the next stage to proceed with their medical leave.`;
 
         case 'deputy-dean_review':
             return `You are approving ${studentName}'s exeat request to ${destination} for ${durationText}. As the Deputy Dean, your approval confirms that the reason "${reason}" meets institutional standards and the student may proceed with their leave.`;
@@ -223,9 +229,6 @@ export const getApprovalConfirmationText = (
         case 'recommendation2':
             return `You are approving ${studentName}'s exeat request to ${destination} for ${durationText}. Your approval confirms that the reason "${reason}" is acceptable and the student may proceed with their leave request.`;
 
-        case 'hostel_approval':
-            return `You are approving ${studentName}'s exeat request to ${destination} for ${durationText}. As the Hostel Administrator, your approval confirms that the reason "${reason}" is acceptable and the student may proceed with their leave request.`;
-
         case 'security_signin':
             return `You are about to sign ${studentName} back into the school after their exeat. This will allow the student to return to campus and complete their exeat.`;
 
@@ -233,10 +236,10 @@ export const getApprovalConfirmationText = (
             return `You are about to sign ${studentName} out of the school. This will allow the student to leave campus.`;
 
         case 'hostel_signout':
-            return `You are about to sign ${studentName} out of the hostel. This will allow the student to leave campus.`;
+            return `You are about to sign ${studentName} out of the hostel. As the Hostel Administrator, this will allow the student to leave campus.`;
 
         case 'hostel_signin':
-            return `You are about to sign ${studentName} back into the hostel after their exeat. This will allow the student to return to campus and complete their exeat.`;
+            return `You are about to sign ${studentName} back into the hostel after their exeat. As the Hostel Administrator, this will allow the student to return to campus and complete their exeat.`;
 
         default:
             return `You are about to approve ${studentName}'s exeat request to ${destination} for ${durationText}. This will authorize the student to leave campus for the stated reason: "${reason}".`;
