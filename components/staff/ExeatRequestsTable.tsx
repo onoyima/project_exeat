@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 import { FileText, LogOut, LogIn, CheckCircle, XCircle, MessageSquare } from 'lucide-react';
 import type { StaffExeatRequest } from '@/lib/services/staffApi';
 import { CountdownTimer } from '@/components/staff/CountdownTimer';
+import { getApprovalConfirmationText, getRejectionConfirmationText } from '@/lib/utils/exeat-ui';
 
 interface ExeatRequestsTableProps {
     requests: StaffExeatRequest[];
@@ -68,19 +69,23 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
         type: 'approve' | 'reject' | null;
         requestId: number | null;
         comment: string;
+        request: StaffExeatRequest | null;
     }>({
         isOpen: false,
         type: null,
         requestId: null,
         comment: '',
+        request: null,
     });
 
     const handleAction = (type: 'approve' | 'reject', requestId: number) => {
+        const request = requests.find(r => r.id === requestId);
         setActionDialog({
             isOpen: true,
             type,
             requestId,
             comment: '',
+            request: request || null,
         });
     };
 
@@ -93,7 +98,7 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
             } else {
                 await onReject(actionDialog.requestId, actionDialog.comment || undefined);
             }
-            setActionDialog({ isOpen: false, type: null, requestId: null, comment: '' });
+            setActionDialog({ isOpen: false, type: null, requestId: null, comment: '', request: null });
         } catch (error) {
             console.error('Error processing action:', error);
         }
@@ -372,10 +377,41 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                             {actionDialog.type === 'approve' ? 'Approve Exeat Request' : 'Reject Exeat Request'}
                         </DialogTitle>
                         <DialogDescription>
-                            {actionDialog.type === 'approve'
-                                ? 'Are you sure you want to approve this exeat request? You can add an optional comment below.'
-                                : 'Are you sure you want to reject this exeat request? Please provide a reason for rejection.'
-                            }
+                            {actionDialog.request && actionDialog.type === 'approve' ? (
+                                <>
+                                    {getApprovalConfirmationText(
+                                        actionDialog.request.status,
+                                        `${actionDialog.request.student.fname} ${actionDialog.request.student.lname}`,
+                                        actionDialog.request.reason,
+                                        actionDialog.request.destination,
+                                        Math.ceil(
+                                            (new Date(actionDialog.request.return_date).getTime() -
+                                                new Date(actionDialog.request.departure_date).getTime()) / (1000 * 60 * 60 * 24)
+                                        )
+                                    )}
+                                    <br />
+                                    <span className="font-medium text-green-700">This action cannot be undone.</span>
+                                </>
+                            ) : actionDialog.request && actionDialog.type === 'reject' ? (
+                                <>
+                                    {getRejectionConfirmationText(
+                                        actionDialog.request.status,
+                                        `${actionDialog.request.student.fname} ${actionDialog.request.student.lname}`,
+                                        actionDialog.request.reason,
+                                        actionDialog.request.destination,
+                                        Math.ceil(
+                                            (new Date(actionDialog.request.return_date).getTime() -
+                                                new Date(actionDialog.request.departure_date).getTime()) / (1000 * 60 * 60 * 24)
+                                        )
+                                    )}
+                                    <br />
+                                    <span className="font-medium text-red-700">This action cannot be undone.</span>
+                                </>
+                            ) : (
+                                actionDialog.type === 'approve'
+                                    ? 'Are you sure you want to approve this exeat request? You can add an optional comment below.'
+                                    : 'Are you sure you want to reject this exeat request? Please provide a reason for rejection.'
+                            )}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -399,7 +435,7 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                     <DialogFooter>
                         <Button
                             variant="outline"
-                            onClick={() => setActionDialog({ isOpen: false, type: null, requestId: null, comment: '' })}
+                            onClick={() => setActionDialog({ isOpen: false, type: null, requestId: null, comment: '', request: null })}
                         >
                             Cancel
                         </Button>
