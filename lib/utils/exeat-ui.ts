@@ -188,3 +188,89 @@ export const getCategoryName = (categoryId: number, isMedical: boolean) => {
     return 'General';
 };
 
+/**
+ * Get descriptive approval confirmation text based on exeat status
+ * @param status - The exeat request status
+ * @param studentName - The student's full name
+ * @param reason - The exeat reason
+ * @param destination - The destination
+ * @param duration - The duration in days
+ * @returns Descriptive text explaining what the approval means
+ */
+export const getApprovalConfirmationText = (
+    status: string,
+    studentName: string,
+    reason: string,
+    destination: string,
+    duration: number
+) => {
+    const durationText = duration === 1 ? '1 day' : `${duration} days`;
+
+    switch (status) {
+        case 'pending':
+            return `You are about to approve ${studentName}'s exeat request to ${destination} for ${durationText}. This will allow the student to leave campus for the stated reason: "${reason}". The student will be able to proceed with their departure once approved.`;
+
+        case 'cmd_review':
+            return `You are approving ${studentName}'s medical exeat request to ${destination} for ${durationText}. As the Medical Director, your approval confirms that the medical reason "${reason}" is valid and the student may proceed with their medical leave.`;
+
+        case 'deputy-dean_review':
+            return `You are approving ${studentName}'s exeat request to ${destination} for ${durationText}. As the Deputy Dean, your approval confirms that the reason "${reason}" meets institutional standards and the student may proceed with their leave.`;
+
+        case 'dean_review':
+            return `You are approving ${studentName}'s exeat request to ${destination} for ${durationText}. As the Dean of Students, your approval is the final authorization for the student to leave campus for the stated reason: "${reason}".`;
+
+        case 'recommendation1':
+        case 'recommendation2':
+            return `You are approving ${studentName}'s exeat request to ${destination} for ${durationText}. Your approval confirms that the reason "${reason}" is acceptable and the student may proceed with their leave request.`;
+
+        case 'hostel_approval':
+            return `You are approving ${studentName}'s exeat request to ${destination} for ${durationText}. As the Hostel Administrator, your approval confirms that the reason "${reason}" is acceptable and the student may proceed with their leave request.`;
+
+        case 'security_signin':
+            return `You are about to sign ${studentName} back in after their exeat. This will allow the student to return to campus and complete their exeat.`;
+
+        default:
+            return `You are about to approve ${studentName}'s exeat request to ${destination} for ${durationText}. This will authorize the student to leave campus for the stated reason: "${reason}".`;
+    }
+};
+
+/**
+ * Get descriptive rejection confirmation text based on exeat status
+ * @param status - The exeat request status
+ * @param studentName - The student's full name
+ * @param reason - The exeat reason
+ * @param destination - The destination
+ * @param duration - The duration in days
+ * @returns Descriptive text explaining what the rejection means
+ */
+export const getRejectionConfirmationText = (
+    status: string,
+    studentName: string,
+    reason: string,
+    destination: string,
+    duration: number
+) => {
+    const durationText = duration === 1 ? '1 day' : `${duration} days`;
+
+    switch (status) {
+        case 'pending':
+            return `You are about to reject ${studentName}'s exeat request to ${destination} for ${durationText}. The student will not be allowed to leave campus for the stated reason: "${reason}". Please ensure you provide a clear reason for rejection.`;
+
+        case 'cmd_review':
+            return `You are rejecting ${studentName}'s medical exeat request to ${destination} for ${durationText}. As the Medical Director, your rejection indicates that the medical reason "${reason}" does not meet medical leave criteria.`;
+
+        case 'deputy-dean_review':
+            return `You are rejecting ${studentName}'s exeat request to ${destination} for ${durationText}. As the Deputy Dean, your rejection indicates that the reason "${reason}" does not meet institutional standards.`;
+
+        case 'dean_review':
+            return `You are rejecting ${studentName}'s exeat request to ${destination} for ${durationText}. As the Dean of Students, your rejection is the final decision denying the student's request to leave campus for the stated reason: "${reason}".`;
+
+        case 'recommendation1':
+        case 'recommendation2':
+            return `You are rejecting ${studentName}'s exeat request to ${destination} for ${durationText}. Your rejection indicates that the reason "${reason}" is not acceptable for the requested leave.`;
+
+        default:
+            return `You are about to reject ${studentName}'s exeat request to ${destination} for ${durationText}. The student will not be allowed to leave campus for the stated reason: "${reason}".`;
+    }
+};
+

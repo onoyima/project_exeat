@@ -223,7 +223,7 @@ export function ActionableItemSkeleton({
   return (
     <div className={cn(
       "group relative p-4 md:p-6 rounded-lg border-l-4 transition-all duration-200",
-      "animate-pulse min-h-[100px] md:min-h-[120px]",
+      "min-h-[100px] md:min-h-[120px]",
       priorityColors[priority]
     )}>
       <div className="flex items-start gap-4 md:gap-6">
