@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -56,7 +56,6 @@ interface ExeatApplicationFormProps {
 }
 
 export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationFormProps) {
-
   const { data: categoriesData, isLoading: loadingCategories, error: categoriesError } = useGetCategoriesQuery();
   const [createExeatRequest, { isLoading: isSubmitting }] = useCreateExeatRequestMutation();
 
@@ -71,34 +70,79 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
     mode: 'onChange',
   });
 
-  // Watch departure date to validate return date
+  // Watch dates efficiently
   const watchedDepartureDate = form.watch('departure_date');
   const watchedReturnDate = form.watch('return_date');
 
+  // Memoize date boundaries for performance
+  const dateBoundaries = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  const onSubmit = async (values: ExeatFormValues) => {
+    const threeMonthsFromNow = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate());
+
+    return { today, threeMonthsFromNow };
+  }, []);
+
+  // Memoize sorted categories
+  const sortedCategories = useMemo(() => {
+    return categoriesData?.categories
+      ? [...categoriesData.categories].sort((a, b) => a.name.localeCompare(b.name))
+      : [];
+  }, [categoriesData?.categories]);
+
+  // Optimized departure date disabled function
+  const isDepartureDateDisabled = useCallback((date: Date) => {
+    const { today, threeMonthsFromNow } = dateBoundaries;
+
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+
+    return compareDate < today || compareDate > threeMonthsFromNow;
+  }, [dateBoundaries]);
+
+  // Optimized return date disabled function
+  const isReturnDateDisabled = useCallback((date: Date) => {
+    const { today, threeMonthsFromNow } = dateBoundaries;
+
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+
+    // Basic date range check
+    if (compareDate < today || compareDate > threeMonthsFromNow) return true;
+
+    // Check against departure date
+    if (watchedDepartureDate) {
+      const departureDateOnly = new Date(watchedDepartureDate);
+      departureDateOnly.setHours(0, 0, 0, 0);
+      if (compareDate <= departureDateOnly) return true;
+    }
+
+    return false;
+  }, [dateBoundaries, watchedDepartureDate]);
+
+  // Optimized departure date change handler
+  const handleDepartureDateChange = useCallback((date: Date | undefined, field: any) => {
+    field.onChange(date);
+
+    // Clear return date if it becomes invalid (return date before departure date)
+    if (date && watchedReturnDate && watchedReturnDate < date) {
+      form.setValue('return_date', null as any);
+    }
+  }, [watchedReturnDate, form]);
+
+  // Optimized form submission
+  const onSubmit = useCallback(async (values: ExeatFormValues) => {
     try {
-
       const payload = {
         ...values,
         category_id: Number(values.category_id),
         departure_date: format(values.departure_date, 'yyyy-MM-dd'),
         return_date: format(values.return_date, 'yyyy-MM-dd'),
-        // // Include profile data
-        // matric_no: profile.matric_no,
-        // parent_surname: profile.parent_surname,
-        // parent_othernames: profile.parent_othernames,
-        // parent_phone_no: profile.parent_phone_no,
-        // parent_phone_no_two: profile.parent_phone_no_two,
-        // parent_email: profile.parent_email,
-        // student_accommodation: profile.student_accommodation,
       };
 
-      // Call the mutation
       const result = await createExeatRequest(payload).unwrap();
-      console.log('result:', result);
 
-      // Show success message and close modal
       toast({
         variant: "success",
         title: "Success",
@@ -106,34 +150,30 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
         duration: 3000,
       });
 
-      // Reset form and close modal immediately
       form.reset();
       onSuccess?.();
-      return;
     } catch (error: any) {
       console.log('Error object:', error);
 
-      // Force immediate toast display
       if (error?.status === 403 && error?.data?.message) {
         toast({
           variant: "destructive",
           title: "Existing Request",
           description: error.data.message,
-          duration: 5000, // Show for 5 seconds
+          duration: 5000,
         });
-        setTimeout(() => onSuccess?.(), 100); // Close modal after a brief delay
+        setTimeout(() => onSuccess?.(), 100);
         return;
       }
 
-      // Handle other errors
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to submit exeat request. Please try again.",
-        duration: 5000, // Show for 5 seconds
+        duration: 5000,
       });
     }
-  };
+  }, [createExeatRequest, form, onSuccess]);
 
   // Handle loading states
   if (loadingCategories) {
@@ -152,13 +192,10 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
     console.error('API Errors:', { categoriesError });
     return (
       <div className="space-y-4">
-        {categoriesError && (
-          <div className="p-4 bg-destructive/10 text-destructive rounded-md">
-            <p>Failed to load exeat categories. Please try again later.</p>
-            <p className="text-sm mt-2">{categoriesError.toString()}</p>
-          </div>
-        )}
-
+        <div className="p-4 bg-destructive/10 text-destructive rounded-md">
+          <p>Failed to load exeat categories. Please try again later.</p>
+          <p className="text-sm mt-2">{categoriesError.toString()}</p>
+        </div>
       </div>
     );
   }
@@ -173,8 +210,6 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
     );
   }
 
-  const categories = categoriesData?.categories ? [...categoriesData.categories].sort((a, b) => a.name.localeCompare(b.name)) : [];
-
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
       {/* Close button */}
@@ -183,7 +218,7 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
           type="button"
           variant="ghost"
           className="h-8 w-8 p-0 absolute right-4 top-4"
-          onClick={() => onSuccess?.()}
+          onClick={onSuccess}
         >
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
@@ -207,7 +242,7 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((cat) => (
+                  {sortedCategories.map((cat) => (
                     <SelectItem key={cat.id} value={String(cat.id)}>
                       {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
                     </SelectItem>
@@ -257,7 +292,7 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
             <Textarea
               {...field}
               placeholder="Please provide a detailed reason for your exeat request"
-              className="min-h-[100px]"
+              className="min-h-[100px] resize-none"
             />
           )}
         />
@@ -287,25 +322,8 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
             render={({ field }) => (
               <DatePicker
                 value={field.value}
-                onChange={(date) => {
-                  field.onChange(date);
-                  // Clear return date if it becomes invalid
-                  if (date && watchedReturnDate && watchedReturnDate <= date) {
-                    form.setValue('return_date', null as any);
-                  }
-                }}
-                disabled={(date) => {
-                  const today = new Date();
-                  const threeMonthsFromNow = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate());
-
-                  // Disable dates before today
-                  if (date < today) return true;
-
-                  // Disable dates more than 3 months from now
-                  if (date > threeMonthsFromNow) return true;
-
-                  return false;
-                }}
+                onChange={(date) => handleDepartureDateChange(date, field)}
+                disabled={isDepartureDateDisabled}
               />
             )}
           />
@@ -322,32 +340,13 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
               <DatePicker
                 value={field.value}
                 onChange={field.onChange}
-                disabled={(date) => {
-                  const today = new Date();
-                  const threeMonthsFromNow = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate());
-
-                  // Disable dates before today
-                  if (date < today) return true;
-
-                  // Disable dates more than 3 months from now
-                  if (date > threeMonthsFromNow) return true;
-
-                  // Disable dates before departure date (if departure date is selected)
-                  if (watchedDepartureDate) {
-                    const departureDateOnly = new Date(watchedDepartureDate);
-                    departureDateOnly.setHours(0, 0, 0, 0);
-                    const checkDateOnly = new Date(date);
-                    checkDateOnly.setHours(0, 0, 0, 0);
-                    if (checkDateOnly <= departureDateOnly) return true;
-                  }
-
-                  return false;
-                }}
+                disabled={isReturnDateDisabled}
               />
             )}
           />
         </FormField>
       </div>
+
       <Button
         type="submit"
         className="w-full"
