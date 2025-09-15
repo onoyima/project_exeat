@@ -25,7 +25,6 @@ import {
 } from '@/lib/services/exeatApi';
 
 const preferredModes = [
-  { value: 'whatsapp', label: 'WhatsApp' },
   { value: 'text', label: 'Text' },
   { value: 'phone_call', label: 'Phone Call' },
   { value: 'any', label: 'Any' },
