@@ -179,12 +179,12 @@ export default function StaffSidebar({
                 <NavLink href="/staff/admin/audit-trail" icon={History}>
                   Audit Trail
                 </NavLink>
-                <NavLink href="/staff/admin/analytics" icon={BarChart3}>
+                {/* <NavLink href="/staff/admin/analytics" icon={BarChart3}>
                   Analytics
                 </NavLink>
                 <NavLink href="/staff/admin/settings" icon={Settings}>
                   System Settings
-                </NavLink>
+                </NavLink> */}
               </>
             )}
 
