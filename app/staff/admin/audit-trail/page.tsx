@@ -101,7 +101,7 @@ export default function AdminAuditTrailPage() {
             </div>
 
             {/* Overview Statistics */}
-            {auditData && (
+            {/* {auditData && (
                 <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
                     <StatsCard
                         title="Department Students"
@@ -132,10 +132,10 @@ export default function AdminAuditTrailPage() {
                         className="border-l-4 border-l-blue-500"
                     />
                 </div>
-            )}
+            )} */}
 
             {/* Department Statistics */}
-            {auditData && (
+            {/* {auditData && (
                 <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
                     <StatsCard
                         title="Total Requests"
@@ -159,10 +159,10 @@ export default function AdminAuditTrailPage() {
                         className="border-l-4 border-l-indigo-500"
                     />
                 </div>
-            )}
+            )} */}
 
             {/* Action Summary */}
-            {Object.keys(actionSummary).length > 0 && (
+            {/* {Object.keys(actionSummary).length > 0 && (
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-xl">Action Summary</CardTitle>
@@ -182,7 +182,7 @@ export default function AdminAuditTrailPage() {
                         </div>
                     </CardContent>
                 </Card>
-            )}
+            )} */}
 
             {/* Audit Logs */}
             <Card>
