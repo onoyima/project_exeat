@@ -3,14 +3,18 @@ import {
     useGetStaffProfileQuery,
     useGetAllExeatRequestsQuery,
     useGetExeatRequestsByStatusQuery,
+    useGetExeatRequestByIdQuery,
     useApproveExeatRequestMutation,
     useRejectExeatRequestMutation,
     useSignStudentOutMutation,
     useSignStudentInMutation,
     useGetExeatStatisticsQuery,
+    useSendCommentMutation,
+    useEditExeatRequestMutation,
 } from '@/lib/services/staffApi';
 import type { StaffProfile } from '@/types/staff';
 import { extractRoleName } from '@/lib/utils/csrf';
+import { canEditExeat, getEditableFields } from '@/lib/utils/exeat';
 
 /**
  * Custom hook for staff functionality with role-based access control
@@ -22,11 +26,42 @@ export const useStaff = () => {
 
     // Role-based access control
     const hasRole = useMemo(() => {
-        if (!profile?.exeat_roles) return () => false;
+        return (roleName: string) => {
+            // First check profile from API
+            if (profile?.exeat_roles) {
+                const apiRoles = profile.exeat_roles.map((role: any) => extractRoleName(role));
+                if (apiRoles.includes(roleName)) {
+                    return true;
+                }
+            }
 
-        const roles = profile.exeat_roles.map((role: any) => extractRoleName(role));
+            // If not found in API profile, check localStorage
+            try {
+                if (typeof window !== 'undefined') {
+                    const userStr = localStorage.getItem('user');
+                    if (userStr) {
+                        const user = JSON.parse(userStr);
+                        // Check roles array
+                        if (user.roles && Array.isArray(user.roles) && user.roles.includes(roleName)) {
+                            return true;
+                        }
+                        // Check exeat_roles array as fallback
+                        if (user.exeat_roles && Array.isArray(user.exeat_roles)) {
+                            const localRoles = user.exeat_roles.map((role: any) =>
+                                role.role?.name || (typeof role.role === 'string' ? role.role : '')
+                            ).filter(Boolean);
+                            if (localRoles.includes(roleName)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Error checking localStorage for roles:', e);
+            }
 
-        return (roleName: string) => roles.includes(roleName);
+            return false;
+        };
     }, [profile]);
 
     // Check if staff has multiple roles
@@ -75,6 +110,73 @@ export const useStaff = () => {
         return useGetAllExeatRequestsQuery();
     };
 
+    // Get mutation hooks
+    const [editExeatRequest] = useEditExeatRequestMutation();
+
+    // Function to edit exeat request with role-based access control
+    const editExeatRequestWithAccess = async (exeat_request_id: number, payload: Partial<any>) => {
+        try {
+            // Get user roles directly from localStorage
+            let userRoles: string[] = [];
+            let userObj = null;
+
+            if (typeof window !== 'undefined') {
+                const userStr = localStorage.getItem('user');
+
+                if (userStr) {
+                    try {
+                        userObj = JSON.parse(userStr);
+
+                        // Get roles from the roles array
+                        userRoles = userObj.roles || [];
+
+                        // If no roles found in roles array, try to extract from exeat_roles
+                        if (!userRoles.length && userObj.exeat_roles) {
+                            userRoles = userObj.exeat_roles.map((role: any) => {
+                                const extractedRole = role.role?.name || (typeof role.role === 'string' ? role.role : '');
+                                return extractedRole;
+                            }).filter(Boolean);
+                        }
+                    } catch (e) {
+                        console.error('DEBUG: Error parsing user from localStorage:', e);
+                    }
+                }
+            } else {
+                console.log('DEBUG: Window is not defined (server-side rendering)');
+            }
+
+            // Check if user has permission to edit (admin, dean, or deputy_dean)
+            const hasPermission = userRoles.some(role => ['admin', 'dean', 'deputy_dean'].includes(role));
+
+            if (!hasPermission) {
+                throw new Error('You do not have permission to edit exeat requests');
+            }
+
+            // Get primary role for field filtering
+            const primaryRole = userRoles[0] || '';
+
+            const editableFields = getEditableFields(primaryRole);
+
+            const filteredPayload = Object.fromEntries(
+                Object.entries(payload).filter(([key]) => {
+                    const isEditable = editableFields.includes(key);
+                    return isEditable;
+                })
+            );
+
+            if (Object.keys(filteredPayload).length === 0) {
+                throw new Error('No valid fields to update');
+            }
+
+            // Proceed with edit if all checks pass
+            const result = await editExeatRequest({ exeat_request_id, payload: filteredPayload });
+            return result;
+        } catch (error) {
+            console.error('DEBUG: Error in editExeatRequestWithAccess:', error);
+            throw error;
+        }
+    };
+
     return {
         // Profile
         profile,
@@ -105,6 +207,9 @@ export const useStaff = () => {
         rejectExeatRequest: useRejectExeatRequestMutation(),
         signStudentOut: useSignStudentOutMutation(),
         signStudentIn: useSignStudentInMutation(),
+        sendComment: useSendCommentMutation(),
+        editExeatRequest: useEditExeatRequestMutation(),
+        editExeatRequestWithAccess,
     };
 };
 

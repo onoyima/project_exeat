@@ -40,7 +40,8 @@ export default function PendingExeatRequestsPage() {
         approveExeatRequest,
         rejectExeatRequest,
         signStudentOut,
-        signStudentIn
+        signStudentIn,
+        sendComment,
     } = useStaff();
 
     const { data: allRequests, isLoading, refetch } = useStaffExeatRequests();
@@ -164,6 +165,44 @@ export default function PendingExeatRequestsPage() {
         }
     };
 
+    const handleSendComment = async (exeat_request_id: number, comment?: string) => {
+        try {
+            const response = await sendComment[0]({ exeat_request_id, comment: comment! });
+
+            console.log('DEBUG: Send comment response:', response);
+
+            // Check if there's an error in the response
+            if (response.error) {
+                console.error('Error sending comment:', response.error);
+
+                let errorMessage = 'Failed to send comment. Please try again.';
+
+                // Extract error details from the error object
+                if ('data' in response.error && response.error.data) {
+                    const errorData = response.error.data as any;
+                    if (errorData.message) {
+                        errorMessage = errorData.message;
+
+                        // If there's info about previous comment, add it to the error message
+                        if (errorData.previous_comment) {
+                            const prevComment = errorData.previous_comment;
+                            errorMessage += `\n\nPrevious comment: "${prevComment.message}" sent by ${prevComment.sent_by} at ${prevComment.sent_at}`;
+                        }
+                    }
+                }
+
+                throw new Error(errorMessage);
+            }
+
+            refetch();
+        } catch (error) {
+            console.error('Error sending comment:', error);
+            console.log('DEBUG: Error type:', typeof error);
+            console.log('DEBUG: Error message:', error instanceof Error ? error.message : 'No message');
+            throw error;
+        }
+    };
+
     const getRoleDisplayName = (roleName: string) => {
         const roleMap: Record<string, string> = {
             dean: 'Dean of Students',
@@ -282,6 +321,7 @@ export default function PendingExeatRequestsPage() {
                                     onSignOut={canSignStudents ? handleSignOut : undefined}
                                     onSignIn={canSignStudents ? handleSignIn : undefined}
                                     onViewDetails={handleViewDetails}
+                                    onSendComment={handleSendComment}
                                 />
                             </CardContent>
                         </Card>

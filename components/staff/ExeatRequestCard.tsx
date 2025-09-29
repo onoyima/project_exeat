@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Separator } from '@/components/ui/separator';
-import { CalendarIcon, ClockIcon, UserIcon, PhoneIcon, MailIcon, MapPinIcon, FileText } from 'lucide-react';
+import { CalendarIcon, ClockIcon, UserIcon, PhoneIcon, MailIcon, MapPinIcon, FileText, MessageSquare } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +19,7 @@ interface ExeatRequestCardProps {
     onReject: (exeat_request_id: number, comment?: string) => Promise<void>;
     onSignOut?: (exeat_request_id: number, comment?: string) => Promise<void>;
     onSignIn?: (exeat_request_id: number, comment?: string) => Promise<void>;
+    onSendComment?: (exeat_request_id: number, comment: string) => Promise<void>;
     onViewDetails: (request: StaffExeatRequest) => void;
     userRole: string;
 }
@@ -29,6 +30,7 @@ export const ExeatRequestCard: React.FC<ExeatRequestCardProps> = ({
     onReject,
     onSignOut,
     onSignIn,
+    onSendComment,
     onViewDetails,
     userRole,
 }) => {
@@ -36,7 +38,7 @@ export const ExeatRequestCard: React.FC<ExeatRequestCardProps> = ({
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
-    const handleAction = async (action: 'approve' | 'reject' | 'sign_out' | 'sign_in') => {
+    const handleAction = async (action: 'approve' | 'reject' | 'sign_out' | 'sign_in' | 'see_me') => {
         if (action === 'approve') {
             setIsLoading(true);
             try {
@@ -109,6 +111,33 @@ export const ExeatRequestCard: React.FC<ExeatRequestCardProps> = ({
             } finally {
                 setIsLoading(false);
             }
+        } else if (action === 'see_me' && onSendComment) {
+            if (!comment.trim()) {
+                toast({
+                    title: 'Comment Required',
+                    description: 'Please provide a message for the student.',
+                    variant: 'destructive',
+                });
+                return;
+            }
+
+            setIsLoading(true);
+            try {
+                await onSendComment(request.id, comment.trim());
+                toast({
+                    title: 'Success',
+                    description: 'Comment sent to student successfully.',
+                });
+                setComment('');
+            } catch (error) {
+                toast({
+                    title: 'Error',
+                    description: 'Failed to send comment. Please try again.',
+                    variant: 'destructive',
+                });
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -133,6 +162,11 @@ export const ExeatRequestCard: React.FC<ExeatRequestCardProps> = ({
     const canSign = userRole === 'hostel_admin';
     const isApproved = request.status === 'approved';
     const isSignedOut = request.status === 'signed_out';
+
+    // Check if the request status is eligible for "See me" button
+    // Exclude hostel signout, hostel sign in, security sign out, security sign in, and completed statuses
+    const excludedStatuses = ['hostel_signout', 'hostel_signin', 'security_signout', 'security_signin', 'completed'];
+    const canSendComment = !excludedStatuses.includes(request.status);
 
     return (
         <Card className="w-full">
@@ -367,6 +401,42 @@ export const ExeatRequestCard: React.FC<ExeatRequestCardProps> = ({
                                             disabled={isLoading}
                                         >
                                             {isLoading ? 'Signing In...' : 'Sign In'}
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        )}
+
+                        {/* See Me Button */}
+                        {onSendComment && canSendComment && (
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" size="sm">
+                                        <MessageSquare className="h-4 w-4 mr-2" />
+                                        See Me
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Send Comment to Student</DialogTitle>
+                                        <DialogDescription>
+                                            Send a message to the student requesting them to see you.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                        <Textarea
+                                            placeholder="Enter your message for the student..."
+                                            value={comment}
+                                            onChange={(e) => setComment(e.target.value)}
+                                            defaultValue="Come to my office to see me"
+                                        />
+                                    </div>
+                                    <DialogFooter>
+                                        <Button
+                                            onClick={() => handleAction('see_me')}
+                                            disabled={isLoading || !comment.trim()}
+                                        >
+                                            {isLoading ? 'Sending...' : 'Send Comment'}
                                         </Button>
                                     </DialogFooter>
                                 </DialogContent>

@@ -18,7 +18,8 @@ import {
     FileText,
     UserCheck,
     Building,
-    RefreshCw
+    RefreshCw,
+    MessageSquare
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -30,6 +31,7 @@ interface ExeatRequestDetailProps {
     onClose: () => void;
     onApprove: (exeat_request_id: number, comment?: string) => Promise<void>;
     onReject: (exeat_request_id: number, comment?: string) => Promise<void>;
+    onSendComment?: (exeat_request_id: number, comment: string) => Promise<void>;
     userRole: string;
 }
 
@@ -39,21 +41,24 @@ export const ExeatRequestDetail: React.FC<ExeatRequestDetailProps> = ({
     onClose,
     onApprove,
     onReject,
+    onSendComment,
     userRole,
 }) => {
     const [comment, setComment] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [actionType, setActionType] = useState<'approve' | 'reject' | null>(null);
+    const [actionType, setActionType] = useState<'approve' | 'reject' | 'see_me' | null>(null);
     const { toast } = useToast();
 
     if (!request) return null;
 
-    const handleAction = async (action: 'approve' | 'reject') => {
-        // For rejections, require a comment
-        if (action === 'reject' && !comment.trim()) {
+    const handleAction = async (action: 'approve' | 'reject' | 'see_me') => {
+        // For rejections and see_me, require a comment
+        if ((action === 'reject' || action === 'see_me') && !comment.trim()) {
             toast({
                 title: 'Comment Required',
-                description: 'Please provide a reason for rejection.',
+                description: action === 'reject'
+                    ? 'Please provide a reason for rejection.'
+                    : 'Please provide a message for the student.',
                 variant: 'destructive',
             });
             return;
@@ -67,11 +72,17 @@ export const ExeatRequestDetail: React.FC<ExeatRequestDetailProps> = ({
                     title: 'Success',
                     description: 'Exeat request approved successfully.',
                 });
-            } else {
+            } else if (action === 'reject') {
                 await onReject(request.id, comment.trim());
                 toast({
                     title: 'Success',
                     description: 'Exeat request rejected successfully.',
+                });
+            } else if (action === 'see_me' && onSendComment) {
+                await onSendComment(request.id, comment.trim());
+                toast({
+                    title: 'Success',
+                    description: 'Comment sent to student successfully.',
                 });
             }
             setComment('');
@@ -80,7 +91,7 @@ export const ExeatRequestDetail: React.FC<ExeatRequestDetailProps> = ({
         } catch (error) {
             toast({
                 title: 'Error',
-                description: `Failed to ${action} request. Please try again.`,
+                description: `Failed to ${action === 'see_me' ? 'send comment' : action} request. Please try again.`,
                 variant: 'destructive',
             });
         } finally {
@@ -111,6 +122,11 @@ export const ExeatRequestDetail: React.FC<ExeatRequestDetailProps> = ({
     const canApprove = userRole === 'dean' || userRole === 'deputy_dean';
     const canVetMedical = userRole === 'cmd';
     const isPending = request.status === 'pending' || request.status === 'cmd_review' || request.status === 'deputy-dean_review';
+
+    // Check if the request status is eligible for "See me" button
+    // Exclude hostel signout, hostel sign in, security sign out, security sign in, and completed statuses
+    const excludedStatuses = ['hostel_signout', 'hostel_signin', 'security_signout', 'security_signin', 'completed'];
+    const canSendComment = !excludedStatuses.includes(request.status);
 
     // Determine if user can take action on this specific request
     const canTakeAction = isPending && (
@@ -346,7 +362,7 @@ export const ExeatRequestDetail: React.FC<ExeatRequestDetailProps> = ({
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex gap-3">
+                            <div className="flex gap-3 flex-wrap">
                                 <Button
                                     onClick={() => setActionType('approve')}
                                     disabled={isLoading}
@@ -365,6 +381,17 @@ export const ExeatRequestDetail: React.FC<ExeatRequestDetailProps> = ({
                                     <XCircle className="h-4 w-4 mr-2" />
                                     Reject Request
                                 </Button>
+                                {canSendComment && onSendComment && (
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setActionType('see_me')}
+                                        disabled={isLoading}
+                                        className="flex-1"
+                                    >
+                                        <MessageSquare className="h-4 w-4 mr-2" />
+                                        See Me
+                                    </Button>
+                                )}
                             </div>
 
                             {/* Confirmation Buttons */}
@@ -374,15 +401,23 @@ export const ExeatRequestDetail: React.FC<ExeatRequestDetailProps> = ({
                                         <p className="text-sm font-medium mb-2">
                                             {actionType === 'approve'
                                                 ? 'Confirm Approval'
-                                                : 'Confirm Rejection'
+                                                : actionType === 'reject'
+                                                    ? 'Confirm Rejection'
+                                                    : 'Confirm Send Comment'
                                             }
                                         </p>
                                         <div className="flex gap-2">
                                             <Button
                                                 onClick={() => handleAction(actionType)}
-                                                disabled={isLoading || (actionType === 'reject' && !comment.trim())}
+                                                disabled={isLoading || ((actionType === 'reject' || actionType === 'see_me') && !comment.trim())}
                                                 className="flex-1"
-                                                variant={actionType === 'approve' ? 'default' : 'destructive'}
+                                                variant={
+                                                    actionType === 'approve'
+                                                        ? 'default'
+                                                        : actionType === 'reject'
+                                                            ? 'destructive'
+                                                            : 'outline'
+                                                }
                                             >
                                                 {isLoading ? (
                                                     <>
@@ -396,10 +431,15 @@ export const ExeatRequestDetail: React.FC<ExeatRequestDetailProps> = ({
                                                                 <CheckCircle className="h-4 w-4 mr-2" />
                                                                 Confirm Approve
                                                             </>
-                                                        ) : (
+                                                        ) : actionType === 'reject' ? (
                                                             <>
                                                                 <XCircle className="h-4 w-4 mr-2" />
                                                                 Confirm Reject
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <MessageSquare className="h-4 w-4 mr-2" />
+                                                                Send Comment
                                                             </>
                                                         )}
                                                     </>

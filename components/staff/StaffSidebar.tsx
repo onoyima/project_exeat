@@ -15,11 +15,6 @@ import {
   LogOut,
   X,
   UserCog,
-  Users,
-  Shield,
-  Settings,
-  BarChart3,
-  FileText,
   Home,
   XCircle,
 } from 'lucide-react';
@@ -179,12 +174,6 @@ export default function StaffSidebar({
                 <NavLink href="/staff/admin/audit-trail" icon={History}>
                   Audit Trail
                 </NavLink>
-                {/* <NavLink href="/staff/admin/analytics" icon={BarChart3}>
-                  Analytics
-                </NavLink>
-                <NavLink href="/staff/admin/settings" icon={Settings}>
-                  System Settings
-                </NavLink> */}
               </>
             )}
 
