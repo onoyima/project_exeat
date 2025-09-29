@@ -17,6 +17,8 @@ import {
   UserCog,
   Home,
   XCircle,
+  Building2,
+  CreditCard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -167,6 +169,12 @@ export default function StaffSidebar({
                 </div>
                 <NavLink href="/staff/admin" icon={Home}>
                   Admin Dashboard
+                </NavLink>
+                <NavLink href="/staff/admin/hostel-assignments" icon={Building2}>
+                  Hostel Assignments
+                </NavLink>
+                <NavLink href="/staff/admin/student-debts" icon={CreditCard}>
+                  Student Debts
                 </NavLink>
                 <NavLink href="/staff/assign-exeat-role" icon={UserCog}>
                   Assign Exeat Role

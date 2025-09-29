@@ -43,7 +43,7 @@ export interface User {
 /**
  * User role type
  */
-export type UserRole = 'student' | 'dean' | 'deputy-dean' | 'hostel-admin' | 'admin' | 'cmd';
+export type UserRole = 'student' | 'dean' | 'secretary' | 'hostel-admin' | 'admin' | 'cmd';
 
 /**
  * Authentication response

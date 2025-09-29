@@ -68,7 +68,7 @@ export default function PendingExeatRequestsPage() {
                 const statusGroups = {
                     pending: ['pending', 'recommendation1', 'recommendation2'],
                     medical: ['cmd_review'],
-                    dean: ['deputy-dean_review', 'parent_consent', 'dean_review'],
+                    dean: ['secretary_review', 'parent_consent', 'dean_review'],
                     approved: ['approved', 'hostel_signin', 'hostel_signout', 'security_signout'],
                     active: ['signed_out', 'security_signin'],
                     rejected: ['rejected'],
@@ -206,7 +206,7 @@ export default function PendingExeatRequestsPage() {
     const getRoleDisplayName = (roleName: string) => {
         const roleMap: Record<string, string> = {
             dean: 'Dean of Students',
-            deputy_dean: 'Deputy Dean',
+            secretary: 'Deputy Dean',
             cmd: 'Chief Medical Director',
             hostel_admin: 'Hostel Admin',
         };

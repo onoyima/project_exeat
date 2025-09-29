@@ -108,7 +108,7 @@ export const ExeatRequestDetail: React.FC<ExeatRequestDetailProps> = ({
             signed_in: 'secondary',
             completed: 'secondary',
             cmd_review: 'default',
-            'deputy-dean_review': 'default',
+            'secretary_review': 'default',
         };
 
         return (
@@ -119,9 +119,9 @@ export const ExeatRequestDetail: React.FC<ExeatRequestDetailProps> = ({
     };
 
     // Check permissions based on user role
-    const canApprove = userRole === 'dean' || userRole === 'deputy_dean';
+    const canApprove = userRole === 'dean' || userRole === 'secretary';
     const canVetMedical = userRole === 'cmd';
-    const isPending = request.status === 'pending' || request.status === 'cmd_review' || request.status === 'deputy-dean_review';
+    const isPending = request.status === 'pending' || request.status === 'cmd_review' || request.status === 'secretary_review';
 
     // Check if the request status is eligible for "See me" button
     // Exclude hostel signout, hostel sign in, security sign out, security sign in, and completed statuses
@@ -130,7 +130,7 @@ export const ExeatRequestDetail: React.FC<ExeatRequestDetailProps> = ({
 
     // Determine if user can take action on this specific request
     const canTakeAction = isPending && (
-        (canApprove && (request.status === 'pending' || request.status === 'deputy-dean_review')) ||
+        (canApprove && (request.status === 'pending' || request.status === 'secretary_review')) ||
         (canVetMedical && request.status === 'cmd_review')
     );
 

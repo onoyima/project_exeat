@@ -158,7 +158,7 @@ export const ExeatRequestCard: React.FC<ExeatRequestCardProps> = ({
         );
     };
 
-    const canApprove = userRole === 'dean' || userRole === 'deputy_dean';
+    const canApprove = userRole === 'dean' || userRole === 'secretary';
     const canSign = userRole === 'hostel_admin';
     const isApproved = request.status === 'approved';
     const isSignedOut = request.status === 'signed_out';

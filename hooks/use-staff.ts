@@ -81,7 +81,7 @@ export const useStaff = () => {
 
     // Role-specific permissions
     const canApproveExeat = useMemo(() => {
-        return hasRole('dean') || hasRole('deputy_dean');
+        return hasRole('dean') || hasRole('secretary');
     }, [hasRole]);
 
     const canVetMedical = useMemo(() => {
@@ -101,7 +101,7 @@ export const useStaff = () => {
         if (hasRole('cmd')) {
             return useGetExeatRequestsByStatusQuery('cmd_review');
         }
-        if (hasRole('dean') || hasRole('deputy_dean')) {
+        if (hasRole('dean') || hasRole('secretary')) {
             return useGetAllExeatRequestsQuery();
         }
         if (hasRole('hostel_admin')) {

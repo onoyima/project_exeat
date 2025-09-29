@@ -22,7 +22,7 @@ export const getDynamicActionTitle = (status: string) => {
             return 'Take Action';
         case 'cmd_review':
             return 'Medical Director Review';
-        case 'deputy-dean_review':
+        case 'secretary_review':
             return 'Deputy Dean Review';
         case 'dean_review':
             return 'Dean Review';
@@ -69,7 +69,7 @@ export const getDynamicActionDescription = (status: string) => {
             return 'This request requires your decision. Please review carefully and provide appropriate feedback.';
         case 'cmd_review':
             return 'This medical request is under review by the Medical Director. Your input may be required.';
-        case 'deputy-dean_review':
+        case 'secretary_review':
             return 'This request is under review by the Deputy Dean. Please await their decision.';
         case 'dean_review':
             return 'This request requires review by the Dean of Students. Please await their decision.';
@@ -163,7 +163,7 @@ export const getDynamicCommentRequirement = (status: string) => {
  * @returns True if the status allows action buttons
  */
 export const canTakeAction = (status: string) => {
-    return ['pending', 'cmd_review', 'deputy-dean_review', 'dean_review', 'recommendation1', 'recommendation2'].includes(status);
+    return ['pending', 'cmd_review', 'secretary_review', 'dean_review', 'recommendation1', 'recommendation2'].includes(status);
 };
 
 /**
@@ -219,7 +219,7 @@ export const getApprovalConfirmationText = (
         case 'cmd_review':
             return `You are approving ${studentName}'s medical exeat request to ${destination} for ${durationText}. As the Medical Director, your approval confirms that the medical reason "${reason}" is valid and the student may move to the next stage to proceed with their medical leave.`;
 
-        case 'deputy-dean_review':
+        case 'secretary_review':
             return `You are approving ${studentName}'s exeat request to ${destination} for ${durationText}. As the Deputy Dean, your approval confirms that the reason "${reason}" meets institutional standards and the student may proceed with their leave.`;
 
         case 'dean_review':
@@ -271,7 +271,7 @@ export const getRejectionConfirmationText = (
         case 'cmd_review':
             return `You are rejecting ${studentName}'s medical exeat request to ${destination} for ${durationText}. As the Medical Director, your rejection indicates that the medical reason "${reason}" does not meet medical leave criteria.`;
 
-        case 'deputy-dean_review':
+        case 'secretary_review':
             return `You are rejecting ${studentName}'s exeat request to ${destination} for ${durationText}. As the Deputy Dean, your rejection indicates that the reason "${reason}" does not meet institutional standards.`;
 
         case 'dean_review':

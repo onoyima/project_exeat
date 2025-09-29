@@ -173,7 +173,7 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                 {/* Primary Action Row */}
                                 <div className="flex gap-2">
                                     {/* Show approve/reject for pending and review statuses */}
-                                    {(r.status === 'pending' || r.status === 'cmd_review' || r.status === 'deputy-dean_review') && (
+                                    {(r.status === 'pending' || r.status === 'cmd_review' || r.status === 'secretary_review') && (
                                         <>
                                             <Button
                                                 size="sm"
@@ -319,7 +319,7 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
                                             {/* Show approve/reject for pending and review statuses */}
-                                            {(r.status === 'pending' || r.status === 'cmd_review' || r.status === 'deputy-dean_review') && (
+                                            {(r.status === 'pending' || r.status === 'cmd_review' || r.status === 'secretary_review') && (
                                                 <>
                                                     <Button
                                                         size="sm"

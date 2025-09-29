@@ -109,13 +109,13 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
             icon: Shield,
             description: 'Chief Medical Director review',
             roleMatch: 'cmd'
-        },] : []),
+        }] : []),
         {
-            key: 'deputy_dean_review',
-            label: 'Deputy Dean Review',
+            key: 'secretary_review',
+            label: 'Secretary Review',
             icon: UserCheck,
-            description: 'Deputy Dean approval',
-            roleMatch: 'deputy_dean'
+            description: 'Secretary approval',
+            roleMatch: 'secretary'
         },
         {
             key: 'parent_consent',
@@ -247,8 +247,8 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
         }
 
         // Handle deputy dean review status specifically
-        if (exeatRequest.status === 'deputy_dean_review') {
-            const deputyDeanIndex = workflowStages.findIndex(s => s.key === 'deputy_dean_review');
+        if (exeatRequest.status === 'secretary_review') {
+            const deputyDeanIndex = workflowStages.findIndex(s => s.key === 'secretary_review');
             return deputyDeanIndex >= 0 ? deputyDeanIndex : (exeatRequest.is_medical ? 2 : 1);
         }
 
@@ -304,10 +304,10 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
                 current: 'Awaiting Chief Medical Director review',
                 pending: 'Chief Medical Director review required'
             },
-            deputy_dean_review: {
-                completed: 'Deputy Dean approval received',
-                current: 'Awaiting Deputy Dean approval',
-                pending: 'Deputy Dean approval required'
+            secretary_review: {
+                completed: 'Secretary approval received',
+                current: 'Awaiting Secretary approval',
+                pending: 'Secretary approval required'
             },
             parent_consent: {
                 completed: 'Parent/Guardian consent received',
@@ -396,7 +396,7 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
             if (stageKey === 'departed_school') {
                 return 'current'; // Ready for departure
             }
-            if (['security_signout', 'hostel_signout', 'dean_review', 'parent_consent', 'deputy_dean_review', 'cmd_review'].includes(stageKey)) {
+            if (['security_signout', 'hostel_signout', 'dean_review', 'parent_consent', 'secretary_review', 'cmd_review'].includes(stageKey)) {
                 return 'completed'; // Approval stages are done
             }
             return 'pending';
@@ -596,7 +596,7 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
                                                             {approval?.comment && (
                                                                 <div className="bg-gray-50 rounded-lg p-3 border-l-2 border-gray-200">
                                                                     <p className="text-xs text-gray-700 italic">
-                                                                        "{approval.comment}"
+                                                                        &quot;{approval.comment}&quot;
                                                                     </p>
                                                                 </div>
                                                             )}

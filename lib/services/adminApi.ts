@@ -1,6 +1,29 @@
 
 import { api } from './api';
-import type { AdminDashboardResponse, AuditTrailResponse, AdminStaffAssignment, AssignRoleResponse, AdminRole, StaffMember, AssignRoleRequest } from '@/types/staff';
+import type {
+    AdminDashboardResponse,
+    AuditTrailResponse,
+    AdminStaffAssignment,
+    AssignRoleResponse,
+    AdminRole,
+    StaffMember,
+    AssignRoleRequest,
+    HostelAssignmentOptions,
+    CreateHostelAssignmentRequest,
+    CreateHostelAssignmentResponse,
+    ListHostelAssignmentsParams,
+    ListHostelAssignmentsResponse,
+    UpdateAssignmentStatusRequest,
+    UpdateAssignmentStatusResponse,
+    RemoveAssignmentResponse,
+    StaffHostelAssignmentsResponse,
+    HostelAssignedStaffResponse
+} from '@/types/staff';
+import type {
+    AdminDebtListResponse,
+    ClearDebtRequest,
+    ClearDebtResponse
+} from '@/types/student';
 
 // API
 export const adminApi = api.injectEndpoints({
@@ -149,6 +172,102 @@ export const adminApi = api.injectEndpoints({
             transformResponse: (response: AuditTrailResponse) => response,
             providesTags: ['Admin'],
         }),
+
+        // ===== HOSTEL ASSIGNMENT ENDPOINTS =====
+
+        // 1. Get Assignment Options (Paginated)
+        getHostelAssignmentOptions: builder.query<HostelAssignmentOptions, { per_page?: number; page?: number }>({
+            query: ({ per_page = 15, page = 1 }) => ({
+                url: '/admin/hostel-assignments/options',
+                params: { per_page, page },
+            }),
+            transformResponse: (response: { status: string; data: HostelAssignmentOptions }) => response.data,
+            providesTags: ['Admin'],
+        }),
+
+        // 2. Create Hostel Assignment
+        createHostelAssignment: builder.mutation<CreateHostelAssignmentResponse, CreateHostelAssignmentRequest>({
+            query: (body) => ({
+                url: '/admin/hostel-assignments',
+                method: 'POST',
+                body,
+            }),
+            transformResponse: (response: CreateHostelAssignmentResponse) => response,
+            invalidatesTags: ['Admin'],
+        }),
+
+        // 3. List All Assignments
+        getHostelAssignments: builder.query<ListHostelAssignmentsResponse, ListHostelAssignmentsParams>({
+            query: (params) => ({
+                url: '/admin/hostel-assignments',
+                params,
+            }),
+            transformResponse: (response: ListHostelAssignmentsResponse) => response,
+            providesTags: ['Admin'],
+        }),
+
+        // 4. Update Assignment Status
+        updateHostelAssignmentStatus: builder.mutation<UpdateAssignmentStatusResponse, { id: number; status: 'active' | 'inactive' }>({
+            query: ({ id, status }) => ({
+                url: `/admin/hostel-assignments/${id}`,
+                method: 'PUT',
+                body: { status },
+            }),
+            transformResponse: (response: UpdateAssignmentStatusResponse) => response,
+            invalidatesTags: ['Admin'],
+        }),
+
+        // 5. Remove Assignment
+        removeHostelAssignment: builder.mutation<RemoveAssignmentResponse, number>({
+            query: (id) => ({
+                url: `/admin/hostel-assignments/${id}`,
+                method: 'DELETE',
+            }),
+            transformResponse: (response: RemoveAssignmentResponse) => response,
+            invalidatesTags: ['Admin'],
+        }),
+
+        // 6. Get Staff's Hostel Assignments
+        getStaffHostelAssignments: builder.query<StaffHostelAssignmentsResponse, number>({
+            query: (staffId) => `/admin/hostel-assignments/staff/${staffId}`,
+            transformResponse: (response: StaffHostelAssignmentsResponse) => response,
+            providesTags: ['Admin'],
+        }),
+
+        // 7. Get Hostel's Assigned Staff
+        getHostelAssignedStaff: builder.query<HostelAssignedStaffResponse, number>({
+            query: (hostelId) => `/admin/hostel-assignments/hostel/${hostelId}`,
+            transformResponse: (response: HostelAssignedStaffResponse) => response,
+            providesTags: ['Admin'],
+        }),
+
+        // ===== STUDENT DEBT MANAGEMENT ENDPOINTS =====
+
+        // 1. List All Student Debts (Admin)
+        getStudentDebts: builder.query<AdminDebtListResponse, {
+            payment_status?: 'unpaid' | 'paid' | 'cleared';
+            student_id?: number;
+            page?: number;
+            per_page?: number;
+        }>({
+            query: (params) => ({
+                url: '/admin/student-debts',
+                params,
+            }),
+            transformResponse: (response: AdminDebtListResponse) => response,
+            providesTags: ['Admin'],
+        }),
+
+        // 2. Clear Debt Manually (Admin)
+        clearStudentDebt: builder.mutation<ClearDebtResponse, { id: number; data: ClearDebtRequest }>({
+            query: ({ id, data }) => ({
+                url: `/admin/student-debts/${id}/clear`,
+                method: 'POST',
+                body: data,
+            }),
+            transformResponse: (response: ClearDebtResponse) => response,
+            invalidatesTags: ['Admin'],
+        }),
     }),
 });
 
@@ -161,4 +280,13 @@ export const {
     useCreateRoleAssignmentMutation,
     useGetAdminDashboardStatsQuery,
     useGetAdminAuditTrailQuery,
+    useGetHostelAssignmentOptionsQuery,
+    useCreateHostelAssignmentMutation,
+    useGetHostelAssignmentsQuery,
+    useUpdateHostelAssignmentStatusMutation,
+    useRemoveHostelAssignmentMutation,
+    useGetStaffHostelAssignmentsQuery,
+    useGetHostelAssignedStaffQuery,
+    useGetStudentDebtsQuery,
+    useClearStudentDebtMutation,
 } = adminApi; 

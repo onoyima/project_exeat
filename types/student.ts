@@ -88,7 +88,7 @@ export interface ExeatRequestForm {
 export type ExeatStatus =
     | 'pending'
     | 'cmd_review'
-    | 'deputy-dean_review'
+    | 'secretary_review'
     | 'parent_consent'
     | 'dean_review'
     | 'hostel_signin'
@@ -132,4 +132,261 @@ export interface ExeatRequest {
 export interface ExeatCategory {
     id: number;
     name: string;
+}
+
+// ===== STUDENT DEBT MANAGEMENT TYPES =====
+
+/**
+ * Student debt information
+ */
+export interface StudentDebt {
+    id: number;
+    student_id: number;
+    exeat_request_id: number;
+    amount: string;
+    overdue_hours: number;
+    payment_status: 'unpaid' | 'paid' | 'cleared';
+    payment_reference: string | null;
+    payment_proof: string | null;
+    payment_date: string | null;
+    cleared_by: number | null;
+    cleared_at: string | null;
+    notes: string | null;
+    created_at: string;
+    updated_at: string;
+    student: {
+        id: number;
+        user_id: number;
+        user_type: number;
+        student_role_id: number;
+        email: string;
+        password: string;
+        title_id: number;
+        lname: string;
+        fname: string;
+        mname: string;
+        gender: string;
+        dob: string;
+        country_id: number;
+        state_id: number;
+        lga_name: string;
+        city: string;
+        religion: string;
+        marital_status: string;
+        address: string;
+        phone: string;
+        username: string;
+        passport: string;
+        signature: string;
+        hobbies: string;
+        email_verified_at: string;
+        status: number;
+        remember_token: string;
+        created_at: string | null;
+        updated_at: string;
+    };
+    exeat_request: {
+        id: number;
+        student_id: number;
+        matric_no: string;
+        category_id: number;
+        reason: string;
+        destination: string;
+        departure_date: string;
+        return_date: string;
+        preferred_mode_of_contact: string;
+        parent_surname: string;
+        parent_othernames: string;
+        parent_phone_no: string;
+        parent_phone_no_two: string;
+        parent_email: string;
+        student_accommodation: string | null;
+        status: string;
+        is_medical: boolean;
+        is_expired: boolean;
+        expired_at: string | null;
+        created_at: string;
+        updated_at: string;
+    };
+    cleared_by_staff: any | null;
+}
+
+/**
+ * Student debt list response
+ */
+export interface StudentDebtListResponse {
+    status: 'success';
+    data: {
+        current_page: number;
+        data: StudentDebt[];
+        total: number;
+    };
+}
+
+/**
+ * Payment initialization request
+ */
+export interface PaymentInitRequest {
+    payment_method: 'paystack';
+}
+
+/**
+ * Payment initialization response
+ */
+export interface PaymentInitResponse {
+    status: 'success';
+    message: string;
+    data: {
+        authorization_url: string;
+        access_code: string;
+        reference: string;
+    };
+}
+
+/**
+ * Payment verification response
+ */
+export interface PaymentVerificationResponse {
+    status: 'success';
+    message: string;
+    data: {
+        id: number;
+        payment_status: 'cleared';
+        payment_date: string;
+        cleared_at: string;
+        payment_reference: string;
+    };
+}
+
+/**
+ * Admin debt list item
+ */
+export interface AdminDebtListItem {
+    id: number;
+    student_id: number;
+    exeat_request_id: number;
+    amount: string;
+    overdue_hours: number;
+    payment_status: 'unpaid' | 'paid' | 'cleared';
+    payment_reference: string | null;
+    payment_proof: string | null;
+    payment_date: string | null;
+    cleared_by: number | null;
+    cleared_at: string | null;
+    notes: string | null;
+    created_at: string;
+    updated_at: string;
+    student: {
+        id: number;
+        user_id: number;
+        user_type: number;
+        student_role_id: number;
+        email: string;
+        password: string;
+        title_id: number;
+        lname: string;
+        fname: string;
+        mname: string;
+        gender: string;
+        dob: string;
+        country_id: number;
+        state_id: number;
+        lga_name: string;
+        city: string;
+        religion: string;
+        marital_status: string;
+        address: string;
+        phone: string;
+        username: string;
+        passport: string;
+        signature: string;
+        hobbies: string;
+        email_verified_at: string;
+        status: number;
+        remember_token: string;
+        created_at: string | null;
+        updated_at: string;
+    };
+    exeat_request: {
+        id: number;
+        student_id: number;
+        matric_no: string;
+        category_id: number;
+        reason: string;
+        destination: string;
+        departure_date: string;
+        return_date: string;
+        preferred_mode_of_contact: string;
+        parent_surname: string;
+        parent_othernames: string;
+        parent_phone_no: string;
+        parent_phone_no_two: string;
+        parent_email: string;
+        student_accommodation: string | null;
+        status: string;
+        is_medical: boolean;
+        is_expired: boolean;
+        expired_at: string | null;
+        created_at: string;
+        updated_at: string;
+    };
+    cleared_by_staff: any | null;
+}
+
+/**
+ * Admin debt list response
+ */
+export interface AdminDebtListResponse {
+    status: 'success';
+    data: {
+        current_page: number;
+        data: AdminDebtListItem[];
+        total: number;
+    };
+}
+
+/**
+ * Clear debt request
+ */
+export interface ClearDebtRequest {
+    notes: string;
+}
+
+/**
+ * Clear debt response
+ */
+export interface ClearDebtResponse {
+    status: 'success';
+    message: string;
+    data: {
+        id: number;
+        payment_status: 'cleared';
+        cleared_by: number;
+        cleared_at: string;
+        notes: string;
+        clearedByStaff: {
+            id: number;
+            fname: string;
+            lname: string;
+        };
+    };
+}
+
+/**
+ * Debt check response for exeat creation
+ */
+export interface DebtCheckResponse {
+    status: 'error';
+    message: string;
+    details: {
+        total_debt_amount: number;
+        number_of_debts: number;
+        debts: Array<{
+            debt_id: number;
+            amount: number;
+            payment_status: string;
+            exeat_request_id: number;
+        }>;
+        payment_instructions: string;
+    };
 } 

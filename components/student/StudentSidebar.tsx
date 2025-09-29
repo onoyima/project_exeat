@@ -12,7 +12,8 @@ import {
   History,
   UserCircle,
   LogOut,
-  X
+  X,
+  CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -146,6 +147,10 @@ export default function StudentSidebar({
 
             <NavLink href="/student/exeats" icon={History}>
               Exeat History
+            </NavLink>
+
+            <NavLink href="/student/debts" icon={CreditCard}>
+              My Debts
             </NavLink>
 
             {/* Account Navigation */}

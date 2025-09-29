@@ -71,7 +71,7 @@ export default function StudentDashboard() {
 
   // Calculate counts for different statuses with progressive disclosure priority
   const inReviewCount = exeatRequests.filter(r =>
-    ['cmd_review', 'deputy-dean_review', 'dean_review'].includes(r.status)
+    ['cmd_review', 'secretary_review', 'dean_review'].includes(r.status)
   ).length;
   const parentConsentCount = exeatRequests.filter(r => r.status === 'parent_consent').length;
   const hostelCount = exeatRequests.filter(r =>
