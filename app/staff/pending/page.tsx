@@ -206,7 +206,7 @@ export default function PendingExeatRequestsPage() {
     const getRoleDisplayName = (roleName: string) => {
         const roleMap: Record<string, string> = {
             dean: 'Dean of Students',
-            secretary: 'Deputy Dean',
+            secretary: 'Secretary',
             cmd: 'Chief Medical Director',
             hostel_admin: 'Hostel Admin',
         };

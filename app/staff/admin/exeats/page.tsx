@@ -18,7 +18,7 @@ const statuses = [
     { value: "all", label: "All Statuses" },
     { value: "pending", label: "Pending" },
     { value: "cmd_review", label: "CMD Review" },
-    { value: "secretary_review", label: "Deputy Dean Review" },
+    { value: "secretary_review", label: "Secretary Review" },
     { value: "parent_consent", label: "Parent Consent" },
     { value: "dean_review", label: "Dean Review" },
     { value: "hostel_signin", label: "Hostel Sign In" },
