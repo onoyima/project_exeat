@@ -33,6 +33,7 @@ import { useRouter } from "next/navigation";
 import { useGetExeatRequestsQuery } from "@/lib/services/exeatApi";
 import { useGetCurrentUser } from '@/hooks/use-current-user';
 import Link from 'next/link';
+import { useEffect } from 'react';
 import {
   Stethoscope,
   Palmtree,
@@ -74,6 +75,7 @@ const statuses = [
 
 export default function ExeatHistory() {
   const router = useRouter();
+  const { user, isLoading: userLoading } = useGetCurrentUser();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -81,8 +83,18 @@ export default function ExeatHistory() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [displayCount, setDisplayCount] = useState(10);
 
-  const { data: exeatData, isLoading } = useGetExeatRequestsQuery();
+  // Only fetch exeat requests when user is authenticated
+  const { data: exeatData, isLoading, refetch } = useGetExeatRequestsQuery(undefined, {
+    skip: !user || userLoading,
+  });
   const exeatRequests = exeatData?.exeat_requests || [];
+
+  // Refetch data when user becomes available
+  useEffect(() => {
+    if (user && !userLoading) {
+      refetch();
+    }
+  }, [user, userLoading, refetch]);
 
   // Filter exeat requests
   const filteredRequests = exeatRequests.filter((request) => {
@@ -265,7 +277,7 @@ export default function ExeatHistory() {
 
             {/* Mobile Card View - Hidden on Desktop */}
             <div className="block lg:hidden space-y-4">
-              {isLoading ? (
+              {userLoading || isLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
@@ -358,7 +370,7 @@ export default function ExeatHistory() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {isLoading ? (
+                      {userLoading || isLoading ? (
                         <TableRow>
                           <TableCell colSpan={6} className="text-center py-8">
                             <div className="flex items-center justify-center">
