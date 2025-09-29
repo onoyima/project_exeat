@@ -187,7 +187,7 @@ export default function ExeatRequestDetailPage() {
     };
 
     // Check if user can edit exeat
-    const canEdit = hasRole('dean') || hasRole('deputy_dean') || hasRole('admin');
+    const canEdit = hasRole('dean') || hasRole('secretary') || hasRole('admin');
 
     // Debug user roles from localStorage
     try {
