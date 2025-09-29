@@ -246,7 +246,7 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
             return workflowStages.length - 1; // Final stage (return & sign in completed)
         }
 
-        // Handle deputy dean review status specifically
+        // Handle Deputy Dean review status specifically
         if (exeatRequest.status === 'secretary_review') {
             const deputyDeanIndex = workflowStages.findIndex(s => s.key === 'secretary_review');
             return deputyDeanIndex >= 0 ? deputyDeanIndex : (exeatRequest.is_medical ? 2 : 1);
