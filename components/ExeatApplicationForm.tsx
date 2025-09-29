@@ -27,12 +27,12 @@ import {
 const preferredModes = [
   { value: 'text', label: 'Text' },
   { value: 'phone_call', label: 'Phone Call' },
-  { value: 'any', label: 'Any' },
+  { value: 'email', label: 'Email' }
 ] as const;
 
 const exeatFormSchema = z.object({
   category_id: z.string().min(1, 'Please select a category'),
-  preferred_mode_of_contact: z.enum(['whatsapp', 'text', 'phone_call', 'any'], {
+  preferred_mode_of_contact: z.enum(['whatsapp', 'text', 'phone_call', 'email'], {
     required_error: 'Please select a contact mode',
   }),
   reason: z.string().min(10, 'Please provide a detailed reason (minimum 10 characters)'),
@@ -62,7 +62,7 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
     resolver: zodResolver(exeatFormSchema),
     defaultValues: {
       category_id: '',
-      preferred_mode_of_contact: 'any',
+      preferred_mode_of_contact: 'phone_call',
       reason: '',
       destination: '',
     },
