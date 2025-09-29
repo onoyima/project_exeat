@@ -167,6 +167,22 @@ export const staffApi = api.injectEndpoints({
             transformResponse: (response: { exeat_request: StaffExeatRequest }) => response,
             providesTags: ['ExeatRequests'],
         }),
+        sendComment: builder.mutation<ApiResponse<StaffExeatRequest>, { exeat_request_id: number; comment: string }>({
+            query: ({ exeat_request_id, comment }) => ({
+                url: `/staff/exeat-requests/${exeat_request_id}/send-comment`,
+                method: 'POST',
+                body: { comment, priority: "high" },
+            }),
+            invalidatesTags: ['ExeatRequests'],
+        }),
+        editExeatRequest: builder.mutation<ApiResponse<StaffExeatRequest>, { exeat_request_id: number; payload: Partial<StaffExeatRequest> }>({
+            query: ({ exeat_request_id, payload }) => ({
+                url: `/staff/exeat-requests/${exeat_request_id}`,
+                method: 'PUT',
+                body: payload,
+            }),
+            invalidatesTags: ['ExeatRequests'],
+        }),
     }),
 });
 
@@ -185,4 +201,6 @@ export const {
     useGetRejectedExeatRequestsQuery,
     useGetRejectedExeatRequestDetailsQuery,
     useGetStaffDashboardStatsQuery,
+    useSendCommentMutation,
+    useEditExeatRequestMutation,
 } = staffApi;

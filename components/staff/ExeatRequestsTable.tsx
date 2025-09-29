@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StatusPill } from '@/components/ui/status-pill';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -16,11 +15,11 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { format } from 'date-fns';
-import { FileText, LogOut, LogIn, CheckCircle, XCircle, MessageSquare } from 'lucide-react';
+import { FileText, LogOut, LogIn, CheckCircle, XCircle, MessageSquare, RefreshCw } from 'lucide-react';
 import type { StaffExeatRequest } from '@/lib/services/staffApi';
 import { CountdownTimer } from '@/components/staff/CountdownTimer';
 import { getApprovalConfirmationText, getRejectionConfirmationText } from '@/lib/utils/exeat-ui';
+import { useToast } from '@/hooks/use-toast';
 
 interface ExeatRequestsTableProps {
     requests: StaffExeatRequest[];
@@ -28,32 +27,9 @@ interface ExeatRequestsTableProps {
     onReject: (exeat_request_id: number, comment?: string) => Promise<void>;
     onSignOut?: (exeat_request_id: number, comment?: string) => Promise<void>;
     onSignIn?: (exeat_request_id: number, comment?: string) => Promise<void>;
+    onSendComment?: (exeat_request_id: number, comment: string) => Promise<void>;
     onViewDetails: (request: StaffExeatRequest) => void;
 }
-
-const getCategoryIcon = (categoryId: number, isMedical: boolean) => {
-    if (isMedical || categoryId === 1) return '🏥';
-    if (categoryId === 2) return '🌴';
-    if (categoryId === 3) return '🚨';
-    if (categoryId === 4) return '💼';
-    return '📋';
-};
-
-const getCategoryName = (categoryId: number, isMedical: boolean) => {
-    if (isMedical || categoryId === 1) return 'Medical';
-    if (categoryId === 2) return 'Casual';
-    if (categoryId === 3) return 'Emergency';
-    if (categoryId === 4) return 'Official';
-    return 'Unknown';
-};
-
-const formatDate = (dateStr: string) => {
-    try {
-        return format(new Date(dateStr), 'PP');
-    } catch {
-        return dateStr;
-    }
-};
 
 export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
     requests,
@@ -61,24 +37,28 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
     onReject,
     onSignOut,
     onSignIn,
+    onSendComment,
     onViewDetails,
 }) => {
+    const { toast } = useToast();
     const getInitials = (fname: string, lname: string) => `${(fname || '').charAt(0)}${(lname || '').charAt(0)}`.toUpperCase();
     const [actionDialog, setActionDialog] = useState<{
         isOpen: boolean;
-        type: 'approve' | 'reject' | null;
+        type: 'approve' | 'reject' | 'see_me' | null;
         requestId: number | null;
         comment: string;
         request: StaffExeatRequest | null;
+        isLoading: boolean;
     }>({
         isOpen: false,
         type: null,
         requestId: null,
         comment: '',
         request: null,
+        isLoading: false,
     });
 
-    const handleAction = (type: 'approve' | 'reject', requestId: number) => {
+    const handleAction = (type: 'approve' | 'reject' | 'see_me', requestId: number) => {
         const request = requests.find(r => r.id === requestId);
         setActionDialog({
             isOpen: true,
@@ -86,21 +66,67 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
             requestId,
             comment: '',
             request: request || null,
+            isLoading: false,
         });
     };
 
     const submitAction = async () => {
         if (!actionDialog.requestId || !actionDialog.type) return;
 
+        setActionDialog(prev => ({ ...prev, isLoading: true }));
+
         try {
             if (actionDialog.type === 'approve') {
                 await onApprove(actionDialog.requestId, actionDialog.comment || undefined);
-            } else {
+                toast({
+                    title: 'Success',
+                    description: 'Exeat request approved successfully.',
+                });
+            } else if (actionDialog.type === 'reject') {
                 await onReject(actionDialog.requestId, actionDialog.comment || undefined);
+                toast({
+                    title: 'Success',
+                    description: 'Exeat request rejected successfully.',
+                });
+            } else if (actionDialog.type === 'see_me' && onSendComment) {
+                try {
+                    await onSendComment(actionDialog.requestId, actionDialog.comment);
+                    toast({
+                        title: 'Success',
+                        description: 'Comment sent to student successfully.',
+                    });
+                } catch (error: any) {
+                    console.error('Error sending comment:', error);
+                    console.log('DEBUG: Error type in table:', typeof error);
+                    console.log('DEBUG: Error message in table:', error.message);
+
+                    // Extract detailed error message
+                    let errorMessage = 'Failed to send comment. Please try again.';
+
+                    if (error.message) {
+                        errorMessage = error.message;
+                    }
+
+                    console.log('DEBUG: Final error message for toast:', errorMessage);
+
+                    toast({
+                        title: 'Error',
+                        description: errorMessage,
+                        variant: 'destructive',
+                    });
+                    // Re-throw to prevent dialog from closing
+                    throw error;
+                }
             }
-            setActionDialog({ isOpen: false, type: null, requestId: null, comment: '', request: null });
+            setActionDialog({ isOpen: false, type: null, requestId: null, comment: '', request: null, isLoading: false });
         } catch (error) {
             console.error('Error processing action:', error);
+            toast({
+                title: 'Error',
+                description: `Failed to ${actionDialog.type === 'see_me' ? 'send comment' : actionDialog.type} request. Please try again.`,
+                variant: 'destructive',
+            });
+            setActionDialog(prev => ({ ...prev, isLoading: false }));
         }
     };
 
@@ -146,16 +172,6 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                             <div className="space-y-2">
                                 {/* Primary Action Row */}
                                 <div className="flex gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="flex-1 min-w-0"
-                                        onClick={() => onViewDetails(r)}
-                                    >
-                                        <FileText className="h-4 w-4 mr-1 sm:mr-2" />
-                                        <span className="truncate">View Details</span>
-                                    </Button>
-
                                     {/* Show approve/reject for pending and review statuses */}
                                     {(r.status === 'pending' || r.status === 'cmd_review' || r.status === 'secretary_review') && (
                                         <>
@@ -230,6 +246,29 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                             <span className="truncate">Sign In</span>
                                         </Button>
                                     )}
+
+                                    {/* Show See Me button for eligible requests */}
+                                    {!!onSendComment && !['hostel_signout', 'hostel_signin', 'security_signout', 'security_signin', 'completed'].includes(r.status) && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="flex-1 min-w-0"
+                                            onClick={() => handleAction('see_me', r.id)}
+                                        >
+                                            <MessageSquare className="h-4 w-4 mr-1 sm:mr-2" />
+                                            <span className="truncate">See Me</span>
+                                        </Button>
+                                    )}
+
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 min-w-0"
+                                        onClick={() => onViewDetails(r)}
+                                    >
+                                        <FileText className="h-4 w-4 mr-1 sm:mr-2" />
+                                        <span className="truncate">View Details</span>
+                                    </Button>
                                 </div>
                             </div>
                         </Card>
@@ -279,16 +318,6 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-8 px-3 text-[13px] md:text-sm"
-                                                onClick={() => onViewDetails(r)}
-                                            >
-                                                <FileText className="h-4 w-4 mr-2" />
-                                                View Details
-                                            </Button>
-
                                             {/* Show approve/reject for pending and review statuses */}
                                             {(r.status === 'pending' || r.status === 'cmd_review' || r.status === 'secretary_review') && (
                                                 <>
@@ -360,6 +389,30 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                                     Sign In
                                                 </Button>
                                             )}
+
+                                            {/* Show See Me button for eligible requests */}
+                                            {!!onSendComment && !['hostel_signout', 'hostel_signin', 'security_signout', 'security_signin', 'completed'].includes(r.status) && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-8 px-3 text-[13px] md:text-sm"
+                                                    onClick={() => handleAction('see_me', r.id)}
+                                                >
+                                                    <MessageSquare className="h-4 w-4 mr-2" />
+                                                    See Me
+                                                </Button>
+                                            )}
+
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 px-3 text-[13px] md:text-sm"
+                                                onClick={() => onViewDetails(r)}
+                                            >
+                                                <FileText className="h-4 w-4 mr-2" />
+                                                View Details
+                                            </Button>
+
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -374,7 +427,11 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>
-                            {actionDialog.type === 'approve' ? 'Approve Exeat Request' : 'Reject Exeat Request'}
+                            {actionDialog.type === 'approve'
+                                ? 'Approve Exeat Request'
+                                : actionDialog.type === 'reject'
+                                    ? 'Reject Exeat Request'
+                                    : 'Send Comment to Student'}
                         </DialogTitle>
                         <DialogDescription>
                             {actionDialog.request && actionDialog.type === 'approve' ? (
@@ -407,44 +464,75 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                     <br />
                                     <span className="font-medium text-red-700">This action cannot be undone.</span>
                                 </>
+                            ) : actionDialog.request && actionDialog.type === 'see_me' ? (
+                                <>
+                                    Send a message to {actionDialog.request.student.fname} {actionDialog.request.student.lname} requesting them to see you.
+                                </>
                             ) : (
                                 actionDialog.type === 'approve'
                                     ? 'Are you sure you want to approve this exeat request? You can add an optional comment below.'
-                                    : 'Are you sure you want to reject this exeat request? Please provide a reason for rejection.'
+                                    : actionDialog.type === 'reject'
+                                        ? 'Are you sure you want to reject this exeat request? Please provide a reason for rejection.'
+                                        : 'Please provide a message for the student.'
                             )}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
                             <label className="text-sm font-medium">
-                                {actionDialog.type === 'approve' ? 'Comment (Optional)' : 'Reason for Rejection *'}
+                                {actionDialog.type === 'approve'
+                                    ? 'Comment (Optional)'
+                                    : actionDialog.type === 'reject'
+                                        ? 'Reason for Rejection *'
+                                        : 'Message for Student *'}
                             </label>
                             <Textarea
                                 placeholder={actionDialog.type === 'approve'
                                     ? 'Add any additional notes or conditions...'
-                                    : 'Please provide a reason for rejection...'
+                                    : actionDialog.type === 'reject'
+                                        ? 'Please provide a reason for rejection...'
+                                        : 'Enter your message for the student...'
                                 }
                                 value={actionDialog.comment}
                                 onChange={(e) => setActionDialog(prev => ({ ...prev, comment: e.target.value }))}
                                 className="mt-1"
                                 rows={3}
-                                required={actionDialog.type === 'reject'}
+                                defaultValue={actionDialog.type === 'see_me' ? "Come to my office to see me" : ""}
+                                required={actionDialog.type === 'reject' || actionDialog.type === 'see_me'}
                             />
                         </div>
                     </div>
                     <DialogFooter>
                         <Button
                             variant="outline"
-                            onClick={() => setActionDialog({ isOpen: false, type: null, requestId: null, comment: '', request: null })}
+                            onClick={() => setActionDialog({ isOpen: false, type: null, requestId: null, comment: '', request: null, isLoading: false })}
+                            disabled={actionDialog.isLoading}
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={submitAction}
-                            className={actionDialog.type === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
-                            disabled={actionDialog.type === 'reject' && !actionDialog.comment.trim()}
+                            className={
+                                actionDialog.type === 'approve'
+                                    ? 'bg-green-600 hover:bg-green-700'
+                                    : actionDialog.type === 'reject'
+                                        ? 'bg-red-600 hover:bg-red-700'
+                                        : ''
+                            }
+                            disabled={actionDialog.isLoading || ((actionDialog.type === 'reject' || actionDialog.type === 'see_me') && !actionDialog.comment.trim())}
                         >
-                            {actionDialog.type === 'approve' ? 'Approve Request' : 'Reject Request'}
+                            {actionDialog.isLoading ? (
+                                <>
+                                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                                    Processing...
+                                </>
+                            ) : (
+                                actionDialog.type === 'approve'
+                                    ? 'Approve Request'
+                                    : actionDialog.type === 'reject'
+                                        ? 'Reject Request'
+                                        : 'Send Comment'
+                            )}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

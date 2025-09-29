@@ -147,3 +147,45 @@ export const getCountdownColor = (timeData: ReturnType<typeof getTimeRemaining>)
 
     return 'text-green-600 bg-green-50 border-green-200';
 };
+
+/**
+ * Check if a user can edit an exeat request based on their role and the exeat status
+ * @param userRoles - Array of user roles
+ * @param exeatStatus - Current status of the exeat request
+ * @returns Boolean indicating if the user can edit the exeat
+ */
+export const canEditExeat = (userRoles: string[], exeatStatus: string): boolean => {
+    // Only admin, dean, and deputy_dean roles can edit
+    const hasEditRole = userRoles.some(role =>
+        ['admin', 'dean', 'deputy_dean'].includes(role)
+    );
+
+    return hasEditRole;
+};
+
+/**
+ * Get editable fields based on user role
+ * @param userRole - The user's role
+ * @returns Array of field names that can be edited
+ */
+export const getEditableFields = (userRole: string): string[] => {
+    // Base fields that all editors can modify
+    const baseFields = ['reason', 'destination', 'departure_date', 'return_date', 'comment'];
+
+    // Additional fields for admin and dean roles
+    if (['admin', 'dean'].includes(userRole)) {
+        return [
+            ...baseFields,
+            'parent_surname',
+            'parent_othernames',
+            'parent_phone_no',
+            'parent_phone_no_two',
+            'parent_email',
+            'preferred_mode_of_contact',
+            'category_id',
+            'is_medical'
+        ];
+    }
+
+    return baseFields;
+};

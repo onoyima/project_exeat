@@ -129,7 +129,7 @@ export default function AdminDashboard() {
                                     </CardDescription>
                                 </div>
                                 <Button asChild variant="outline" size="sm">
-                                    <Link href="/staff/admin/audit">
+                                    <Link href="/staff/admin/audit-trail">
                                         <ArrowRight className="mr-2 h-4 w-4" />
                                         View All
                                     </Link>
