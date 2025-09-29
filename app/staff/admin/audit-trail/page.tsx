@@ -228,7 +228,7 @@ export default function AdminAuditTrailPage() {
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-4 max-h-96 overflow-y-auto">
+                        <div className="space-y-4 h-full overflow-y-auto">
                             {filteredLogs.map((log) => (
                                 <div
                                     key={log.id}

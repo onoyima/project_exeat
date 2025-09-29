@@ -11,7 +11,7 @@ export const getStatusColor = (status: string) => {
         case 'rejected':
             return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200';
         case 'cmd_review':
-        case 'deputy-dean_review':
+        case 'secretary_review':
         case 'dean_review':
             return 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200';
         case 'parent_consent':
@@ -35,8 +35,8 @@ export const getStatusText = (status: string) => {
             return 'Awaiting Initial Review';
         case 'cmd_review':
             return 'Medical Director Review';
-        case 'deputy-dean_review':
-            return 'Deputy Dean Review';
+        case 'secretary_review':
+            return 'Secretary Review';
         case 'parent_consent':
             return 'Awaiting Parent Approval';
         case 'dean_review':

@@ -431,6 +431,196 @@ export interface AdminDashboardResponse {
     };
 }
 
+// ===== HOSTEL ASSIGNMENT TYPES =====
+
+/**
+ * Hostel information
+ */
+export interface Hostel {
+    id: number;
+    name: string;
+    gender: string;
+}
+
+/**
+ * Staff member for assignment
+ */
+export interface StaffForAssignment {
+    id: number;
+    fname: string;
+    lname: string;
+    email: string;
+    passport?: string;
+}
+
+/**
+ * Paginated response for hostels
+ */
+export interface HostelPagination {
+    current_page: number;
+    data: Hostel[];
+    total: number;
+}
+
+/**
+ * Paginated response for staff
+ */
+export interface StaffPagination {
+    current_page: number;
+    data: StaffForAssignment[];
+    total: number;
+}
+
+/**
+ * Assignment options response
+ */
+export interface HostelAssignmentOptions {
+    hostels: HostelPagination;
+    staff: StaffPagination;
+}
+
+/**
+ * Create hostel assignment request
+ */
+export interface CreateHostelAssignmentRequest {
+    vuna_accomodation_id: number;
+    staff_id: number;
+    auto_assign_role?: boolean;
+    notes?: string;
+}
+
+/**
+ * Hostel assignment response
+ */
+export interface HostelAssignment {
+    id: number;
+    vuna_accomodation_id: number;
+    staff_id: number;
+    assigned_at: string;
+    status: 'active' | 'inactive';
+    assigned_by: number;
+    notes?: string;
+    hostel: Hostel;
+    staff: StaffForAssignment;
+}
+
+/**
+ * Create hostel assignment response
+ */
+export interface CreateHostelAssignmentResponse {
+    status: 'success';
+    message: string;
+    data: HostelAssignment;
+}
+
+/**
+ * List hostel assignments query parameters
+ */
+export interface ListHostelAssignmentsParams {
+    status?: 'active' | 'inactive';
+    hostel_id?: number;
+    staff_id?: number;
+    page?: number;
+    per_page?: number;
+}
+
+/**
+ * Hostel assignment list item
+ */
+export interface HostelAssignmentListItem {
+    id: number;
+    vuna_accomodation_id: number;
+    staff_id: number;
+    assigned_at: string;
+    status: 'active' | 'inactive';
+    assigned_by: number;
+    notes?: string;
+    hostel: {
+        id: number;
+        name: string;
+    };
+    staff: {
+        id: number;
+        fname: string;
+        lname: string;
+        passport?: string;
+    };
+}
+
+/**
+ * Paginated hostel assignments response
+ */
+export interface HostelAssignmentsPagination {
+    current_page: number;
+    data: HostelAssignmentListItem[];
+    total: number;
+}
+
+/**
+ * List hostel assignments response
+ */
+export interface ListHostelAssignmentsResponse {
+    status: 'success';
+    data: HostelAssignmentsPagination;
+}
+
+/**
+ * Update assignment status request
+ */
+export interface UpdateAssignmentStatusRequest {
+    status: 'active' | 'inactive';
+}
+
+/**
+ * Update assignment status response
+ */
+export interface UpdateAssignmentStatusResponse {
+    status: 'success';
+    message: string;
+    data: {
+        id: number;
+        status: 'active' | 'inactive';
+        updated_at: string;
+    };
+}
+
+/**
+ * Remove assignment response
+ */
+export interface RemoveAssignmentResponse {
+    status: 'success';
+    message: string;
+}
+
+/**
+ * Staff's hostel assignments response
+ */
+export interface StaffHostelAssignmentsResponse {
+    status: 'success';
+    data: Array<{
+        id: number;
+        vuna_accomodation_id: number;
+        staff_id: number;
+        status: 'active' | 'inactive';
+        hostel: Hostel;
+    }>;
+}
+
+/**
+ * Hostel's assigned staff response
+ */
+export interface HostelAssignedStaffResponse {
+    status: 'success';
+    data: Array<{
+        id: number;
+        vuna_accomodation_id: number;
+        staff_id: number;
+        status: 'active' | 'inactive';
+        assigned_by: number;
+        staff: StaffForAssignment;
+    }>;
+}
+
 /**
  * Staff Dashboard Overview Statistics
  */

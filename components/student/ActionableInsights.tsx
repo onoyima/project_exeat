@@ -286,7 +286,7 @@ function generateActionableItems(exeatRequests: ExeatRequest[]): ActionableItem[
 
   // Requests under review that might need follow-up - Medium Priority
   const reviewRequests = exeatRequests.filter(r =>
-    ['cmd_review', 'deputy-dean_review', 'dean_review'].includes(r.status)
+    ['cmd_review', 'secretary_review', 'dean_review'].includes(r.status)
   );
 
   // Check for requests older than 5 days in review

@@ -1,6 +1,15 @@
 import { api } from './api';
 import type { ApiResponse } from '@/types/api';
-import type { StudentProfile, ExeatCategory, ExeatRequestForm, ExeatRequest } from '@/types/student';
+import type {
+    StudentProfile,
+    ExeatCategory,
+    ExeatRequestForm,
+    ExeatRequest,
+    StudentDebtListResponse,
+    PaymentInitRequest,
+    PaymentInitResponse,
+    PaymentVerificationResponse
+} from '@/types/student';
 
 export const studentApi = api.injectEndpoints({
     endpoints: (builder) => ({
@@ -29,6 +38,39 @@ export const studentApi = api.injectEndpoints({
             transformResponse: (response: ApiResponse<{ requests: ExeatRequest[] }>) => response.data!.requests,
             providesTags: ['ExeatRequests'],
         }),
+
+        // ===== STUDENT DEBT MANAGEMENT ENDPOINTS =====
+
+        // 1. List Student's Own Debts
+        getStudentDebts: builder.query<StudentDebtListResponse, { page?: number; per_page?: number }>({
+            query: (params) => ({
+                url: '/student/debts',
+                params,
+            }),
+            transformResponse: (response: StudentDebtListResponse) => response,
+            providesTags: ['StudentDebts'],
+        }),
+
+        // 2. Initialize Payment (Paystack)
+        initializePayment: builder.mutation<PaymentInitResponse, { id: number; data: PaymentInitRequest }>({
+            query: ({ id, data }) => ({
+                url: `/student/debts/${id}/payment-proof`,
+                method: 'POST',
+                body: data,
+            }),
+            transformResponse: (response: PaymentInitResponse) => response,
+            invalidatesTags: ['StudentDebts'],
+        }),
+
+        // 3. Verify Payment
+        verifyPayment: builder.query<PaymentVerificationResponse, { id: number; reference: string }>({
+            query: ({ id, reference }) => ({
+                url: `/student/debts/${id}/verify-payment`,
+                params: { reference },
+            }),
+            transformResponse: (response: PaymentVerificationResponse) => response,
+            providesTags: ['StudentDebts'],
+        }),
     }),
 });
 
@@ -37,4 +79,7 @@ export const {
     useGetExeatCategoriesQuery,
     useCreateExeatRequestMutation,
     useGetExeatRequestsQuery,
+    useGetStudentDebtsQuery,
+    useInitializePaymentMutation,
+    useVerifyPaymentQuery,
 } = studentApi; 
