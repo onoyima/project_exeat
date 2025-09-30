@@ -251,10 +251,44 @@ export interface PaymentVerificationResponse {
     message: string;
     data: {
         id: number;
+        student_id: number;
+        exeat_request_id: number;
+        amount: string;
+        processing_charge: string;
+        total_amount_with_charge: string;
+        overdue_hours: number;
         payment_status: 'cleared';
-        payment_date: string;
-        cleared_at: string;
         payment_reference: string;
+        payment_proof: string | null;
+        payment_date: string;
+        cleared_by: number | null;
+        cleared_at: string;
+        notes: string | null;
+        created_at: string;
+        updated_at: string;
+        exeat_request: {
+            id: number;
+            student_id: number;
+            matric_no: string;
+            category_id: number;
+            reason: string;
+            destination: string;
+            departure_date: string;
+            return_date: string;
+            preferred_mode_of_contact: string;
+            parent_surname: string;
+            parent_othernames: string;
+            parent_phone_no: string;
+            parent_phone_no_two: string;
+            parent_email: string;
+            student_accommodation: string | null;
+            status: string;
+            is_medical: boolean;
+            is_expired: boolean;
+            expired_at: string | null;
+            created_at: string;
+            updated_at: string;
+        };
     };
 }
 
