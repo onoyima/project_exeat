@@ -737,6 +737,10 @@ export default function ExeatRequestDetailPage() {
                                         <Label className="text-sm font-medium text-slate-600">Accommodation</Label>
                                         <p className="text-slate-800">{request.student_accommodation || 'Not specified'}</p>
                                     </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-sm font-medium text-slate-600">Phone</Label>
+                                        <p className="text-slate-800">{request.student.phone || 'Not provided'}</p>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
