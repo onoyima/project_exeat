@@ -43,6 +43,7 @@ export interface StaffExeatRequest {
         lname: string;
         email?: string;
         passport?: string;
+        phone?: string;
     };
     category?: {
         id: number;

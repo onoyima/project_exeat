@@ -31,7 +31,8 @@ import {
     Clock,
     MessageSquare,
     PenLine,
-    Save
+    Save,
+    Phone
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -878,6 +879,13 @@ export default function ExeatRequestDetailPage() {
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="absolute inset-0 rounded-full border-4 border-transparent group-hover:border-blue-200/50 transition-all duration-300"></div>
+                                </div>
+                                {/* Add student phone number */}
+                                <div className="flex items-center justify-center">
+                                    <Button variant="outline" size="icon" onClick={() => window.open(`tel:${request.student.phone || ''}`, '_blank')}>
+                                        <Phone className="h-4 w-4" />
+                                        Student Phone
+                                    </Button>
                                 </div>
                             </CardContent>
                         </Card>
