@@ -83,9 +83,9 @@ export default function HostelAssignedStaffPage() {
 
     if (error) {
         return (
-            <div className="space-y-6 p-6">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" asChild>
+            <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <Button variant="ghost" size="icon" asChild className="self-start">
                         <Link href="/staff/admin/hostel-assignments">
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
@@ -112,10 +112,10 @@ export default function HostelAssignedStaffPage() {
     }
 
     return (
-        <div className="space-y-6 p-4 sm:p-6">
+        <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <Button variant="ghost" size="icon" asChild>
+                <Button variant="ghost" size="icon" asChild className="self-start">
                     <Link href="/staff/admin/hostel-assignments">
                         <ArrowLeft className="h-4 w-4" />
                     </Link>

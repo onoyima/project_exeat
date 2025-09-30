@@ -167,14 +167,14 @@ export default function HostelAssignmentsPage() {
     };
 
     return (
-        <div className="space-y-6 p-6">
+        <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-bold">Hostel Assignments</h1>
                     <p className="text-muted-foreground mt-1">Manage staff assignments to hostels</p>
                 </div>
-                <Button asChild>
+                <Button asChild className="w-full sm:w-auto">
                     <Link href="/staff/admin/hostel-assignments/create">
                         <Plus className="mr-2 h-4 w-4" />
                         New Assignment
@@ -183,7 +183,7 @@ export default function HostelAssignmentsPage() {
             </div>
 
             {/* Statistics Cards */}
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Assignments</CardTitle>
@@ -233,19 +233,17 @@ export default function HostelAssignmentsPage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="flex-1">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                                <Input
-                                    placeholder="Search by hostel name or staff name..."
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    className="pl-10"
-                                />
-                            </div>
+                    <div className="flex flex-col gap-4">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                            <Input
+                                placeholder="Search by hostel name or staff name..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="pl-10"
+                            />
                         </div>
-                        <div className="w-full sm:w-48">
+                        <div className="w-full">
                             <Select value={statusFilter} onValueChange={setStatusFilter}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Filter by status" />
@@ -310,7 +308,7 @@ export default function HostelAssignmentsPage() {
                             {filteredAssignments.map((assignment) => (
                                 <div
                                     key={assignment.id}
-                                    className="flex items-center gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                                    className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors"
                                 >
                                     {/* Staff Avatar / Passport */}
                                     <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -329,44 +327,44 @@ export default function HostelAssignmentsPage() {
                                     </div>
 
                                     {/* Assignment Info */}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-1">
+                                    <div className="flex-1 min-w-0 w-full sm:w-auto">
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                                             <h3 className="font-semibold text-lg">{assignment.hostel.name}</h3>
-                                            {getStatusIcon(assignment.status)}
+                                            <div className="flex items-center gap-2">
+                                                {getStatusIcon(assignment.status)}
+                                                {getStatusBadge(assignment.status)}
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <User className="h-4 w-4" />
-                                            <span>{assignment.staff.fname} {assignment.staff.lname}</span>
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                <User className="h-4 w-4" />
+                                                <span>{assignment.staff.fname} {assignment.staff.lname}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                <Calendar className="h-3 w-3" />
+                                                <span>Assigned: {format(new Date(assignment.assigned_at), 'MMM d, yyyy')}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                <User className="h-3 w-3" />
+                                                <span>Assigned by: {getStaffNameById(assignment.assigned_by)}</span>
+                                            </div>
+                                            {assignment.notes && (
+                                                <p className="text-xs text-muted-foreground italic">
+                                                    Note: {assignment.notes}
+                                                </p>
+                                            )}
                                         </div>
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                                            <Calendar className="h-3 w-3" />
-                                            <span>Assigned: {format(new Date(assignment.assigned_at), 'MMM d, yyyy')}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                                            <User className="h-3 w-3" />
-                                            <span>Assigned by: {getStaffNameById(assignment.assigned_by)}</span>
-                                        </div>
-                                        {assignment.notes && (
-                                            <p className="text-xs text-muted-foreground mt-1 italic">
-                                                Note: {assignment.notes}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* Status Badge */}
-                                    <div className="flex-shrink-0">
-                                        {getStatusBadge(assignment.status)}
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="flex-shrink-0">
+                                    <div className="flex-shrink-0 w-full sm:w-auto">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
+                                                <Button variant="ghost" size="icon" className="w-full sm:w-auto">
                                                     <MoreHorizontal className="h-4 w-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
+                                            <DropdownMenuContent align="end" className="w-48">
                                                 <DropdownMenuItem
                                                     onClick={() => router.push(`/staff/admin/hostel-assignments/hostel/${assignment.vuna_accomodation_id}/staff`)}
                                                 >
