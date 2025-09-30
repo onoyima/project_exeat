@@ -64,7 +64,7 @@ export default function CreateHostelAssignmentPage() {
     const [createAssignment] = useCreateHostelAssignmentMutation();
 
     const hostels = options?.hostels?.data || [];
-    
+
     // Process staff list from the same endpoint as assign-exeat-role
     const staff = staffList ? staffList.map(staff => ({
         id: staff.id,
@@ -125,10 +125,10 @@ export default function CreateHostelAssignmentPage() {
     const selectedStaff = staff.find(s => s.id.toString() === formData.staff_id);
 
     return (
-        <div className="space-y-6 p-6">
+        <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             {/* Header */}
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" asChild>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <Button variant="ghost" size="icon" asChild className="self-start">
                     <Link href="/staff/admin/hostel-assignments">
                         <ArrowLeft className="h-4 w-4" />
                     </Link>
@@ -139,8 +139,8 @@ export default function CreateHostelAssignmentPage() {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid gap-6 lg:grid-cols-2">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
                     {/* Assignment Form */}
                     <Card>
                         <CardHeader>
@@ -388,14 +388,14 @@ export default function CreateHostelAssignmentPage() {
                 </div>
 
                 {/* Form Actions */}
-                <div className="flex items-center justify-end gap-4">
-                    <Button type="button" variant="outline" asChild>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4">
+                    <Button type="button" variant="outline" asChild className="w-full sm:w-auto">
                         <Link href="/staff/admin/hostel-assignments">Cancel</Link>
                     </Button>
                     <Button
                         type="submit"
                         disabled={isSubmitting || !formData.vuna_accomodation_id || !formData.staff_id}
-                        className="min-w-[120px]"
+                        className="w-full sm:w-auto min-w-[120px]"
                     >
                         {isSubmitting ? (
                             <>

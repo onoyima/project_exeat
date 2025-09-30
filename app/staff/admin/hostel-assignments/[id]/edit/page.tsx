@@ -89,9 +89,9 @@ export default function EditHostelAssignmentPage() {
 
     if (isLoading) {
         return (
-            <div className="space-y-6 p-6">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" asChild>
+            <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <Button variant="ghost" size="icon" asChild className="self-start">
                         <Link href="/staff/admin/hostel-assignments">
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
@@ -110,9 +110,9 @@ export default function EditHostelAssignmentPage() {
 
     if (!assignment) {
         return (
-            <div className="space-y-6 p-6">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" asChild>
+            <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <Button variant="ghost" size="icon" asChild className="self-start">
                         <Link href="/staff/admin/hostel-assignments">
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
@@ -139,10 +139,10 @@ export default function EditHostelAssignmentPage() {
     }
 
     return (
-        <div className="space-y-6 p-6">
+        <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             {/* Header */}
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" asChild>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <Button variant="ghost" size="icon" asChild className="self-start">
                     <Link href="/staff/admin/hostel-assignments">
                         <ArrowLeft className="h-4 w-4" />
                     </Link>
@@ -155,8 +155,8 @@ export default function EditHostelAssignmentPage() {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid gap-6 lg:grid-cols-2">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
                     {/* Assignment Details */}
                     <Card>
                         <CardHeader>
@@ -296,14 +296,14 @@ export default function EditHostelAssignmentPage() {
                 </div>
 
                 {/* Form Actions */}
-                <div className="flex items-center justify-end gap-4">
-                    <Button type="button" variant="outline" asChild>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4">
+                    <Button type="button" variant="outline" asChild className="w-full sm:w-auto">
                         <Link href="/staff/admin/hostel-assignments">Cancel</Link>
                     </Button>
                     <Button
                         type="submit"
                         disabled={isSubmitting}
-                        className="min-w-[120px]"
+                        className="w-full sm:w-auto min-w-[120px]"
                     >
                         {isSubmitting ? (
                             <>
