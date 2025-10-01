@@ -25,7 +25,7 @@ import {
 } from '@/lib/services/exeatApi';
 
 const preferredModes = [
-  { value: 'text', label: 'Text' },
+  { value: 'text', label: 'Text Message' },
   { value: 'phone_call', label: 'Phone Call' },
   { value: 'email', label: 'Email' }
 ] as const;
