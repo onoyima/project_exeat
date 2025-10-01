@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useVerifyPaymentQuery } from '@/lib/services/studentApi';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-export default function PaymentResultPage() {
+function PaymentResultContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
 
@@ -212,6 +212,39 @@ export default function PaymentResultPage() {
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+// Loading component for Suspense fallback
+function PaymentResultLoading() {
+    return (
+        <div className="min-h-screen flex items-center justify-center p-4">
+            <Card className="w-full max-w-md">
+                <CardHeader className="text-center">
+                    <Loader2 className="h-12 w-12 text-primary mx-auto mb-4 animate-spin" />
+                    <CardTitle className="text-xl">Loading Payment Details</CardTitle>
+                    <CardDescription>
+                        Please wait while we load your payment information...
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-3">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
+// Main export with Suspense boundary
+export default function PaymentResultPage() {
+    return (
+        <Suspense fallback={<PaymentResultLoading />}>
+            <PaymentResultContent />
+        </Suspense>
     );
 }
 
