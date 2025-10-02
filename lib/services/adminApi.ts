@@ -167,8 +167,11 @@ export const adminApi = api.injectEndpoints({
             providesTags: ['DashboardStats'],
         }),
 
-        getAdminAuditTrail: builder.query<AuditTrailResponse, void>({
-            query: () => '/dashboard/dean',
+        getAdminAuditTrail: builder.query<AuditTrailResponse, { page?: number; per_page?: number }>({
+            query: ({ page = 1, per_page = 20 } = {}) => ({
+                url: '/dashboard/dean',
+                params: { page, per_page },
+            }),
             transformResponse: (response: AuditTrailResponse) => response,
             providesTags: ['Admin'],
         }),

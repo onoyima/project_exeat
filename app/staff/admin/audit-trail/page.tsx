@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useGetAdminAuditTrailQuery } from '@/lib/services/adminApi';
 import {
     Users,
@@ -14,21 +15,41 @@ import {
     Shield,
     Calendar,
     AlertCircle,
-    TrendingUp
+    TrendingUp,
+    ChevronLeft,
+    ChevronRight,
+    ChevronsLeft,
+    ChevronsRight,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function AdminAuditTrailPage() {
-    const { data: auditTrail, isLoading: auditTrailLoading } = useGetAdminAuditTrailQuery();
+    const [page, setPage] = useState(1);
+    const [perPage] = useState(20);
     const [searchTerm, setSearchTerm] = useState('');
     const [actionFilter, setActionFilter] = useState<string>('all');
+    const [expandedDetails, setExpandedDetails] = useState<number | null>(null);
+    const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+    const [selectedLog, setSelectedLog] = useState<any>(null);
+
+    const { data: auditTrail, isLoading: auditTrailLoading } = useGetAdminAuditTrailQuery({ page, per_page: perPage });
 
     const auditData = auditTrail?.data;
     const auditLogs = auditData?.audit_trail.audit_logs || [];
     const actionSummary = auditData?.audit_trail.action_summary || {};
+    const pagination = auditData?.audit_trail.pagination;
 
     // Filter audit logs based on search and action filter
     const filteredLogs = auditLogs.filter(log => {
@@ -45,6 +66,41 @@ export default function AdminAuditTrailPage() {
 
     // Get unique actions for filter dropdown
     const uniqueActions = Array.from(new Set(auditLogs.map(log => log.action)));
+
+    // Helper function to parse and format JSON details
+    const formatDetails = (details: string) => {
+        try {
+            const parsed = JSON.parse(details);
+            return parsed;
+        } catch {
+            return details;
+        }
+    };
+
+    // Helper function to get readable details
+    const getReadableDetails = (details: string) => {
+        try {
+            const parsed = JSON.parse(details);
+            // Extract key information from JSON
+            if (parsed.assigned_staff_name && parsed.role_display_name) {
+                return `${parsed.assigned_staff_name} - ${parsed.role_display_name}${parsed.removed_by ? ` (Removed by ${parsed.removed_by})` : ''}`;
+            }
+            if (parsed.payment_reference) {
+                return `Payment: ${parsed.payment_reference} - ₦${parseFloat(parsed.amount).toLocaleString()}`;
+            }
+            if (parsed.exeat_request_id && parsed.amount) {
+                return `Exeat #${parsed.exeat_request_id} - ₦${parseFloat(parsed.amount).toLocaleString()} (${parsed.days_overdue} days overdue)`;
+            }
+            return details;
+        } catch {
+            return details;
+        }
+    };
+
+    const handleViewDetails = (log: any) => {
+        setSelectedLog(log);
+        setDetailsDialogOpen(true);
+    };
 
     const getActionIcon = (action: string) => {
         switch (action.toLowerCase()) {
@@ -78,10 +134,10 @@ export default function AdminAuditTrailPage() {
 
     if (auditTrailLoading) {
         return (
-            <div className="space-y-6 p-4 lg:p-6">
-                <div className="animate-pulse space-y-6">
-                    <div className="h-8 bg-muted rounded w-1/4"></div>
-                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+                <div className="animate-pulse space-y-4 sm:space-y-6">
+                    <div className="h-8 bg-muted rounded w-full sm:w-1/4"></div>
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                         {[...Array(4)].map((_, i) => (
                             <div key={i} className="h-24 bg-muted rounded"></div>
                         ))}
@@ -93,7 +149,7 @@ export default function AdminAuditTrailPage() {
     }
 
     return (
-        <div className="space-y-6 p-4 lg:p-6">
+        <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             {/* Header */}
             <div>
                 <h1 className="text-2xl sm:text-3xl font-bold">Audit Trail</h1>
@@ -186,33 +242,40 @@ export default function AdminAuditTrailPage() {
 
             {/* Audit Logs */}
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle className="text-xl">Audit Logs</CardTitle>
-                        <CardDescription>
-                            Detailed system activity logs ({filteredLogs.length} of {auditLogs.length} entries)
-                        </CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Search logs..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-9 w-64"
-                            />
+                <CardHeader>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <CardTitle className="text-xl">Audit Logs</CardTitle>
+                            <CardDescription>
+                                Detailed system activity logs ({filteredLogs.length} of {auditLogs.length} entries)
+                                {pagination && (
+                                    <span className="block sm:inline sm:ml-2">
+                                        • Page {pagination.current_page} of {pagination.last_page}
+                                    </span>
+                                )}
+                            </CardDescription>
                         </div>
-                        <select
-                            value={actionFilter}
-                            onChange={(e) => setActionFilter(e.target.value)}
-                            className="px-3 py-2 border border-border rounded-md bg-background text-sm"
-                        >
-                            <option value="all">All Actions</option>
-                            {uniqueActions.map(action => (
-                                <option key={action} value={action}>{action}</option>
-                            ))}
-                        </select>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                            <div className="relative flex-1 sm:flex-initial">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search logs..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-9 w-full sm:w-64"
+                                />
+                            </div>
+                            <select
+                                value={actionFilter}
+                                onChange={(e) => setActionFilter(e.target.value)}
+                                className="px-3 py-2 border border-border rounded-md bg-background text-sm w-full sm:w-auto"
+                            >
+                                <option value="all">All Actions</option>
+                                {uniqueActions.map(action => (
+                                    <option key={action} value={action}>{action}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -228,17 +291,17 @@ export default function AdminAuditTrailPage() {
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-4 h-full overflow-y-auto">
+                        <div className="space-y-4">
                             {filteredLogs.map((log) => (
                                 <div
                                     key={log.id}
-                                    className="flex items-start gap-4 p-4 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors"
+                                    className="flex flex-col sm:flex-row items-start gap-4 p-4 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors"
                                 >
                                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                                         {getActionIcon(log.action)}
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-2">
+                                    <div className="flex-1 min-w-0 w-full sm:w-auto">
+                                        <div className="flex flex-wrap items-center gap-2 mb-2">
                                             <Badge
                                                 variant="outline"
                                                 className={cn("text-xs", getActionBadgeColor(log.action))}
@@ -255,27 +318,143 @@ export default function AdminAuditTrailPage() {
                                                 ({log.actor.type})
                                             </span>
                                         </p>
-                                        <p className="text-sm text-muted-foreground mb-2">
-                                            {log.details}
+                                        <p className="text-sm text-muted-foreground mb-2 break-words">
+                                            {getReadableDetails(log.details)}
                                         </p>
-                                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-muted-foreground">
                                             <span>{log.formatted_time}</span>
-                                            <span>•</span>
-                                            <span>{format(new Date(log.timestamp), 'MMM d, yyyy h:mm a')}</span>
+                                            <span className="hidden sm:inline">•</span>
+                                            <span className="hidden sm:inline">{format(new Date(log.timestamp), 'MMM d, yyyy h:mm a')}</span>
+                                            <span className="sm:hidden">{format(new Date(log.timestamp), 'MMM d, h:mm a')}</span>
                                             {log.actor.email && (
                                                 <>
-                                                    <span>•</span>
-                                                    <span>{log.actor.email}</span>
+                                                    <span className="hidden sm:inline">•</span>
+                                                    <span className="break-all">{log.actor.email}</span>
                                                 </>
                                             )}
                                         </div>
+                                        {log.details.length > 100 && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="mt-2 h-auto p-0 text-xs text-primary hover:underline"
+                                                onClick={() => handleViewDetails(log)}
+                                            >
+                                                <Eye className="h-3 w-3 mr-1" />
+                                                View Full Details
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     )}
                 </CardContent>
+
+                {/* Pagination Controls */}
+                {pagination && pagination.last_page > 1 && (
+                    <div className="border-t px-6 py-4">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="text-sm text-muted-foreground">
+                                Showing {pagination.from} to {pagination.to} of {pagination.total} entries
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setPage(1)}
+                                    disabled={page === 1}
+                                    className="hidden sm:flex"
+                                >
+                                    <ChevronsLeft className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setPage(page - 1)}
+                                    disabled={page === 1}
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                    <span className="hidden sm:inline ml-2">Previous</span>
+                                </Button>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium">
+                                        Page {pagination.current_page} of {pagination.last_page}
+                                    </span>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setPage(page + 1)}
+                                    disabled={!pagination.has_more_pages}
+                                >
+                                    <span className="hidden sm:inline mr-2">Next</span>
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setPage(pagination.last_page)}
+                                    disabled={page === pagination.last_page}
+                                    className="hidden sm:flex"
+                                >
+                                    <ChevronsRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </Card>
+
+            {/* Details Dialog */}
+            <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+                <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Activity className="h-5 w-5" />
+                            Audit Log Details
+                        </DialogTitle>
+                        <DialogDescription>
+                            Full details for audit log entry
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selectedLog && (
+                        <div className="space-y-4">
+                            {/* Log Info */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-sm font-medium text-muted-foreground">Action</p>
+                                    <Badge variant="outline" className={cn("mt-1", getActionBadgeColor(selectedLog.action))}>
+                                        {selectedLog.action}
+                                    </Badge>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-muted-foreground">Target</p>
+                                    <p className="text-sm mt-1">{selectedLog.target_type} #{selectedLog.target_id}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-muted-foreground">Actor</p>
+                                    <p className="text-sm mt-1">{selectedLog.actor.name} ({selectedLog.actor.type})</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-muted-foreground">Timestamp</p>
+                                    <p className="text-sm mt-1">{format(new Date(selectedLog.timestamp), 'MMM d, yyyy h:mm:ss a')}</p>
+                                </div>
+                            </div>
+
+                            {/* Details */}
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-2">Details</p>
+                                <div className="bg-muted p-4 rounded-lg">
+                                    <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-words">
+                                        {JSON.stringify(formatDetails(selectedLog.details), null, 2)}
+                                    </pre>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

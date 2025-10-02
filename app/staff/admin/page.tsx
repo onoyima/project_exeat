@@ -193,38 +193,23 @@ export default function AdminDashboard() {
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
-                                        {dashboardStats.recent_activities.map((activity) => (
+                                        {dashboardStats.recent_activities.slice(0, 10).map((activity) => (
                                             <div
                                                 key={activity.id}
-                                                className="flex items-center gap-3 p-3 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors cursor-pointer"
-                                                onClick={() => router.push(`/staff/exeat-requests/${activity.id}`)}
+                                                className="flex items-start gap-3 p-3 rounded-lg border border-border/50 hover:bg-accent/50 transition-colors"
                                             >
-                                                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                                    <FileText className="h-5 w-5 text-primary" />
+                                                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                    <Activity className="h-4 w-4 text-primary" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-medium text-sm truncate">
-                                                        {activity.student_name}
+                                                        {activity.action}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground truncate">
-                                                        {activity.approved_by ? `Approved by ${activity.approved_by}` : 'Pending approval'}
+                                                        by {activity.actor} ({activity.actor_type})
                                                     </p>
-                                                </div>
-                                                <div className="flex flex-col items-end gap-1">
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={cn(
-                                                            "text-xs",
-                                                            activity.status === 'approved' ? 'border-green-200 text-green-700' :
-                                                                activity.status === 'rejected' ? 'border-red-200 text-red-700' :
-                                                                    activity.status === 'completed' ? 'border-emerald-200 text-emerald-700' :
-                                                                        'border-primary/20 text-primary'
-                                                        )}
-                                                    >
-                                                        {activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
-                                                    </Badge>
                                                     <p className="text-xs text-muted-foreground">
-                                                        {activity.created_at}
+                                                        {activity.formatted_time}
                                                     </p>
                                                 </div>
                                             </div>
