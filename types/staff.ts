@@ -307,6 +307,10 @@ export interface AdminDashboardExeatStatistics {
     approved_requests: number;
     rejected_requests: number;
     pending_requests: number;
+    parentRequestpending: number;
+    completeRequests: number;
+    student_outofschool: number;
+    awaitingDeanApproval: number;
     approval_rate: number;
     average_processing_time: string;
 }
@@ -341,6 +345,7 @@ export interface AuditLogEntry {
     actor: {
         type: string;
         name: string;
+        id: number;
         email?: string;
         student_id?: number | null;
     };
@@ -354,6 +359,15 @@ export interface AuditLogEntry {
  */
 export interface AdminDashboardAuditTrail {
     audit_logs: AuditLogEntry[];
+    pagination: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+        from: number;
+        to: number;
+        has_more_pages: boolean;
+    };
     total_actions: number;
     action_summary: Record<string, number>;
 }
@@ -373,8 +387,10 @@ export interface ChartDataset {
  */
 export interface ChartConfig {
     labels: string[];
-    datasets: ChartDataset[];
-    backgroundColor?: string[];
+    datasets?: ChartDataset[];
+    data?: (number | string)[];
+    borderColor?: string;
+    backgroundColor?: string | string[];
 }
 
 /**
@@ -390,6 +406,26 @@ export interface AdminDashboardAuditStatistics {
 }
 
 /**
+ * Debt Trend Entry
+ */
+export interface DebtTrendEntry {
+    date: string;
+    new_debts: number;
+    debt_amount: number | string;
+    payments: number | string;
+    formatted_date: string;
+}
+
+/**
+ * Debt Aging Category
+ */
+export interface DebtAgingCategory {
+    count: number;
+    amount: number;
+    formatted_amount: string;
+}
+
+/**
  * Dashboard Charts
  */
 export interface AdminDashboardCharts {
@@ -401,6 +437,9 @@ export interface AdminDashboardCharts {
     };
     user_activity: ChartConfig;
     approval_rates: ChartConfig;
+    debt_trends: DebtTrendEntry[];
+    payment_methods: Record<string, { count: number; amount: string }>;
+    debt_aging: Record<string, DebtAgingCategory>;
 }
 
 /**
@@ -408,10 +447,105 @@ export interface AdminDashboardCharts {
  */
 export interface RecentActivityEntry {
     id: number;
+    action: string;
+    actor: string;
+    actor_type: string;
+    actor_id: number;
+    timestamp: string;
+    formatted_time: string;
+    details: string;
+}
+
+/**
+ * Debt Analytics Overview
+ */
+export interface DebtAnalyticsOverview {
+    total_debts: number;
+    total_amount: string;
+    paid_amount: string;
+    pending_amount: string;
+    cleared_amount: string;
+    average_debt: string;
+    collection_rate: string;
+}
+
+/**
+ * Debt Analytics Recent Activity
+ */
+export interface DebtAnalyticsRecentActivity {
+    period_days: number;
+    new_debts: number;
+    new_amount: string;
+    recent_payments: string;
+}
+
+/**
+ * Debt Analytics Status Distribution
+ */
+export interface DebtAnalyticsStatusDistribution {
+    cleared?: {
+        count: number;
+        amount: string;
+    };
+    unpaid?: {
+        count: number;
+        amount: string;
+    };
+    paid?: {
+        count: number;
+        amount: string;
+    };
+}
+
+/**
+ * Debt Analytics
+ */
+export interface DebtAnalytics {
+    overview: DebtAnalyticsOverview;
+    recent_activity: DebtAnalyticsRecentActivity;
+    status_distribution: DebtAnalyticsStatusDistribution;
+}
+
+/**
+ * Top Debtor Entry
+ */
+export interface TopDebtor {
+    student_id: number;
     student_name: string;
-    status: string;
-    created_at: string;
-    approved_by: string | null;
+    student_number: string;
+    debt_count: number;
+    total_amount: string;
+}
+
+/**
+ * Monthly Debt Summary
+ */
+export interface MonthlyDebtSummary {
+    month: string;
+    month_name: string;
+    new_debts: number;
+    debt_amount: number | string;
+    payments: number | string;
+    net_change: number;
+}
+
+/**
+ * Clearance Statistics
+ */
+export interface ClearanceStatistics {
+    clearance_by_staff: any[];
+    average_clearance_time_hours: string;
+    total_cleared: number;
+    total_cleared_amount: string;
+}
+
+/**
+ * Debt Summary
+ */
+export interface DebtSummary {
+    top_debtors: TopDebtor[];
+    monthly_summary: MonthlyDebtSummary[];
+    clearance_stats: ClearanceStatistics;
 }
 
 /**
@@ -424,9 +558,11 @@ export interface AdminDashboardResponse {
         exeat_statistics: AdminDashboardExeatStatistics;
         user_analytics: AdminDashboardUserAnalytics;
         performance_metrics: AdminDashboardPerformanceMetrics;
+        debt_analytics: DebtAnalytics;
         audit_trail: AdminDashboardAuditTrail;
         audit_statistics: AdminDashboardAuditStatistics;
         charts: AdminDashboardCharts;
+        debt_summary: DebtSummary;
         recent_activities: RecentActivityEntry[];
     };
 }
@@ -743,6 +879,17 @@ export interface DepartmentStatistics {
 }
 
 /**
+ * Audit Trail Charts
+ */
+export interface AuditTrailCharts {
+    department_trends: any[];
+    approval_timeline: any[];
+    student_activity: any[];
+    debt_trends: DebtTrendEntry[];
+    payment_methods: Record<string, { count: number; amount: string }>;
+}
+
+/**
  * Audit Trail Response
  */
 export interface AuditTrailResponse {
@@ -751,17 +898,24 @@ export interface AuditTrailResponse {
         overview: AuditTrailOverview;
         department_statistics: DepartmentStatistics;
         pending_approvals: any[];
-        student_analytics: null;
+        student_analytics: any[];
+        debt_analytics: DebtAnalytics;
         audit_trail: {
             audit_logs: AuditLogEntry[];
+            pagination: {
+                current_page: number;
+                last_page: number;
+                per_page: number;
+                total: number;
+                from: number;
+                to: number;
+                has_more_pages: boolean;
+            };
             total_actions: number;
             action_summary: Record<string, number>;
         };
-        charts: {
-            department_trends: null;
-            approval_timeline: null;
-            student_activity: null;
-        };
-        recent_requests: null;
+        charts: AuditTrailCharts;
+        debt_summary: DebtSummary;
+        recent_requests: any[];
     };
 } 
