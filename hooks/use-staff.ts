@@ -27,7 +27,23 @@ export const useStaff = () => {
     // Role-based access control
     const hasRole = useMemo(() => {
         return (roleName: string) => {
-            // First check profile from API
+            // First check localStorage roles array (most direct and reliable)
+            try {
+                if (typeof window !== 'undefined') {
+                    const userStr = localStorage.getItem('user');
+                    if (userStr) {
+                        const user = JSON.parse(userStr);
+                        // Check roles array first (primary source)
+                        if (user.roles && Array.isArray(user.roles) && user.roles.includes(roleName)) {
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Error checking localStorage for roles:', e);
+            }
+
+            // Then check profile from API
             if (profile?.exeat_roles) {
                 const apiRoles = profile.exeat_roles.map((role: any) => extractRoleName(role));
                 if (apiRoles.includes(roleName)) {
@@ -35,17 +51,12 @@ export const useStaff = () => {
                 }
             }
 
-            // If not found in API profile, check localStorage
+            // Fallback to exeat_roles in localStorage
             try {
                 if (typeof window !== 'undefined') {
                     const userStr = localStorage.getItem('user');
                     if (userStr) {
                         const user = JSON.parse(userStr);
-                        // Check roles array
-                        if (user.roles && Array.isArray(user.roles) && user.roles.includes(roleName)) {
-                            return true;
-                        }
-                        // Check exeat_roles array as fallback
                         if (user.exeat_roles && Array.isArray(user.exeat_roles)) {
                             const localRoles = user.exeat_roles.map((role: any) =>
                                 role.role?.name || (typeof role.role === 'string' ? role.role : '')
@@ -57,7 +68,7 @@ export const useStaff = () => {
                     }
                 }
             } catch (e) {
-                console.error('Error checking localStorage for roles:', e);
+                console.error('Error checking localStorage exeat_roles:', e);
             }
 
             return false;
@@ -74,9 +85,34 @@ export const useStaff = () => {
         return profile?.exeat_roles?.[0]?.role;
     }, [profile]);
 
-    // Get all roles
+    // Get all roles (from API profile or localStorage)
     const allRoles = useMemo(() => {
-        return profile?.exeat_roles?.map((role: any) => role.role) || [];
+        // First try to get from API profile
+        if (profile?.exeat_roles && profile.exeat_roles.length > 0) {
+            return profile.exeat_roles.map((role: any) => role.role);
+        }
+
+        // Fallback to localStorage roles array
+        if (typeof window !== 'undefined') {
+            try {
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    // If roles array exists, convert it to the expected format
+                    if (user.roles && Array.isArray(user.roles) && user.roles.length > 0) {
+                        return user.roles.map((roleName: string) => ({
+                            name: roleName,
+                            display_name: roleName.charAt(0).toUpperCase() + roleName.slice(1).replace('_', ' '),
+                            description: ''
+                        }));
+                    }
+                }
+            } catch (e) {
+                console.error('Error reading roles from localStorage:', e);
+            }
+        }
+
+        return [];
     }, [profile]);
 
     // Role-specific permissions
@@ -177,9 +213,29 @@ export const useStaff = () => {
         }
     };
 
+    // Get user profile with fallback to localStorage
+    const userProfile = useMemo(() => {
+        // Use API profile if available
+        if (profile) return profile;
+
+        // Fallback to localStorage
+        if (typeof window !== 'undefined') {
+            try {
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                    return JSON.parse(userStr);
+                }
+            } catch (e) {
+                console.error('Error reading user from localStorage:', e);
+            }
+        }
+
+        return null;
+    }, [profile]);
+
     return {
-        // Profile
-        profile,
+        // Profile (with localStorage fallback)
+        profile: userProfile,
         profileLoading,
         profileError,
 

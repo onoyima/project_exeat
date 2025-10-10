@@ -127,7 +127,7 @@ const StaffDashboard = () => {
     // Get user roles from staff profile
     const userRoles = useMemo(() => {
         if (!allRoles || allRoles.length === 0) return [];
-        return allRoles.map(role => role.name);
+        return allRoles.map((role: any) => role.name);
     }, [allRoles]);
 
     // Check if user is admin
@@ -175,7 +175,7 @@ const StaffDashboard = () => {
                 </p>
                 {userRoles.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2">
-                        {userRoles.map((role, index) => (
+                        {userRoles.map((role: string, index: number) => (
                             <span
                                 key={index}
                                 className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary"
