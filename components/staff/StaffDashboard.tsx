@@ -1,8 +1,7 @@
 import React, { useMemo } from 'react'
-import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '@/lib/services/authSlice';
+import { useStaff } from '@/hooks/use-staff';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import {
     FileText,
@@ -31,7 +30,7 @@ interface NavigationCard {
 }
 
 const StaffDashboard = () => {
-    const currentUser = useSelector(selectCurrentUser);
+    const { profile, profileLoading, allRoles } = useStaff();
 
     // Define navigation cards based on roles
     const navigationCards: NavigationCard[] = useMemo(() => [
@@ -125,11 +124,11 @@ const StaffDashboard = () => {
         },
     ], []);
 
-    // Get user roles from exeat_roles
+    // Get user roles from staff profile
     const userRoles = useMemo(() => {
-        if (!currentUser?.exeat_roles) return [];
-        return currentUser.exeat_roles.map(role => role.role.name);
-    }, [currentUser]);
+        if (!allRoles || allRoles.length === 0) return [];
+        return allRoles.map(role => role.name);
+    }, [allRoles]);
 
     // Check if user is admin
     const isAdmin = userRoles.includes('admin');
@@ -142,13 +141,37 @@ const StaffDashboard = () => {
     }, [navigationCards, userRoles, isAdmin]);
 
 
+    // Loading state
+    if (profileLoading) {
+        return (
+            <div className="space-y-6 p-4 sm:p-6">
+                <div className="flex flex-col gap-2">
+                    <Skeleton className="h-8 w-64" />
+                    <Skeleton className="h-4 w-48" />
+                    <div className="flex gap-2 mt-2">
+                        <Skeleton className="h-6 w-24 rounded-full" />
+                        <Skeleton className="h-6 w-24 rounded-full" />
+                    </div>
+                </div>
+                <div>
+                    <Skeleton className="h-6 w-32 mb-4" />
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {[...Array(6)].map((_, i) => (
+                            <Skeleton key={i} className="h-32" />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6 p-4 sm:p-6">
             {/* Welcome Section */}
             <div className="flex flex-col gap-2">
                 <h1 className="text-2xl sm:text-3xl font-bold">Staff Dashboard</h1>
                 <p className="text-muted-foreground">
-                    Welcome back, <span className="font-medium">{currentUser?.fname} {currentUser?.lname}</span>
+                    Welcome back, <span className="font-medium">{profile?.fname} {profile?.lname}</span>
                 </p>
                 {userRoles.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2">
