@@ -132,6 +132,7 @@ export interface ExeatRequest {
 export interface ExeatCategory {
     id: number;
     name: string;
+    description?: string;
 }
 
 // ===== STUDENT DEBT MANAGEMENT TYPES =====
