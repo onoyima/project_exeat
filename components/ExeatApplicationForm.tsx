@@ -69,9 +69,10 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
     mode: 'onChange',
   });
 
-  // Watch dates efficiently
+  // Watch dates and category efficiently
   const watchedDepartureDate = form.watch('departure_date');
   const watchedReturnDate = form.watch('return_date');
+  const watchedCategoryId = form.watch('category_id');
 
   // Memoize date boundaries for performance
   const dateBoundaries = useMemo(() => {
@@ -89,6 +90,11 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
       ? [...categoriesData.categories].sort((a, b) => a.name.localeCompare(b.name))
       : [];
   }, [categoriesData?.categories]);
+
+  // Get selected category details
+  const selectedCategory = useMemo(() => {
+    return sortedCategories.find(cat => String(cat.id) === watchedCategoryId);
+  }, [sortedCategories, watchedCategoryId]);
 
   // Optimized departure date disabled function
   const isDepartureDateDisabled = useCallback((date: Date) => {
@@ -224,7 +230,7 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <FormField
           label="Exeat Category"
           error={form.formState.errors.category_id?.message}
@@ -238,22 +244,47 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
                 onValueChange={field.onChange}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select Category" />
+                  <SelectValue placeholder="Select Category">
+                    {field.value && selectedCategory
+                      ? selectedCategory.name.charAt(0).toUpperCase() + selectedCategory.name.slice(1)
+                      : "Select Category"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {sortedCategories.map((cat) => (
-                    <SelectItem key={cat.id} value={String(cat.id)}>
-                      {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
+                    <SelectItem
+                      key={cat.id}
+                      value={String(cat.id)}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex flex-col items-start w-full py-1">
+                        <span className="font-medium">
+                          {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
+                        </span>
+                        {cat.description && (
+                          <span className="text-xs text-muted-foreground mt-1 leading-relaxed max-w-[300px]">
+                            {cat.description}
+                          </span>
+                        )}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             )}
           />
+          {selectedCategory?.description && (
+            <p className="text-sm text-muted-foreground mt-2 p-3 bg-muted/50 rounded-md border">
+              <span className="font-medium">About this category:</span> {selectedCategory.description}
+            </p>
+          )}
         </FormField>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
         <FormField
-          label="Preferred Contact Method"
+          label="Preferred Contact Method (How can we contact your parent/guardian?)"
           error={form.formState.errors.preferred_mode_of_contact?.message}
         >
           <Controller
