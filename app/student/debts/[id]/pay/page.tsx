@@ -237,9 +237,6 @@ export default function PayDebtPage() {
                         {/* Amount */}
                         <div className="p-4 border rounded-lg bg-muted/50">
                             <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                    <DollarSign className="h-5 w-5 text-primary" />
-                                </div>
                                 <div>
                                     <h3 className="font-semibold text-lg">
                                         {formatCurrency(debt.amount)}
