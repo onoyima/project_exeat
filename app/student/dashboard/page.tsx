@@ -18,7 +18,6 @@ import {
   Home,
   GraduationCap,
   Users,
-  ArrowRight,
   Stethoscope,
   Palmtree,
   AlertCircle,
@@ -324,117 +323,68 @@ export default function StudentDashboard() {
         </Card>
       </div>
 
-      {/* Recent Exeat Requests - Enhanced Mobile-First Design */}
-      <Card className="">
-        <CardHeader className="pb-4 md:pb-6">
+      <Card className="p-4 md:p-6">
+        <CardHeader className="pb-2 md:pb-4">
           <CardTitle className="text-lg md:text-xl font-semibold">Recent Requests</CardTitle>
           <CardDescription className="text-base md:text-lg">
-            Your latest exeat applications and their current status
+            Latest applications and status
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[400px] md:h-[450px] w-full rounded-md">
-            <div className="space-y-4 p-4 md:p-6">
-              {exeatRequests.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p className="text-base">No exeat requests found</p>
-                </div>
-              ) : (
-                exeatRequests.map((request) => (
-                  <Link
-                    href={`/student/exeats/${request.id}`}
-                    key={request.id}
-                    className={cn(
-                      "group relative block p-4 md:p-6 rounded-lg transition-all duration-200",
-                      "hover:shadow-md hover:-translate-y-0.5 hover:bg-accent/30",
-                      "border border-border/50 hover:border-border",
-                      "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
-                      "touch-manipulation min-h-[120px] md:min-h-[140px]"
-                    )}
-                  >
-                    <div className="flex items-start gap-4 md:gap-6">
-                      {/* Category Icon with Enhanced Visual Hierarchy */}
-                      <div className={cn(
-                        "flex-shrink-0 p-3 md:p-4 rounded-lg transition-all duration-200",
-                        "bg-primary/5 group-hover:bg-primary/10 group-hover:scale-105",
-                        "border border-primary/10 group-hover:border-primary/20"
-                      )}>
-                        {request.is_medical || request.category_id === 1 ? (
-                          <Stethoscope className="h-5 w-5 md:h-6 md:w-6 text-red-600" />
-                        ) : request.category_id === 2 ? (
-                          <Palmtree className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
-                        ) : request.category_id === 3 ? (
-                          <AlertCircle className="h-5 w-5 md:h-6 md:w-6 text-orange-600" />
-                        ) : (
-                          <Briefcase className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
-                        )}
-                      </div>
-
-                      {/* Content with Improved Visual Hierarchy */}
-                      <div className="flex-1 min-w-0 space-y-3 md:space-y-4">
-                        {/* Header with Better Typography Hierarchy */}
-                        <div className="flex items-start justify-between gap-3 md:gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                              <h3 className="text-base md:text-lg font-semibold capitalize text-foreground group-hover:text-primary transition-colors duration-200">
-                                {request.is_medical ? 'Medical' : request.category_id === 1 ? 'Medical' :
-                                  request.category_id === 2 ? 'Casual' :
-                                    request.category_id === 3 ? 'Emergency' :
-                                      request.category_id === 4 ? 'Official' : 'Unknown'}
-                              </h3>
-                              <div className="flex items-center gap-2">
-                                <span className="text-muted-foreground hidden sm:inline">•</span>
-                                <span className="text-sm md:text-base text-muted-foreground font-medium">
-                                  {format(new Date(request.created_at), 'MMM d, yyyy')}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          {/* Enhanced Status Badge Following Design Philosophy */}
-                          <StatusPill status={request.status} size="sm" />
-                        </div>
-
-                        {/* Reason with Better Typography */}
-                        <p className="text-sm md:text-base text-muted-foreground line-clamp-2 leading-relaxed">
-                          {request.reason}
-                        </p>
-
-                        {/* Details with Improved Spacing and Visual Hierarchy - Mobile-First */}
-                        <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-3 sm:gap-x-6 md:gap-x-8 sm:gap-y-3 pt-2">
-                          <div className="flex items-center gap-2 md:gap-3 text-sm md:text-base text-muted-foreground min-h-[44px] touch-manipulation">
-                            <MapPin className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
-                            <span className="truncate max-w-[120px] sm:max-w-[200px] md:max-w-[240px] font-medium">{request.destination}</span>
-                          </div>
-                          <div className="flex items-center gap-2 md:gap-3 text-sm md:text-base text-muted-foreground min-h-[44px] touch-manipulation">
-                            <Calendar className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
-                            <span className="font-medium">
-                              {format(new Date(request.departure_date), 'MMM d')} - {format(new Date(request.return_date), 'MMM d')}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 md:gap-3 text-sm md:text-base text-muted-foreground min-h-[44px] touch-manipulation">
-                            <Phone className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0" />
-                            <span className="font-medium capitalize">{request.preferred_mode_of_contact}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Enhanced Arrow with Better Animation */}
-                      <div className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2">
-                        <div className={cn(
-                          "p-2 md:p-3 rounded-full transition-all duration-200",
-                          "opacity-0 group-hover:opacity-100 group-hover:scale-110",
-                          "bg-primary/10 group-hover:bg-primary/20",
-                          "border border-primary/20 group-hover:border-primary/30"
-                        )}>
-                          <ArrowRight className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))
-              )}
+        <CardContent className="p-0">
+          {exeatRequests.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-base">No exeat requests found</p>
             </div>
-          </ScrollArea>
+          ) : (
+            <div className="divide-y rounded-md border border-border/50 overflow-hidden">
+              {exeatRequests.map((request) => (
+                <Link
+                  href={`/student/exeats/${request.id}`}
+                  key={request.id}
+                  className={cn(
+                    "block p-4 sm:p-5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  )}
+                >
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="text-base font-semibold capitalize truncate">
+                          {request.is_medical ? 'Medical' : request.category_id === 1 ? 'Medical' :
+                            request.category_id === 2 ? 'Casual' :
+                              request.category_id === 3 ? 'Emergency' :
+                                request.category_id === 4 ? 'Official' : 'Unknown'}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(request.created_at), 'MMM d, yyyy')}
+                        </p>
+                      </div>
+                      <StatusPill status={request.status} size="sm" />
+                    </div>
+
+                    {request.reason && (
+                      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 break-words">
+                        {request.reason}
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-sm text-muted-foreground">
+                      <span className="truncate max-w-[180px] sm:max-w-[260px] font-medium">
+                        {request.destination}
+                      </span>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="font-medium">
+                        {format(new Date(request.departure_date), 'MMM d')} - {format(new Date(request.return_date), 'MMM d')}
+                      </span>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="font-medium capitalize break-words">
+                        {request.preferred_mode_of_contact}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

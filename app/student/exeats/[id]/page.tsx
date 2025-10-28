@@ -513,7 +513,7 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
                                                         }`}
                                                 >
                                                     {/* Header */}
-                                                    <div className="flex items-center justify-between mb-3">
+                                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
                                                         <div className="flex items-center gap-3">
                                                             <div className={`p-1.5 rounded-lg ${isCompleted ? 'bg-green-100' :
                                                                 isRejected ? 'bg-red-100' :
@@ -524,9 +524,9 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
                                                                         isCurrent ? 'text-blue-600' : 'text-gray-500'
                                                                     }`} />
                                                             </div>
-                                                            <div>
+                                                            <div className="min-w-0">
                                                                 <h4 className="font-semibold text-sm text-gray-900">{stage.label}</h4>
-                                                                <p className="text-xs text-gray-500">{getDynamicDescription(stage, status, approval)}</p>
+                                                                <p className="text-xs text-gray-500 break-words">{getDynamicDescription(stage, status, approval)}</p>
                                                             </div>
                                                         </div>
 
@@ -573,7 +573,7 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
                                                                         {getStaffName(approval.staff) && (
                                                                             <div className="flex items-center gap-1 text-xs text-gray-600">
                                                                                 <User className="h-3 w-3" />
-                                                                                <span>by {getStaffName(approval.staff)}</span>
+                                                                                <span className="break-words">by {getStaffName(approval.staff)}</span>
                                                                             </div>
                                                                         )}
                                                                     </>
@@ -595,7 +595,7 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
 
                                                             {approval?.comment && (
                                                                 <div className="bg-gray-50 rounded-lg p-3 border-l-2 border-gray-200">
-                                                                    <p className="text-xs text-gray-700 italic">
+                                                                    <p className="text-xs text-gray-700 italic whitespace-pre-wrap break-words">
                                                                         &quot;{approval.comment}&quot;
                                                                     </p>
                                                                 </div>
@@ -650,7 +650,7 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
                                     ? 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200'
                                     : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
                             }`}>
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex items-center gap-4">
                                     <div className={`p-3 rounded-full ${workflowStages[currentStageIndex]?.key === 'departed_school'
                                         ? 'bg-blue-100'
@@ -670,9 +670,9 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
                                             <Clock className="h-6 w-6 text-blue-600" />
                                         )}
                                     </div>
-                                    <div>
+                                    <div className="min-w-0">
                                         <h4 className="font-semibold text-gray-900">Overall Status</h4>
-                                        <p className="text-sm text-gray-600">
+                                        <p className="text-sm text-gray-600 break-words">
                                             {exeatRequest.status === 'rejected' ? 'Request has been rejected' :
                                                 exeatRequest.status === 'security_signin' ?
                                                     `🏫 You have departed school premises - please return by ${exeatRequest.return_date ? format(new Date(exeatRequest.return_date), 'MMM d, yyyy') : 'return date'} and sign in at security` :
@@ -823,8 +823,8 @@ export default function ExeatDetailsPage() {
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back
                 </Button>
-                <div>
-                    <h1 className="text-3xl font-bold">Exeat Request Details</h1>
+                <div className="min-w-0">
+                    <h1 className="text-2xl md:text-3xl font-bold break-words">Exeat Request Details</h1>
                 </div>
             </motion.div>
 
@@ -842,20 +842,20 @@ export default function ExeatDetailsPage() {
                         <CardContent className="space-y-4">
                             <div>
                                 <h4 className="font-medium text-sm text-muted-foreground mb-1">Reason</h4>
-                                <p className="text-sm leading-relaxed">{exeat.reason || 'No reason provided'}</p>
+                                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{exeat.reason || 'No reason provided'}</p>
                             </div>
 
                             <div>
                                 <h4 className="font-medium text-sm text-muted-foreground mb-1">Destination</h4>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
                                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                                    <span>{exeat.destination || 'N/A'}</span>
+                                    <span className="break-words">{exeat.destination || 'N/A'}</span>
                                 </div>
                             </div>
 
                             <div>
                                 <h4 className="font-medium text-sm text-muted-foreground mb-1">Preferred Contact</h4>
-                                <p className="capitalize">{exeat.preferred_mode_of_contact?.replace('_', ' ') || 'Any'}</p>
+                                <p className="capitalize break-words">{exeat.preferred_mode_of_contact?.replace('_', ' ') || 'Any'}</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -932,18 +932,18 @@ export default function ExeatDetailsPage() {
 
                             <div>
                                 <h4 className="font-medium text-sm text-muted-foreground mb-1">Email</h4>
-                                <p className="text-sm">{exeat.parent_email || 'N/A'}</p>
+                                <p className="text-sm break-words">{exeat.parent_email || 'N/A'}</p>
                             </div>
 
                             <div>
                                 <h4 className="font-medium text-sm text-muted-foreground mb-1">Primary Phone</h4>
-                                <p className="font-mono text-sm">{exeat.parent_phone_no || 'N/A'}</p>
+                                <p className="font-mono text-sm break-words">{exeat.parent_phone_no || 'N/A'}</p>
                             </div>
 
                             {exeat.parent_phone_no_two && (
                                 <div>
                                     <h4 className="font-medium text-sm text-muted-foreground mb-1">Secondary Phone</h4>
-                                    <p className="font-mono text-sm">{exeat.parent_phone_no_two}</p>
+                                    <p className="font-mono text-sm break-words">{exeat.parent_phone_no_two}</p>
                                 </div>
                             )}
                         </div>
