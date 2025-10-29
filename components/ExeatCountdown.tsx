@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
-import { format, differenceInMinutes, differenceInHours, differenceInDays, endOfDay, startOfDay } from 'date-fns';
+import { format, differenceInMinutes, differenceInHours, differenceInDays, differenceInSeconds, endOfDay, startOfDay } from 'date-fns';
 import { AlertCircle, Timer, MapPinned } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,8 +18,9 @@ export function ExeatCountdown({ departureDate, returnDate, variant = 'student',
         days: number;
         hours: number;
         minutes: number;
+        seconds: number;
         totalMinutes: number;
-    }>({ days: 0, hours: 0, minutes: 0, totalMinutes: 0 });
+    }>({ days: 0, hours: 0, minutes: 0, seconds: 0, totalMinutes: 0 });
 
     // Check if same-day exeat (daily exeat)
     const isSameDay = useMemo(() => {
@@ -45,7 +46,7 @@ export function ExeatCountdown({ departureDate, returnDate, variant = 'student',
 
                 if (isNaN(retDate.getTime()) || isNaN(depDate.getTime())) {
                     console.error('Invalid date format:', departureDate, returnDate);
-                    setTimeLeft({ days: 0, hours: 0, minutes: 0, totalMinutes: 0 });
+                    setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, totalMinutes: 0 });
                     return;
                 }
 
@@ -58,12 +59,31 @@ export function ExeatCountdown({ departureDate, returnDate, variant = 'student',
 
                     if (nowDateOnly > returnDateOnly) {
                         // Overdue - past the return date
-                        setTimeLeft({ days: 0, hours: 0, minutes: 0, totalMinutes: -1 });
+                        // Calculate how many days overdue
+                        const overdueDays = differenceInDays(nowDateOnly, returnDateOnly);
+                        const totalOverdueSeconds = Math.abs(differenceInSeconds(now, returnDeadline));
+                        const overdueHours = Math.floor(totalOverdueSeconds / 3600) % 24;
+                        const overdueMinutes = Math.floor(totalOverdueSeconds / 60) % 60;
+                        const overdueSeconds = totalOverdueSeconds % 60;
+                        setTimeLeft({
+                            days: overdueDays,
+                            hours: overdueHours,
+                            minutes: overdueMinutes,
+                            seconds: overdueSeconds,
+                            totalMinutes: -differenceInMinutes(now, returnDeadline)
+                        });
                         return;
                     } else {
                         // Not overdue yet - still on or before return date
                         const days = differenceInDays(returnDeadline, now);
-                        setTimeLeft({ days: Math.max(0, days), hours: 0, minutes: 0, totalMinutes: differenceInMinutes(returnDeadline, now) });
+                        const remainingSeconds = differenceInSeconds(returnDeadline, now);
+                        setTimeLeft({
+                            days: Math.max(0, days),
+                            hours: 0,
+                            minutes: 0,
+                            seconds: remainingSeconds % 60,
+                            totalMinutes: differenceInMinutes(returnDeadline, now)
+                        });
                         return;
                     }
                 }
@@ -72,23 +92,55 @@ export function ExeatCountdown({ departureDate, returnDate, variant = 'student',
                 const totalMinutes = differenceInMinutes(returnDeadline, now);
 
                 if (totalMinutes <= 0) {
-                    setTimeLeft({ days: 0, hours: 0, minutes: 0, totalMinutes });
+                    // Overdue - calculate overdue duration
+                    const totalOverdueSeconds = Math.abs(differenceInSeconds(now, returnDeadline));
+                    const overdueDays = Math.floor(totalOverdueSeconds / 86400);
+                    const overdueHours = Math.floor(totalOverdueSeconds / 3600) % 24;
+                    const overdueMinutes = Math.floor(totalOverdueSeconds / 60) % 60;
+                    const overdueSeconds = totalOverdueSeconds % 60;
+                    setTimeLeft({
+                        days: overdueDays,
+                        hours: overdueHours,
+                        minutes: overdueMinutes,
+                        seconds: overdueSeconds,
+                        totalMinutes
+                    });
                     return;
                 }
 
-                const days = differenceInDays(returnDeadline, now);
-                const hours = differenceInHours(returnDeadline, now) % 24;
-                const minutes = totalMinutes % 60;
+                // Not overdue - show time remaining
+                const totalRemainingSeconds = differenceInSeconds(returnDeadline, now);
+                const days = Math.floor(totalRemainingSeconds / 86400);
+                const hours = Math.floor(totalRemainingSeconds / 3600) % 24;
+                const minutes = Math.floor(totalRemainingSeconds / 60) % 60;
+                const seconds = totalRemainingSeconds % 60;
 
-                setTimeLeft({ days, hours, minutes, totalMinutes });
+                setTimeLeft({ days, hours, minutes, seconds, totalMinutes });
             } catch (error) {
                 console.error('Error in countdown calculation:', error);
-                setTimeLeft({ days: 0, hours: 0, minutes: 0, totalMinutes: 0 });
+                setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, totalMinutes: 0 });
             }
         };
 
         calculateTimeLeft();
-        const timer = setInterval(calculateTimeLeft, 60000); // Update every minute
+
+        // Update every second when overdue for real-time counting, otherwise every minute
+        // Check if currently overdue to set appropriate interval
+        const now = new Date();
+        const retDate = new Date(returnDate);
+        const returnDeadline = endOfDay(retDate);
+
+        let isCurrentlyOverdue = false;
+        if (isSameDay) {
+            const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const returnDateOnly = new Date(retDate.getFullYear(), retDate.getMonth(), retDate.getDate());
+            isCurrentlyOverdue = nowDateOnly > returnDateOnly;
+        } else {
+            isCurrentlyOverdue = differenceInMinutes(returnDeadline, now) <= 0;
+        }
+
+        const interval = isCurrentlyOverdue ? 1000 : 60000; // Every second if overdue, every minute otherwise
+        const timer = setInterval(calculateTimeLeft, interval);
 
         return () => clearInterval(timer);
     }, [returnDate, departureDate, isSameDay]);
@@ -96,11 +148,14 @@ export function ExeatCountdown({ departureDate, returnDate, variant = 'student',
     const isOverdue = timeLeft.totalMinutes <= 0;
     const isUrgent = !isSameDay && timeLeft.totalMinutes <= 1440 && timeLeft.totalMinutes > 0;
 
+    // Calculate penalty amount (for students)
+    const penaltyAmount = isOverdue ? timeLeft.days * 10000 : 0;
+
     // Student-specific messaging
     const getStudentTitle = () => isOverdue ? "Return Time Passed!" : "Expected Return Time";
     const getStudentDescription = () => {
         if (isOverdue) {
-            return `Return was expected by end of ${format(new Date(returnDate), 'MMM d, yyyy')} - please sign back in`;
+            return `Return was expected by end of ${format(new Date(returnDate), 'MMM d, yyyy')} - please sign back in immediately`;
         }
         return `Return by end of ${format(new Date(returnDate), 'MMM d, yyyy')} - please sign back in upon return`;
     };
@@ -163,42 +218,74 @@ export function ExeatCountdown({ departureDate, returnDate, variant = 'student',
                     </div>
                 </div>
 
-                {(!isOverdue && !isSameDay) && (
-                    <div className="flex-shrink-0">
-                        <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 w-full sm:w-auto">
-                            <div className="text-center min-w-0 px-1 sm:px-0">
-                                <div className={cn(
-                                    "text-2xl sm:text-2xl md:text-3xl font-bold",
-                                    isUrgent ? "text-orange-600" : "text-green-600"
-                                )}>
+                {/* Show countdown timer or overdue duration */}
+                <div className="flex-shrink-0">
+                    {isOverdue ? (
+                        // Show overdue duration with seconds (for all exeats - same-day and multi-day)
+                        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 md:gap-3 w-full sm:w-auto">
+                            <div className="text-center min-w-0 px-0.5 sm:px-1">
+                                <div className="text-xl sm:text-2xl md:text-2xl font-bold text-red-600">
                                     {timeLeft.days}
                                 </div>
-                                <div className="text-xs text-muted-foreground mt-0.5">Days</div>
+                                <div className="text-xs text-red-700 font-medium mt-0.5">Days</div>
                             </div>
-                            <div className="text-center min-w-0 px-1 sm:px-0">
-                                <div className={cn(
-                                    "text-2xl sm:text-2xl md:text-3xl font-bold",
-                                    isUrgent ? "text-orange-600" : "text-green-600"
-                                )}>
-                                    {timeLeft.hours}
+                            <div className="text-center min-w-0 px-0.5 sm:px-1">
+                                <div className="text-xl sm:text-2xl md:text-2xl font-bold text-red-600">
+                                    {String(timeLeft.hours).padStart(2, '0')}
                                 </div>
-                                <div className="text-xs text-muted-foreground mt-0.5">Hours</div>
+                                <div className="text-xs text-red-700 font-medium mt-0.5">Hours</div>
                             </div>
-                            <div className="text-center min-w-0 px-1 sm:px-0">
-                                <div className={cn(
-                                    "text-2xl sm:text-2xl md:text-3xl font-bold",
-                                    isUrgent ? "text-orange-600" : "text-green-600"
-                                )}>
-                                    {timeLeft.minutes}
+                            <div className="text-center min-w-0 px-0.5 sm:px-1">
+                                <div className="text-xl sm:text-2xl md:text-2xl font-bold text-red-600">
+                                    {String(timeLeft.minutes).padStart(2, '0')}
                                 </div>
-                                <div className="text-xs text-muted-foreground mt-0.5">Minutes</div>
+                                <div className="text-xs text-red-700 font-medium mt-0.5">Min</div>
+                            </div>
+                            <div className="text-center min-w-0 px-0.5 sm:px-1">
+                                <div className="text-xl sm:text-2xl md:text-2xl font-bold text-red-600">
+                                    {String(timeLeft.seconds).padStart(2, '0')}
+                                </div>
+                                <div className="text-xs text-red-700 font-medium mt-0.5">Sec</div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    ) : (
+                        // Show time remaining (only for multi-day exeats)
+                        !isSameDay && (
+                            <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 w-full sm:w-auto">
+                                <div className="text-center min-w-0 px-1 sm:px-0">
+                                    <div className={cn(
+                                        "text-2xl sm:text-2xl md:text-3xl font-bold",
+                                        isUrgent ? "text-orange-600" : "text-green-600"
+                                    )}>
+                                        {timeLeft.days}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-0.5">Days</div>
+                                </div>
+                                <div className="text-center min-w-0 px-1 sm:px-0">
+                                    <div className={cn(
+                                        "text-2xl sm:text-2xl md:text-3xl font-bold",
+                                        isUrgent ? "text-orange-600" : "text-green-600"
+                                    )}>
+                                        {timeLeft.hours}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-0.5">Hours</div>
+                                </div>
+                                <div className="text-center min-w-0 px-1 sm:px-0">
+                                    <div className={cn(
+                                        "text-2xl sm:text-2xl md:text-3xl font-bold",
+                                        isUrgent ? "text-orange-600" : "text-green-600"
+                                    )}>
+                                        {timeLeft.minutes}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-0.5">Minutes</div>
+                                </div>
+                            </div>
+                        )
+                    )}
+                </div>
             </div>
 
-            {/* Progress Bar - only show for multi-day exeats */}
+            {/* Progress Bar - only show for multi-day exeats when not overdue */}
             {!isOverdue && !isSameDay && (
                 <div className="mt-4">
                     <div className="w-full bg-gray-200 rounded-full h-2">
@@ -233,6 +320,52 @@ export function ExeatCountdown({ departureDate, returnDate, variant = 'student',
                             {isUrgent ? "⚠️ Less than 24 hours remaining" : "Monitor return status"}
                         </p>
                     )}
+                </div>
+            )}
+
+            {/* Penalty Information - only show for students when overdue */}
+            {isOverdue && variant === 'student' && (
+                <div className="mt-4 p-3 sm:p-4 bg-red-100 border border-red-300 rounded-lg">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm sm:text-base font-semibold text-red-900 mb-1">
+                                Late Return Penalty
+                            </p>
+                            <p className="text-xs sm:text-sm text-red-800 leading-relaxed">
+                                You have been overdue for <span className="font-bold">{timeLeft.days} day{timeLeft.days !== 1 ? 's' : ''}</span>.
+                                You will be charged <span className="font-bold">₦{penaltyAmount.toLocaleString()}</span>
+                                {' '}(₦10,000 per day overdue).
+                            </p>
+                            {timeLeft.days === 0 && (
+                                <p className="text-xs sm:text-sm text-red-800 mt-1.5">
+                                    Note: Charges apply from the first full day overdue.
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Overdue warning for staff */}
+            {isOverdue && variant === 'staff' && (
+                <div className="mt-4 p-3 sm:p-4 bg-red-100 border border-red-300 rounded-lg">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm sm:text-base font-semibold text-red-900 mb-1">
+                                Student Overdue
+                            </p>
+                            <p className="text-xs sm:text-sm text-red-800 leading-relaxed">
+                                Student has been overdue for <span className="font-bold">{timeLeft.days} day{timeLeft.days !== 1 ? 's' : ''}</span>
+                                {timeLeft.hours > 0 && <>, <span className="font-bold">{timeLeft.hours} hour{timeLeft.hours !== 1 ? 's' : ''}</span></>}
+                                {timeLeft.minutes > 0 && <>, and <span className="font-bold">{timeLeft.minutes} minute{timeLeft.minutes !== 1 ? 's' : ''}</span></>}.
+                                <br className="mt-1" />
+                                Late return penalty applies: <span className="font-bold">₦{penaltyAmount.toLocaleString()}</span>
+                                {' '}(₦10,000 per day overdue).
+                            </p>
+                        </div>
+                    </div>
                 </div>
             )}
         </Card>
