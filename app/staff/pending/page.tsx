@@ -26,12 +26,14 @@ import { ExeatRequestFilters } from '@/components/staff/ExeatRequestFilters';
 import { extractRoleName } from '@/lib/utils/csrf';
 import type { StaffExeatRequest } from '@/lib/services/staffApi';
 
+
 export default function PendingExeatRequestsPage() {
     const router = useRouter();
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [dateFilter, setDateFilter] = useState<string>('all');
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
+
 
     const {
         profile,
@@ -45,6 +47,7 @@ export default function PendingExeatRequestsPage() {
     } = useStaff();
 
     const { data: allRequests, isLoading, refetch } = useStaffExeatRequests();
+
 
     // Derive filtered and dated requests
     const requests = (allRequests || [])
@@ -226,6 +229,8 @@ export default function PendingExeatRequestsPage() {
         // Redirect to the dedicated exeat details page
         router.push(`/staff/exeat-requests/${request.id}`);
     };
+
+
 
     return (
         <ProtectedRoute requiredRole="staff">

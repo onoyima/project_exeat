@@ -10,7 +10,8 @@ import type {
     ExeatStatistics,
     CompletedExeatRequestsResponse,
     RejectedExeatRequestsResponse,
-    StaffDashboardStats
+    StaffDashboardStats,
+    DeanExeatApplyForm
 } from '@/types/staff';
 import type { ExeatRequest } from '@/types/student';
 
@@ -66,6 +67,21 @@ export const staffApi = api.injectEndpoints({
         getAllExeatRequests: builder.query<StaffExeatRequest[], void>({
             query: () => '/staff/exeat-requests',
             transformResponse: (response: { exeat_requests: StaffExeatRequest[] }) => response.exeat_requests,
+            providesTags: ['ExeatRequests'],
+        }),
+
+        // Search exeat requests by student_id (accessible by any staff)
+        getExeatRequestsByStudentId: builder.query<StaffExeatRequest[], number | string>({
+            query: (studentId) => ({
+                url: '/staff/exeat-requests',
+                params: { student_id: studentId },
+            }),
+            transformResponse: (response: { exeat_requests: StaffExeatRequest[] } | { data?: { exeat_requests: StaffExeatRequest[] } } | StaffExeatRequest[]) => {
+                if (Array.isArray(response)) return response as StaffExeatRequest[];
+                if ('exeat_requests' in (response as any)) return (response as any).exeat_requests;
+                if ((response as any)?.data?.exeat_requests) return (response as any).data.exeat_requests;
+                return [];
+            },
             providesTags: ['ExeatRequests'],
         }),
 
@@ -184,6 +200,25 @@ export const staffApi = api.injectEndpoints({
             }),
             invalidatesTags: ['ExeatRequests'],
         }),
+
+        // Dean applies for exeat on behalf of a student
+        deanApplyExeatRequest: builder.mutation<{ success: boolean; message: string }, DeanExeatApplyForm>({
+            query: (body) => ({
+                url: '/dean/exeat-requests',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['ExeatRequests'],
+        }),
+
+        // Dean bulk approval: approve all that passed secretary and parent consent
+        deanBulkApproveExeats: builder.mutation<{ success?: boolean; message?: string }, void>({
+            query: () => ({
+                url: '/dean/exeat-requests/bulkAprroval',
+                method: 'POST',
+            }),
+            invalidatesTags: ['ExeatRequests'],
+        }),
     }),
 });
 
@@ -192,6 +227,7 @@ export const {
     useGetAllExeatRequestsQuery,
     useGetExeatRequestsByStatusQuery,
     useGetExeatRequestByIdQuery,
+    useGetExeatRequestsByStudentIdQuery,
     useApproveExeatRequestMutation,
     useRejectExeatRequestMutation,
     useSignStudentOutMutation,
@@ -204,4 +240,6 @@ export const {
     useGetStaffDashboardStatsQuery,
     useSendCommentMutation,
     useEditExeatRequestMutation,
+    useDeanApplyExeatRequestMutation,
+    useDeanBulkApproveExeatsMutation,
 } = staffApi;

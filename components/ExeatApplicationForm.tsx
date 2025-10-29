@@ -43,8 +43,8 @@ const exeatFormSchema = z.object({
   return_date: z.date({
     required_error: 'Please select a return date',
   }),
-}).refine((data) => data.return_date > data.departure_date, {
-  message: 'Return date must be after departure date',
+}).refine((data) => data.return_date >= data.departure_date, {
+  message: 'Return date cannot be before departure date',
   path: ['return_date'],
 });
 
@@ -120,7 +120,7 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
     if (watchedDepartureDate) {
       const departureDateOnly = new Date(watchedDepartureDate);
       departureDateOnly.setHours(0, 0, 0, 0);
-      if (compareDate <= departureDateOnly) return true;
+      if (compareDate < departureDateOnly) return true;
     }
 
     return false;
