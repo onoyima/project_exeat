@@ -65,7 +65,7 @@ export const studentApi = api.injectEndpoints({
         // 3. Verify Payment
         verifyPayment: builder.query<PaymentVerificationResponse, { id: number; reference: string }>({
             query: ({ id, reference }) => ({
-                url: `/student/debts/${id}/verify-payment`,
+                url: `/student/debts/${id}/verify-payment-api`,
                 params: { reference },
             }),
             transformResponse: (response: PaymentVerificationResponse) => response,
