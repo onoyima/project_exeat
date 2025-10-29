@@ -89,12 +89,12 @@ export default function PayDebtPage() {
 
             if (result.data?.authorization_url) {
                 setPaymentUrl(result.data.authorization_url);
-                // Open payment in new tab
-                window.open(result.data.authorization_url, '_blank');
+                // Navigate to payment page in the same tab
+                window.location.href = result.data.authorization_url;
 
                 toast({
-                    title: "Payment Initialized",
-                    description: "Payment page opened in new tab. Complete payment and return here to verify.",
+                    title: "Redirecting to Payment",
+                    description: "You will be redirected to complete your payment.",
                 });
             }
         } catch (error: any) {
