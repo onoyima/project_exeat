@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusPill } from '@/components/ui/status-pill';
-import { useGetExeatRequestsQuery } from '@/lib/services/exeatApi';
+import { useGetExeatRequestsQuery, useGetCategoriesQuery } from '@/lib/services/exeatApi';
 import { FileText, Search, Filter, Calendar, MapPin, User, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -28,12 +28,7 @@ const statuses = [
     { value: "completed", label: "Completed" },
 ];
 
-const categories = [
-    { id: 1, name: "Medical", icon: "🏥" },
-    { id: 2, name: "Casual", icon: "🌴" },
-    { id: 3, name: "Emergency", icon: "🚨" },
-    { id: 4, name: "Official", icon: "💼" },
-];
+// categories fetched dynamically
 
 export default function AdminExeatsPage() {
     const [search, setSearch] = useState('');
@@ -42,6 +37,16 @@ export default function AdminExeatsPage() {
     const router = useRouter();
 
     const { data: exeatData, isLoading } = useGetExeatRequestsQuery();
+    const { data: categoriesData } = useGetCategoriesQuery();
+    const apiCategories = categoriesData?.categories || [];
+    const categoryIconById: Record<number, string> = Object.fromEntries(
+        apiCategories.map((c) => [
+            c.id,
+            c.name.toLowerCase() === 'medical' ? '🏥' :
+                c.name.toLowerCase() === 'family' ? '👪' :
+                    c.name.toLowerCase() === 'exigency' ? '⚡' : '📋'
+        ])
+    );
     const exeatRequests = exeatData?.exeat_requests || [];
 
     // Filter exeat requests
@@ -164,9 +169,9 @@ export default function AdminExeatsPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Categories</SelectItem>
-                                {categories.map((category) => (
+                                {apiCategories.map((category) => (
                                     <SelectItem key={category.id} value={category.id.toString()}>
-                                        {category.icon} {category.name}
+                                        {categoryIconById[category.id]} {category.name.charAt(0).toUpperCase() + category.name.slice(1)}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -217,12 +222,7 @@ export default function AdminExeatsPage() {
                                         <div className="flex items-start justify-between">
                                             <div className="flex items-center gap-3">
                                                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                                    <span className="text-2xl">
-                                                        {request.is_medical || request.category_id === 1 ? '🏥' :
-                                                            request.category_id === 2 ? '🌴' :
-                                                                request.category_id === 3 ? '🚨' :
-                                                                    request.category_id === 4 ? '💼' : '📋'}
-                                                    </span>
+                                                    <span className="text-2xl">{categoryIconById[request.category_id] || '📋'}</span>
                                                 </div>
                                                 <div>
                                                     <h3 className="font-semibold text-lg truncate">
@@ -280,12 +280,7 @@ export default function AdminExeatsPage() {
                                         >
                                             {/* Category Icon */}
                                             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                                <span className="text-2xl">
-                                                    {request.is_medical || request.category_id === 1 ? '🏥' :
-                                                        request.category_id === 2 ? '🌴' :
-                                                            request.category_id === 3 ? '🚨' :
-                                                                request.category_id === 4 ? '💼' : '📋'}
-                                                </span>
+                                                <span className="text-2xl">{categoryIconById[request.category_id] || '📋'}</span>
                                             </div>
 
                                             {/* Request Info */}

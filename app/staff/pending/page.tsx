@@ -21,6 +21,7 @@ import {
     CheckCircle,
 } from 'lucide-react';
 import { useStaff, useStaffExeatRequests } from '@/hooks/use-staff';
+import { useGetCategoriesQuery } from '@/lib/services/exeatApi';
 import { ExeatRequestsTable } from '@/components/staff/ExeatRequestsTable';
 import { ExeatRequestFilters } from '@/components/staff/ExeatRequestFilters';
 import { extractRoleName } from '@/lib/utils/csrf';
@@ -47,6 +48,10 @@ export default function PendingExeatRequestsPage() {
     } = useStaff();
 
     const { data: allRequests, isLoading, refetch } = useStaffExeatRequests();
+    const { data: categoriesData } = useGetCategoriesQuery();
+    const nameToId: Record<string, number> = Object.fromEntries(
+        (categoriesData?.categories || []).map((c) => [c.name.toLowerCase(), c.id])
+    );
 
 
     // Derive filtered and dated requests
@@ -110,18 +115,9 @@ export default function PendingExeatRequestsPage() {
         })
         .filter((request: StaffExeatRequest) => {
             if (categoryFilter === 'all') return true;
-
-            // Handle medical category
-            if (categoryFilter === 'medical') {
-                return request.is_medical === 1 || request.category_id === 1;
-            }
-
-            // Handle other categories
-            if (categoryFilter === 'casual') return request.category_id === 2;
-            if (categoryFilter === 'emergency') return request.category_id === 3;
-            if (categoryFilter === 'official') return request.category_id === 4;
-
-            return true;
+            const id = nameToId[categoryFilter];
+            if (!id) return true; // unknown filter value, do not exclude
+            return request.category_id === id;
         })
         .sort((a: StaffExeatRequest, b: StaffExeatRequest) => {
             // Default sort by creation date (newest first)

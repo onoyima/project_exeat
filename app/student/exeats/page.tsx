@@ -30,7 +30,7 @@ import { StatusPill } from '@/components/ui/status-pill';
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { useGetExeatRequestsQuery } from "@/lib/services/exeatApi";
+import { useGetExeatRequestsQuery, useGetCategoriesQuery } from "@/lib/services/exeatApi";
 import { useGetCurrentUser } from '@/hooks/use-current-user';
 import Link from 'next/link';
 import { useEffect } from 'react';
@@ -49,15 +49,11 @@ import {
   FileText,
   Clock,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Users
 } from "lucide-react";
 
-const categories = [
-  { id: 1, name: "Medical", icon: Stethoscope },
-  { id: 2, name: "Casual", icon: Palmtree },
-  { id: 3, name: "Emergency", icon: AlertCircle },
-  { id: 4, name: "Official", icon: Briefcase },
-];
+// categories fetched dynamically
 
 const statuses = [
   { value: "all", label: "All Statuses" },
@@ -88,6 +84,20 @@ export default function ExeatHistory() {
     skip: !user || userLoading,
   });
   const exeatRequests = exeatData?.exeat_requests || [];
+  const { data: categoriesData } = useGetCategoriesQuery();
+  const apiCategories = categoriesData?.categories || [];
+  const categoryNameById: Record<number, string> = Object.fromEntries(
+    apiCategories.map((c) => [c.id, c.name.charAt(0).toUpperCase() + c.name.slice(1)])
+  );
+  const categoryIconById: Record<number, JSX.Element> = Object.fromEntries(
+    apiCategories.map((c) => [
+      c.id,
+      c.name.toLowerCase() === 'medical' ? <Stethoscope className="h-4 w-4" /> :
+        c.name.toLowerCase() === 'family' ? <Users className="h-4 w-4" /> :
+          c.name.toLowerCase() === 'exigency' ? <AlertCircle className="h-4 w-4" /> :
+            <Briefcase className="h-4 w-4" />
+    ])
+  );
 
   // Refetch data when user becomes available
   useEffect(() => {
@@ -199,12 +209,12 @@ export default function ExeatHistory() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map((category) => (
+                    {apiCategories.map((category) => (
                       <SelectItem
                         key={category.id}
                         value={category.id.toString()}
                       >
-                        {category.name}
+                        {category.name.charAt(0).toUpperCase() + category.name.slice(1)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -298,10 +308,7 @@ export default function ExeatHistory() {
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <span className="text-lg">
-                              {request.is_medical || request.category_id === 1 ? "🏥" :
-                                request.category_id === 2 ? "🌴" :
-                                  request.category_id === 3 ? "🚨" :
-                                    request.category_id === 4 ? "💼" : "📋"}
+                              {request.category_id in categoryIconById ? categoryIconById[request.category_id] : <FileText className="h-4 w-4" />}
                             </span>
                             <StatusPill status={request.status} size="sm" />
                           </div>
@@ -399,29 +406,10 @@ export default function ExeatHistory() {
                             <TableCell className="py-4">
                               <div className="flex items-center gap-2">
                                 <div className="p-1.5 rounded-md bg-primary/5 group-hover:bg-primary/10">
-                                  {request.is_medical ||
-                                    request.category_id === 1 ? (
-                                    <Stethoscope className="h-4 w-4" />
-                                  ) : request.category_id === 2 ? (
-                                    <Palmtree className="h-4 w-4" />
-                                  ) : request.category_id === 3 ? (
-                                    <AlertCircle className="h-4 w-4" />
-                                  ) : (
-                                    <Briefcase className="h-4 w-4" />
-                                  )}
+                                  {request.category_id in categoryIconById ? categoryIconById[request.category_id] : <FileText className="h-4 w-4" />}
                                 </div>
                                 <span className="font-medium text-sm">
-                                  {request.is_medical
-                                    ? "Medical"
-                                    : request.category_id === 1
-                                      ? "Medical"
-                                      : request.category_id === 2
-                                        ? "Casual"
-                                        : request.category_id === 3
-                                          ? "Emergency"
-                                          : request.category_id === 4
-                                            ? "Official"
-                                            : "Unknown"}
+                                  {categoryNameById[request.category_id] || 'Unknown'}
                                 </span>
                               </div>
                             </TableCell>
