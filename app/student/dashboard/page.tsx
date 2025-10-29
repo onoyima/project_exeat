@@ -468,39 +468,48 @@ function ReturnCountdown({ exeat }: ReturnCountdownProps) {
     totalMinutes: number;
   }>({ days: 0, hours: 0, minutes: 0, totalMinutes: 0 });
 
-  console.log('ReturnCountdown received exeat:', {
-    id: exeat.id,
-    return_date: exeat.return_date,
-    departure_date: exeat.departure_date,
-    status: exeat.status
-  });
-
   useEffect(() => {
     const calculateTimeLeft = () => {
       try {
         const now = new Date();
+        const departureDate = new Date(exeat.departure_date);
         const returnDate = new Date(exeat.return_date);
-        const returnDeadline = endOfDay(returnDate);
 
-        console.log('Raw return date:', exeat.return_date);
-        console.log('Parsed return date:', returnDate);
-        console.log('Return date is valid:', !isNaN(returnDate.getTime()));
-
-        if (isNaN(returnDate.getTime())) {
-          console.error('Invalid return date format:', exeat.return_date);
+        if (isNaN(returnDate.getTime()) || isNaN(departureDate.getTime())) {
+          console.error('Invalid date format:', exeat.departure_date, exeat.return_date);
           setTimeLeft({ days: 0, hours: 0, minutes: 0, totalMinutes: 0 });
           return;
         }
 
-        const totalMinutes = differenceInMinutes(returnDeadline, now);
+        // Check if same-day exeat (daily exeat)
+        const isSameDay =
+          departureDate.getFullYear() === returnDate.getFullYear() &&
+          departureDate.getMonth() === returnDate.getMonth() &&
+          departureDate.getDate() === returnDate.getDate();
 
-        console.log('Countdown calculation:', {
-          now: now.toISOString(),
-          returnDate: returnDate.toISOString(),
-          returnDeadline: returnDeadline.toISOString(),
-          totalMinutes,
-          isOverdue: totalMinutes <= 0
-        });
+        const returnDeadline = endOfDay(returnDate);
+
+        if (isSameDay) {
+          // For same-day exeats, only check date (not time)
+          // Overdue if current date > return date (past midnight of return day)
+          const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const returnDateOnly = new Date(returnDate.getFullYear(), returnDate.getMonth(), returnDate.getDate());
+
+          if (nowDateOnly > returnDateOnly) {
+            // Overdue - past the return date
+            setTimeLeft({ days: 0, hours: 0, minutes: 0, totalMinutes: -1 });
+            return;
+          } else {
+            // Not overdue yet - still on or before return date
+            // For same-day, show minimal countdown (days only)
+            const days = differenceInDays(returnDeadline, now);
+            setTimeLeft({ days: Math.max(0, days), hours: 0, minutes: 0, totalMinutes: differenceInMinutes(returnDeadline, now) });
+            return;
+          }
+        }
+
+        // For multi-day exeats, use detailed countdown
+        const totalMinutes = differenceInMinutes(returnDeadline, now);
 
         if (totalMinutes <= 0) {
           setTimeLeft({ days: 0, hours: 0, minutes: 0, totalMinutes });
@@ -522,45 +531,60 @@ function ReturnCountdown({ exeat }: ReturnCountdownProps) {
     const timer = setInterval(calculateTimeLeft, 60000); // Update every minute
 
     return () => clearInterval(timer);
-  }, [exeat.return_date]);
+  }, [exeat.return_date, exeat.departure_date]);
+
+  // Check if same-day exeat for display purposes
+  const isSameDay = (() => {
+    try {
+      const departureDate = new Date(exeat.departure_date);
+      const returnDate = new Date(exeat.return_date);
+      return (
+        departureDate.getFullYear() === returnDate.getFullYear() &&
+        departureDate.getMonth() === returnDate.getMonth() &&
+        departureDate.getDate() === returnDate.getDate()
+      );
+    } catch {
+      return false;
+    }
+  })();
 
   const isOverdue = timeLeft.totalMinutes <= 0;
-  const isUrgent = timeLeft.totalMinutes <= 1440 && timeLeft.totalMinutes > 0; // Less than 24 hours
+  const isUrgent = !isSameDay && timeLeft.totalMinutes <= 1440 && timeLeft.totalMinutes > 0; // Less than 24 hours
 
   return (
     <Card className={cn(
-      "p-4 md:p-6 border-2 transition-all duration-300",
+      "p-3 sm:p-4 md:p-6 border-2 transition-all duration-300",
       isOverdue
         ? "bg-gradient-to-r from-red-50 to-rose-50 border-red-200 shadow-red-100"
         : isUrgent
           ? "bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200 shadow-orange-100"
           : "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-green-100"
     )}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
           <div className={cn(
-            "p-3 rounded-full",
+            "p-2 sm:p-3 rounded-full flex-shrink-0",
             isOverdue ? "bg-red-100" :
               isUrgent ? "bg-orange-100" : "bg-green-100"
           )}>
             {isOverdue ? (
-              <AlertCircle className="h-6 w-6 text-red-600" />
+              <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
             ) : isUrgent ? (
-              <Timer className="h-6 w-6 text-orange-600" />
+              <Timer className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
             ) : (
-              <MapPinned className="h-6 w-6 text-green-600" />
+              <MapPinned className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
             )}
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <h3 className={cn(
-              "font-semibold text-lg",
+              "font-semibold text-base sm:text-lg",
               isOverdue ? "text-red-900" :
                 isUrgent ? "text-orange-900" : "text-green-900"
             )}>
               {isOverdue ? "Return Time Passed!" : "Expected Return Time"}
             </h3>
             <p className={cn(
-              "text-sm",
+              "text-xs sm:text-sm mt-1",
               isOverdue ? "text-red-700" :
                 isUrgent ? "text-orange-700" : "text-green-700"
             )}>
@@ -572,43 +596,43 @@ function ReturnCountdown({ exeat }: ReturnCountdownProps) {
           </div>
         </div>
 
-        {!isOverdue && (
-          <div className="text-right">
-            <div className="grid grid-cols-3 gap-1 sm:gap-2 md:gap-4">
-              <div className="text-center min-w-0">
+        {(!isOverdue && !isSameDay) && (
+          <div className="flex-shrink-0">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 w-full sm:w-auto">
+              <div className="text-center min-w-0 px-1 sm:px-0">
                 <div className={cn(
-                  "text-xl sm:text-2xl md:text-3xl font-bold",
+                  "text-2xl sm:text-2xl md:text-3xl font-bold",
                   isUrgent ? "text-orange-600" : "text-green-600"
                 )}>
                   {timeLeft.days}
                 </div>
-                <div className="text-xs sm:text-sm text-muted-foreground">Days</div>
+                <div className="text-xs text-muted-foreground mt-0.5">Days</div>
               </div>
-              <div className="text-center min-w-0">
+              <div className="text-center min-w-0 px-1 sm:px-0">
                 <div className={cn(
-                  "text-xl sm:text-2xl md:text-3xl font-bold",
+                  "text-2xl sm:text-2xl md:text-3xl font-bold",
                   isUrgent ? "text-orange-600" : "text-green-600"
                 )}>
                   {timeLeft.hours}
                 </div>
-                <div className="text-xs sm:text-sm text-muted-foreground">Hours</div>
+                <div className="text-xs text-muted-foreground mt-0.5">Hours</div>
               </div>
-              <div className="text-center min-w-0">
+              <div className="text-center min-w-0 px-1 sm:px-0">
                 <div className={cn(
-                  "text-xl sm:text-2xl md:text-3xl font-bold",
+                  "text-2xl sm:text-2xl md:text-3xl font-bold",
                   isUrgent ? "text-orange-600" : "text-green-600"
                 )}>
                   {timeLeft.minutes}
                 </div>
-                <div className="text-xs sm:text-sm text-muted-foreground">Minutes</div>
+                <div className="text-xs text-muted-foreground mt-0.5">Minutes</div>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Progress Bar */}
-      {!isOverdue && (
+      {/* Progress Bar - only show for multi-day exeats or when overdue */}
+      {!isOverdue && !isSameDay && (
         <div className="mt-4">
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
@@ -632,7 +656,7 @@ function ReturnCountdown({ exeat }: ReturnCountdownProps) {
               }}
             />
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 sm:mt-2 break-words">
             {isUrgent ? "⚠️ Less than 24 hours remaining - sign back in soon" : "Please sign back in by your return date"}
           </p>
         </div>
