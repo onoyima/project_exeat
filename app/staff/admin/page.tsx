@@ -5,6 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useGetAdminDashboardStatsQuery, useGetStaffAssignmentsQuery } from '@/lib/services/adminApi';
 import { useGetExeatRequestsQuery } from '@/lib/services/exeatApi';
+import { useDeanBulkApproveExeatsMutation } from '@/lib/services/staffApi';
+import ConfirmModal from '@/components/ui/confirm-modal';
+import { toast } from '@/hooks/use-toast';
+import { useState } from 'react';
 import { useGetCurrentUser } from '@/hooks/use-current-user';
 import { useRouter } from 'next/navigation';
 import {
@@ -32,6 +36,19 @@ export default function AdminDashboard() {
     const router = useRouter();
     const { data: staffAssignments, isLoading: staffLoading } = useGetStaffAssignmentsQuery();
     const { data: exeatData, isLoading: exeatLoading } = useGetExeatRequestsQuery();
+    const [bulkApprove, { isLoading: bulkApproving }] = useDeanBulkApproveExeatsMutation();
+    const [showBulkConfirm, setShowBulkConfirm] = useState(false);
+    const handleBulkApprove = () => setShowBulkConfirm(true);
+    const runBulkApprove = async () => {
+        try {
+            const result = await bulkApprove().unwrap();
+            toast({ variant: 'success', title: 'Bulk Approval', description: result?.message || 'Bulk approval completed successfully' });
+            setShowBulkConfirm(false);
+        } catch (e: any) {
+            toast({ variant: 'destructive', title: 'Bulk Approval Failed', description: e?.data?.message || 'Bulk approval failed' });
+            // keep modal open to allow retry or cancel
+        }
+    };
     const { data: dashboardStats, isLoading: dashboardStatsLoading } = useGetAdminDashboardStatsQuery() as {
         data: AdminDashboardResponse['data'] | undefined;
         isLoading: boolean;
@@ -47,6 +64,48 @@ export default function AdminDashboard() {
                 <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
                 <p className="text-muted-foreground mt-1">Welcome back, {user?.fname} {user?.lname}</p>
             </div>
+
+            {/* Quick Actions */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-xl">Quick Actions</CardTitle>
+                    <CardDescription>
+                        Common administrative tasks
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+                        <Button asChild variant="outline" className="h-20 flex-col gap-2">
+                            <Link href="/staff/assign-exeat-role">
+                                <Users className="h-6 w-6" />
+                                <span>Assign Roles</span>
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="h-20 flex-col gap-2">
+                            <Link href="/staff/pending">
+                                <FileText className="h-6 w-6" />
+                                <span>View Exeats</span>
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="h-20 flex-col gap-2">
+                            <Link href="/staff/admin/exeats/create">
+                                <Plus className="h-6 w-6" />
+                                <span>Apply Exeat For Student</span>
+                            </Link>
+                        </Button>
+                        <Button onClick={handleBulkApprove} variant="outline" className="h-20 flex-col gap-2" disabled={bulkApproving}>
+                            <CheckCircle2 className="h-6 w-6" />
+                            <span>{bulkApproving ? 'Approving…' : 'Bulk Approve (Dean)'}</span>
+                        </Button>
+                        <Button asChild variant="outline" className="h-20 flex-col gap-2">
+                            <Link href="/staff/admin/analytics">
+                                <TrendingUp className="h-6 w-6" />
+                                <span>Analytics</span>
+                            </Link>
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* System Overview Stats */}
             {
@@ -298,37 +357,16 @@ export default function AdminDashboard() {
                 </Card>
             </div>
 
-            {/* Quick Actions */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-xl">Quick Actions</CardTitle>
-                    <CardDescription>
-                        Common administrative tasks
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-                        <Button asChild variant="outline" className="h-20 flex-col gap-2">
-                            <Link href="/staff/assign-exeat-role">
-                                <Users className="h-6 w-6" />
-                                <span>Assign Roles</span>
-                            </Link>
-                        </Button>
-                        <Button asChild variant="outline" className="h-20 flex-col gap-2">
-                            <Link href="/staff/pending">
-                                <FileText className="h-6 w-6" />
-                                <span>View Exeats</span>
-                            </Link>
-                        </Button>
-                        <Button asChild variant="outline" className="h-20 flex-col gap-2">
-                            <Link href="/staff/admin/analytics">
-                                <TrendingUp className="h-6 w-6" />
-                                <span>Analytics</span>
-                            </Link>
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+
+            <ConfirmModal
+                isOpen={showBulkConfirm}
+                onClose={() => setShowBulkConfirm(false)}
+                title="Confirm Bulk Approval"
+                description="Approve all exeat requests that have passed secretary review and parent consent. This action cannot be undone."
+                confirmLabel={bulkApproving ? 'Approving…' : 'Approve All'}
+                cancelLabel="Cancel"
+                onConfirm={runBulkApprove}
+            />
         </div >
     );
 }

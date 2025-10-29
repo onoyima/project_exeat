@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Menu, User, LogOut } from 'lucide-react';
+import { Menu, User, LogOut, Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/lib/services/authSlice';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,16 @@ export default function StaffNavbar({
     router.replace('/login');
   };
 
+  const [studentIdSearch, setStudentIdSearch] = useState('');
+
+  const onSubmitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const id = studentIdSearch.trim();
+    if (!id) return;
+    router.push(`/staff/search?student_id=${encodeURIComponent(id)}`);
+    setStudentIdSearch('');
+  };
+
   return (
     <header className="fixed top-0 z-50 w-full border-b bg-white">
       <div className="flex h-14 items-center px-4 lg:px-6">
@@ -77,6 +87,21 @@ export default function StaffNavbar({
           <div className="hidden lg:block h-4 w-px bg-border mx-2" />
           <div className="text-sm font-medium">Digital Exeat System - Staff</div>
         </div>
+
+        {/* Navbar Search (Student ID) - compact, doesn't push logo */}
+        <form onSubmit={onSubmitSearch} className="hidden lg:flex items-center gap-2 mr-2 w-[350px] flex-none">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={studentIdSearch}
+              onChange={(e) => setStudentIdSearch(e.target.value)}
+              inputMode="numeric"
+              placeholder="Search by Student ID"
+              className="w-full pl-9 pr-3 py-2 h-9 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
+          <Button type="submit" size="sm" disabled={!studentIdSearch}>Go</Button>
+        </form>
 
         {/* User Menu */}
         <div className="flex items-center gap-4">
@@ -128,6 +153,23 @@ export default function StaffNavbar({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+      </div>
+
+      {/* Mobile search row */}
+      <div className="md:hidden px-4 pb-3">
+        <form onSubmit={onSubmitSearch} className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={studentIdSearch}
+              onChange={(e) => setStudentIdSearch(e.target.value)}
+              inputMode="numeric"
+              placeholder="Search by Student ID"
+              className="w-full pl-9 pr-3 py-2 h-10 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
+          <Button type="submit" size="sm" disabled={!studentIdSearch}>Go</Button>
+        </form>
       </div>
 
       {/* Logout Modal */}

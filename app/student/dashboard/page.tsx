@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGetCurrentUser } from '@/hooks/use-current-user';
 import { format, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns';
 import {
@@ -13,19 +11,14 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  Calendar,
   MapPin,
   Home,
   GraduationCap,
   Users,
-  Stethoscope,
-  Palmtree,
   AlertCircle,
-  Briefcase,
   Phone,
   FileText,
   History,
-  TrendingUp,
   Timer,
   MapPinned,
 } from 'lucide-react';

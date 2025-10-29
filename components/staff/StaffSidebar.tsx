@@ -19,6 +19,7 @@ import {
   XCircle,
   Building2,
   CreditCard,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -169,6 +170,9 @@ export default function StaffSidebar({
                 </div>
                 <NavLink href="/staff/admin" icon={Home}>
                   Admin Dashboard
+                </NavLink>
+                <NavLink href="/staff/admin/exeats/create" icon={FileText}>
+                  Apply Exeat For Student
                 </NavLink>
                 <NavLink href="/staff/admin/hostel-assignments" icon={Building2}>
                   Hostel Assignments

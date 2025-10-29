@@ -918,4 +918,15 @@ export interface AuditTrailResponse {
         debt_summary: DebtSummary;
         recent_requests: any[];
     };
-} 
+}
+
+// ===== DEAN/APPLY EXEAT ON BEHALF TYPES =====
+export interface DeanExeatApplyForm {
+    student_id: number;
+    category_id: number;
+    reason: string;
+    destination: string;
+    departure_date: string; // yyyy-MM-dd
+    return_date: string; // yyyy-MM-dd
+    preferred_mode_of_contact?: 'whatsapp' | 'text' | 'phone_call' | 'email';
+}

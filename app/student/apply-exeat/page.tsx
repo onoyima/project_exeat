@@ -1,14 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, FileText, Info } from 'lucide-react';
+import { ArrowLeft, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import ExeatApplicationForm from '@/components/ExeatApplicationForm';
-import { useGetCurrentUser } from '@/hooks/use-current-user';
 
 const fadeIn = {
     initial: { opacity: 0, y: 20 },
@@ -18,7 +15,6 @@ const fadeIn = {
 
 export default function ApplyExeatPage() {
     const router = useRouter();
-    const currentUser = useGetCurrentUser();
 
     const handleSuccess = () => {
         router.push('/student/exeats');
