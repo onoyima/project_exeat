@@ -41,7 +41,7 @@ import { useGetExeatRequestByIdQuery } from '@/lib/services/staffApi';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StatusPill } from '@/components/ui/status-pill';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CountdownTimer } from '@/components/staff/CountdownTimer';
+import { ExeatCountdown } from '@/components/ExeatCountdown';
 import {
     getDynamicActionTitle,
     getDynamicActionDescription,
@@ -619,7 +619,11 @@ export default function ExeatRequestDetailPage() {
                 {/* Countdown Timer - Show for active exeats */}
                 {(request.status === 'security_signin' || request.status === 'approved') && (
                     <div className="mb-6">
-                        <CountdownTimer returnDate={request.return_date} />
+                        <ExeatCountdown
+                            departureDate={request.departure_date}
+                            returnDate={request.return_date}
+                            variant="staff"
+                        />
                     </div>
                 )}
 
