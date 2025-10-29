@@ -51,7 +51,9 @@ export default function StaffSearchResultsPage() {
                     <CardContent className="p-0">
                         <ExeatRequestsTable
                             requests={requests}
-                            onViewDetails={(r) => router.push(`/staff/exeat-requests/${(r as any).id}`)}
+                            onApprove={async () => { }}
+                            onReject={async () => { }}
+                            onViewDetails={(r) => router.push(`/staff/exeat-requests/${r.id}`)}
                         />
                     </CardContent>
                 </Card>
