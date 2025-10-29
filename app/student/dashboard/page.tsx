@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useGetCurrentUser } from '@/hooks/use-current-user';
-import { format, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns';
+import { format, differenceInMinutes, differenceInHours, differenceInDays, endOfDay, startOfDay } from 'date-fns';
 import {
   PlusCircle,
   Clock,
@@ -23,7 +23,7 @@ import {
   MapPinned,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useGetExeatRequestsQuery } from '@/lib/services/exeatApi';
+import { useGetExeatRequestsQuery, useGetCategoriesQuery } from '@/lib/services/exeatApi';
 import { DashboardSkeleton } from '@/components/student/DashboardSkeletons';
 import { useRouter } from 'next/navigation';
 import { StatusPill } from '@/components/ui/status-pill';
@@ -38,6 +38,10 @@ export default function StudentDashboard() {
 
   const { data: exeatData, isLoading: loadingExeats } = useGetExeatRequestsQuery();
   const exeatRequests = exeatData?.exeat_requests || [];
+  const { data: categoriesData } = useGetCategoriesQuery();
+  const categoryNameById: Record<number, string> = Object.fromEntries(
+    (categoriesData?.categories || []).map((c) => [c.id, c.name.charAt(0).toUpperCase() + c.name.slice(1)])
+  );
 
   // Show skeleton loading if user data or exeat data is still loading
   if (userLoading || loadingExeats) {
@@ -87,22 +91,22 @@ export default function StudentDashboard() {
         return false;
       }
 
-      const currentDate = new Date();
-      const departureDate = new Date(r.departure_date);
-      const returnDate = new Date(r.return_date);
-      const isBeforeReturn = returnDate > currentDate;
-      const isAfterDeparture = currentDate >= departureDate;
-
-      // Handle invalid dates
-      if (isNaN(departureDate.getTime()) || isNaN(returnDate.getTime())) {
-        console.warn('Invalid date format for exeat:', r.id, r.departure_date, r.return_date);
+      // Show countdown when status is security_signin (student has left school)
+      if (r.status !== 'security_signin') {
         return false;
       }
 
-      // Check if user has departed and is currently away from school
-      const hasDeparted = isActiveExeat(r) && currentDate >= departureDate;
+      const returnDate = new Date(r.return_date);
 
-      return (isActiveExeat(r) && isBeforeReturn && isAfterDeparture) || (hasDeparted && isBeforeReturn);
+      // Handle invalid dates
+      if (isNaN(returnDate.getTime())) {
+        console.warn('Invalid return date format for exeat:', r.id, r.return_date);
+        return false;
+      }
+
+      // Student has left (security_signin) - show countdown regardless of overdue status
+      // The countdown component will handle displaying overdue state
+      return true;
     } catch (error) {
       console.error('Error processing exeat dates:', error, r);
       return false;
@@ -153,10 +157,7 @@ export default function StudentDashboard() {
         </div>
       </Card>
 
-      {/* Active Exeat Countdown Timer */}
-      {(activeExeat) && (
-        <ReturnCountdown exeat={activeExeat} />
-      )}
+
 
       {/* Statistics Grid with Enhanced Mobile-First Progressive Disclosure */}
       <div className="space-y-4 md:space-y-6">
@@ -236,38 +237,34 @@ export default function StudentDashboard() {
       {/* Actionable Insights */}
       <ActionableInsights exeatRequests={exeatRequests} isLoading={loadingExeats} />
 
-      {/* Quick Actions & Student Info - Enhanced Mobile-First Layout */}
+      {/* Countdown & Student Info - Enhanced Mobile-First Layout */}
       <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-7">
-        <Card className="lg:col-span-4 p-4 md:p-6">
-          <CardHeader className="pb-4 md:pb-6">
-            <CardTitle className="text-lg md:text-xl font-semibold">Quick Actions</CardTitle>
-            <CardDescription className="text-base md:text-lg">
-              Common tasks you might want to do
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Link href="/student/exeats" className="w-full">
-                <Button
-                  variant="default"
-                  size="lg"
-                  className="h-12 md:h-14 w-full justify-start transition-all duration-200 hover:shadow-md hover:scale-[1.02] focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none active:scale-[0.98] touch-manipulation text-base px-6"
-                >
-                  <History className="mr-3 h-5 w-5" />
-                  <span>View All Exeats</span>
-                </Button>
-              </Link>
-              <Button
-                variant="outline"
-                size="lg"
-                className="h-12 md:h-14 w-full justify-start transition-all duration-200 hover:shadow-md hover:bg-gray-50 hover:scale-[1.02] focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none active:scale-[0.98] touch-manipulation text-base px-6"
-              >
-                <Clock className="mr-3 h-5 w-5" />
-                <span>View Active Permits</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="lg:col-span-4">
+          {activeExeat ? (
+            <ReturnCountdown exeat={activeExeat} />
+          ) : (
+            <Card className="p-4 md:p-6">
+              <CardHeader className="pb-2 md:pb-4">
+                <CardTitle className="text-lg md:text-xl font-semibold">No Active Exeat</CardTitle>
+                <CardDescription className="text-base md:text-lg">You have no active exeat at the moment.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Link href="/student/apply-exeat">
+                    <Button>
+                      <PlusCircle className="mr-2 h-4 w-4" /> Apply for Exeat
+                    </Button>
+                  </Link>
+                  <Link href="/student/exeats">
+                    <Button variant="outline">
+                      <History className="mr-2 h-4 w-4" /> View History
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
 
         <Card className="lg:col-span-3 p-4 md:p-6">
           <CardHeader className="pb-4 md:pb-6">
@@ -342,10 +339,7 @@ export default function StudentDashboard() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <h3 className="text-base font-semibold capitalize truncate">
-                          {request.is_medical ? 'Medical' : request.category_id === 1 ? 'Medical' :
-                            request.category_id === 2 ? 'Casual' :
-                              request.category_id === 3 ? 'Emergency' :
-                                request.category_id === 4 ? 'Official' : 'Unknown'}
+                          {categoryNameById[request.category_id] || (request.is_medical ? 'Medical' : 'Unknown')}
                         </h3>
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(request.created_at), 'MMM d, yyyy')}
@@ -486,6 +480,7 @@ function ReturnCountdown({ exeat }: ReturnCountdownProps) {
       try {
         const now = new Date();
         const returnDate = new Date(exeat.return_date);
+        const returnDeadline = endOfDay(returnDate);
 
         console.log('Raw return date:', exeat.return_date);
         console.log('Parsed return date:', returnDate);
@@ -497,11 +492,12 @@ function ReturnCountdown({ exeat }: ReturnCountdownProps) {
           return;
         }
 
-        const totalMinutes = differenceInMinutes(returnDate, now);
+        const totalMinutes = differenceInMinutes(returnDeadline, now);
 
         console.log('Countdown calculation:', {
           now: now.toISOString(),
           returnDate: returnDate.toISOString(),
+          returnDeadline: returnDeadline.toISOString(),
           totalMinutes,
           isOverdue: totalMinutes <= 0
         });
@@ -511,8 +507,8 @@ function ReturnCountdown({ exeat }: ReturnCountdownProps) {
           return;
         }
 
-        const days = differenceInDays(returnDate, now);
-        const hours = differenceInHours(returnDate, now) % 24;
+        const days = differenceInDays(returnDeadline, now);
+        const hours = differenceInHours(returnDeadline, now) % 24;
         const minutes = totalMinutes % 60;
 
         setTimeLeft({ days, hours, minutes, totalMinutes });
@@ -569,8 +565,8 @@ function ReturnCountdown({ exeat }: ReturnCountdownProps) {
                 isUrgent ? "text-orange-700" : "text-green-700"
             )}>
               {isOverdue
-                ? `Return was expected on ${format(new Date(exeat.return_date), 'MMM d, yyyy')} - please sign back in`
-                : `Expected return on ${format(new Date(exeat.return_date), 'MMM d, yyyy')} - please sign back in upon return`
+                ? `Return was expected by end of ${format(new Date(exeat.return_date), 'MMM d, yyyy')} - please sign back in`
+                : `Return by end of ${format(new Date(exeat.return_date), 'MMM d, yyyy')} - please sign back in upon return`
               }
             </p>
           </div>
@@ -621,7 +617,18 @@ function ReturnCountdown({ exeat }: ReturnCountdownProps) {
                 isUrgent ? "bg-orange-500" : "bg-green-500"
               )}
               style={{
-                width: `${Math.max(0, Math.min(100, ((new Date(exeat.return_date).getTime() - new Date(exeat.departure_date).getTime() - (new Date(exeat.return_date).getTime() - new Date().getTime())) / (new Date(exeat.return_date).getTime() - new Date(exeat.departure_date).getTime())) * 100))}%`
+                width: `${(() => {
+                  try {
+                    const start = startOfDay(new Date(exeat.departure_date)).getTime();
+                    const end = endOfDay(new Date(exeat.return_date)).getTime();
+                    const now = Date.now();
+                    if (isNaN(start) || isNaN(end) || end <= start) return 0;
+                    const progress = ((now - start) / (end - start)) * 100;
+                    return Math.max(0, Math.min(100, progress));
+                  } catch {
+                    return 0;
+                  }
+                })()}%`
               }}
             />
           </div>

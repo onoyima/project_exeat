@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { useGetCategoriesQuery } from '@/lib/services/exeatApi';
 import {
     Filter,
     Search,
@@ -37,6 +38,8 @@ export const ExeatRequestFilters: React.FC<ExeatRequestFiltersProps> = ({
     onClearFilters,
 }) => {
     const hasActiveFilters = searchTerm || statusFilter !== 'all' || dateFilter !== 'all' || categoryFilter !== 'all';
+    const { data: categoriesData } = useGetCategoriesQuery();
+    const categories = useMemo(() => categoriesData?.categories || [], [categoriesData]);
 
     return (
         <Card className="mb-6">
@@ -91,10 +94,11 @@ export const ExeatRequestFilters: React.FC<ExeatRequestFiltersProps> = ({
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All leave types</SelectItem>
-                                <SelectItem value="medical">🏥 Medical Leave</SelectItem>
-                                <SelectItem value="casual">🌴 Casual Leave</SelectItem>
-                                <SelectItem value="emergency">🚨 Emergency Leave</SelectItem>
-                                <SelectItem value="official">💼 Official Business</SelectItem>
+                                {categories.map((c) => (
+                                    <SelectItem key={c.id} value={c.name.toLowerCase()}>
+                                        {c.name.charAt(0).toUpperCase() + c.name.slice(1)}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>

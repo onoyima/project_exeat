@@ -15,13 +15,6 @@ import { toast } from '@/hooks/use-toast';
 import { useDeanApplyExeatRequestMutation } from '@/lib/services/staffApi';
 import { useGetCategoriesQuery } from '@/lib/services/exeatApi';
 
-const preferredModes = [
-    { value: 'text', label: 'Text Message' },
-    { value: 'phone_call', label: 'Phone Call' },
-    { value: 'email', label: 'Email' },
-    { value: 'whatsapp', label: 'WhatsApp' },
-] as const;
-
 const deanExeatFormSchema = z.object({
     student_id: z
         .string()
@@ -29,9 +22,6 @@ const deanExeatFormSchema = z.object({
         .transform((v) => Number(v))
         .pipe(z.number().int().positive('Student ID must be a positive integer')),
     category_id: z.string().min(1, 'Please select a category'),
-    preferred_mode_of_contact: z
-        .enum(['whatsapp', 'text', 'phone_call', 'email'])
-        .optional(),
     reason: z.string().min(10, 'Please provide a detailed reason (minimum 10 characters)'),
     destination: z.string().min(3, 'Please specify the destination'),
     departure_date: z.date({ required_error: 'Please select a departure date' }),
@@ -56,7 +46,6 @@ export default function ExeatApplyForStudentForm({ onSuccess }: Props) {
         defaultValues: {
             student_id: '' as unknown as number,
             category_id: '',
-            preferred_mode_of_contact: 'phone_call',
             reason: '',
             destination: '',
         },
@@ -105,7 +94,6 @@ export default function ExeatApplyForStudentForm({ onSuccess }: Props) {
                 destination: values.destination,
                 departure_date: format(values.departure_date, 'yyyy-MM-dd'),
                 return_date: format(values.return_date, 'yyyy-MM-dd'),
-                preferred_mode_of_contact: values.preferred_mode_of_contact,
             };
 
             const result = await applyExeat(payload).unwrap();
@@ -174,29 +162,6 @@ export default function ExeatApplyForStudentForm({ onSuccess }: Props) {
                                     {sortedCategories.map((cat) => (
                                         <SelectItem key={cat.id} value={String(cat.id)}>
                                             {cat.name.charAt(0).toUpperCase() + cat.name.slice(1)}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        )}
-                    />
-                </FormField>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField label="Preferred Contact Method" error={form.formState.errors.preferred_mode_of_contact?.message}>
-                    <Controller
-                        control={form.control}
-                        name="preferred_mode_of_contact"
-                        render={({ field }) => (
-                            <Select value={(field.value as any) || undefined} onValueChange={field.onChange}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select contact mode" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {preferredModes.map((mode) => (
-                                        <SelectItem key={mode.value} value={mode.value}>
-                                            {mode.label}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
