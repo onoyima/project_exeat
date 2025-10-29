@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/table';
 import { FileText, LogOut, LogIn, CheckCircle, XCircle, MessageSquare, RefreshCw } from 'lucide-react';
 import type { StaffExeatRequest } from '@/lib/services/staffApi';
-import { CountdownTimer } from '@/components/staff/CountdownTimer';
+import { ExeatCountdown } from '@/components/ExeatCountdown';
 import { getApprovalConfirmationText, getRejectionConfirmationText } from '@/lib/utils/exeat-ui';
 import { useToast } from '@/hooks/use-toast';
 
@@ -161,8 +161,10 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                             {/* Countdown Timer for Active Requests */}
                             {(r.status === 'approved' || r.status === 'security_signin') && (
                                 <div className="mb-3">
-                                    <CountdownTimer
+                                    <ExeatCountdown
+                                        departureDate={r.departure_date}
                                         returnDate={r.return_date}
+                                        variant="staff"
                                         className="text-xs"
                                     />
                                 </div>
@@ -304,8 +306,10 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                                 {/* Countdown Timer for Active Requests */}
                                                 {(r.status === 'approved' || r.status === 'security_signin') && (
                                                     <div className="mt-1">
-                                                        <CountdownTimer
+                                                        <ExeatCountdown
+                                                            departureDate={r.departure_date}
                                                             returnDate={r.return_date}
+                                                            variant="staff"
                                                             className="text-xs scale-90 origin-left"
                                                         />
                                                     </div>
