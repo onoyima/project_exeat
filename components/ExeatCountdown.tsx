@@ -50,21 +50,16 @@ export function ExeatCountdown({ departureDate, returnDate, variant = 'student',
                     return;
                 }
 
-                // Deadline is midnight (start of day) of the return date itself
-                // If return date is Oct 29, deadline is 12:00 AM Oct 29
-                const returnDeadline = startOfDay(retDate); // Midnight of the return date
+                // Deadline is 11:59 PM (end of day) of the return date itself
+                // If return date is Oct 29, deadline is 11:59 PM Oct 29
+                const returnDeadline = endOfDay(retDate); // End of the return date
 
                 if (isSameDay) {
-                    // For same-day exeats, only check date (not time)
-                    // Deadline is midnight of the return date itself
-                    const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                    const returnDateOnly = new Date(retDate.getFullYear(), retDate.getMonth(), retDate.getDate());
-
-                    if (nowDateOnly > returnDateOnly) {
-                        // Overdue - past midnight of the return date
-                        // Calculate how many days overdue (counting from the return date)
-                        const overdueDays = differenceInDays(nowDateOnly, returnDateOnly);
+                    // For same-day exeats, treat overdue as crossing 11:59 PM of the return date
+                    if (now > returnDeadline) {
+                        // Overdue - past end of the return date
                         const totalOverdueSeconds = Math.abs(differenceInSeconds(now, returnDeadline));
+                        const overdueDays = Math.floor(totalOverdueSeconds / 86400);
                         const overdueHours = Math.floor(totalOverdueSeconds / 3600) % 24;
                         const overdueMinutes = Math.floor(totalOverdueSeconds / 60) % 60;
                         const overdueSeconds = totalOverdueSeconds % 60;
@@ -77,9 +72,9 @@ export function ExeatCountdown({ departureDate, returnDate, variant = 'student',
                         });
                         return;
                     } else {
-                        // Not overdue yet - still on or before the return date
-                        const days = differenceInDays(returnDeadline, now);
+                        // Not overdue yet - still before end of return date
                         const remainingSeconds = Math.max(0, differenceInSeconds(returnDeadline, now));
+                        const days = Math.floor(remainingSeconds / 86400);
                         setTimeLeft({
                             days: Math.max(0, days),
                             hours: 0,
@@ -95,7 +90,7 @@ export function ExeatCountdown({ departureDate, returnDate, variant = 'student',
                 const totalMinutes = differenceInMinutes(returnDeadline, now);
 
                 if (totalMinutes <= 0) {
-                    // Overdue - calculate overdue duration (counting from midnight of return date)
+                    // Overdue - calculate overdue duration (counting from end of return date)
                     const totalOverdueSeconds = Math.abs(differenceInSeconds(now, returnDeadline));
                     const overdueDays = Math.floor(totalOverdueSeconds / 86400);
                     const overdueHours = Math.floor(totalOverdueSeconds / 3600) % 24;
@@ -131,14 +126,12 @@ export function ExeatCountdown({ departureDate, returnDate, variant = 'student',
         // Check if currently overdue to set appropriate interval
         const now = new Date();
         const retDate = new Date(returnDate);
-        // Deadline is midnight of the return date itself
-        const returnDeadline = startOfDay(retDate);
+        // Deadline is 11:59 PM of the return date itself
+        const returnDeadline = endOfDay(retDate);
 
         let isCurrentlyOverdue = false;
         if (isSameDay) {
-            const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const returnDateOnly = new Date(retDate.getFullYear(), retDate.getMonth(), retDate.getDate());
-            isCurrentlyOverdue = nowDateOnly > returnDateOnly;
+            isCurrentlyOverdue = now > returnDeadline;
         } else {
             isCurrentlyOverdue = differenceInMinutes(returnDeadline, now) <= 0;
         }
