@@ -15,7 +15,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { FileText, LogOut, LogIn, CheckCircle, XCircle, MessageSquare, RefreshCw } from 'lucide-react';
+import { FileText, LogOut, LogIn, CheckCircle, XCircle, MessageSquare, RefreshCw, Phone, Mail } from 'lucide-react';
 import type { StaffExeatRequest } from '@/lib/services/staffApi';
 import { ExeatCountdown } from '@/components/ExeatCountdown';
 import { getApprovalConfirmationText, getRejectionConfirmationText } from '@/lib/utils/exeat-ui';
@@ -136,6 +136,9 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
             <div className="lg:hidden space-y-3">
                 {requests.map((r) => {
                     const avatarUrl = r.student.passport ? `data:image/jpeg;base64,${r.student.passport}` : '';
+                    const mode = (r.preferred_mode_of_contact || '').toLowerCase();
+                    const contactValue = mode === 'email' ? r.parent_email : (r.parent_phone_no || r.parent_phone_no_two);
+                    const modeLabel = mode === 'whatsapp' ? 'WhatsApp' : mode === 'text' ? 'Text' : mode === 'phone_call' ? 'Phone' : mode === 'email' ? 'Email' : 'Contact';
 
                     return (
                         <Card key={r.id} className="p-4 hover:shadow-md transition-shadow duration-200">
@@ -169,6 +172,21 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                     />
                                 </div>
                             )}
+
+                            {/* Preferred Contact (Mobile) */}
+                            <div className="mb-3">
+                                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
+                                    {mode === 'email' ? (
+                                        <Mail className="h-3.5 w-3.5" />
+                                    ) : (
+                                        <Phone className="h-3.5 w-3.5" />
+                                    )}
+                                    <span className="text-xs font-medium">{modeLabel}</span>
+                                    {contactValue && (
+                                        <span className="text-xs font-mono truncate max-w-[140px]">{contactValue}</span>
+                                    )}
+                                </div>
+                            </div>
 
                             {/* Action Buttons */}
                             <div className="space-y-2">
@@ -291,6 +309,9 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                     <TableBody>
                         {requests.map((r) => {
                             const avatarUrl = r.student.passport ? `data:image/jpeg;base64,${r.student.passport}` : '';
+                            const mode = (r.preferred_mode_of_contact || '').toLowerCase();
+                            const contactValue = mode === 'email' ? r.parent_email : (r.parent_phone_no || r.parent_phone_no_two);
+                            const modeLabel = mode === 'whatsapp' ? 'WhatsApp' : mode === 'text' ? 'Text' : mode === 'phone_call' ? 'Phone' : mode === 'email' ? 'Email' : 'Contact';
 
                             return (
                                 <TableRow key={r.id} className="align-middle">
@@ -303,6 +324,20 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                             <div className="flex flex-col">
                                                 <span className="font-medium">{r.student.fname} {r.student.lname}</span>
                                                 <span className="text-muted-foreground font-mono text-xs">{r.matric_no}</span>
+                                                {/* Preferred Contact (Desktop) */}
+                                                <div className="mt-1 inline-flex items-center gap-2 max-w-full">
+                                                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                                                        {mode === 'email' ? (
+                                                            <Mail className="h-3.5 w-3.5" />
+                                                        ) : (
+                                                            <Phone className="h-3.5 w-3.5" />
+                                                        )}
+                                                        <span className="text-[11px] font-medium">{modeLabel}</span>
+                                                        {contactValue && (
+                                                            <span className="text-[11px] font-mono truncate max-w-[180px]">{contactValue}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
                                                 {/* Countdown Timer for Active Requests */}
                                                 {(r.status === 'approved' || r.status === 'security_signin') && (
                                                     <div className="mt-1">
