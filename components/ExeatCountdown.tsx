@@ -59,7 +59,7 @@ export function ExeatCountdown({ departureDate, returnDate, variant = 'student',
                     if (now > returnDeadline) {
                         // Overdue - past end of the return date
                         const totalOverdueSeconds = Math.abs(differenceInSeconds(now, returnDeadline));
-                        const overdueDays = Math.floor(totalOverdueSeconds / 86400);
+                        const overdueDays = Math.ceil(totalOverdueSeconds / 86400);
                         const overdueHours = Math.floor(totalOverdueSeconds / 3600) % 24;
                         const overdueMinutes = Math.floor(totalOverdueSeconds / 60) % 60;
                         const overdueSeconds = totalOverdueSeconds % 60;
@@ -92,7 +92,7 @@ export function ExeatCountdown({ departureDate, returnDate, variant = 'student',
                 if (totalMinutes <= 0) {
                     // Overdue - calculate overdue duration (counting from end of return date)
                     const totalOverdueSeconds = Math.abs(differenceInSeconds(now, returnDeadline));
-                    const overdueDays = Math.floor(totalOverdueSeconds / 86400);
+                    const overdueDays = Math.ceil(totalOverdueSeconds / 86400);
                     const overdueHours = Math.floor(totalOverdueSeconds / 3600) % 24;
                     const overdueMinutes = Math.floor(totalOverdueSeconds / 60) % 60;
                     const overdueSeconds = totalOverdueSeconds % 60;
