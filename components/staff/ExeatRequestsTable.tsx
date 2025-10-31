@@ -97,8 +97,6 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                     });
                 } catch (error: any) {
                     console.error('Error sending comment:', error);
-                    console.log('DEBUG: Error type in table:', typeof error);
-                    console.log('DEBUG: Error message in table:', error.message);
 
                     // Extract detailed error message
                     let errorMessage = 'Failed to send comment. Please try again.';
@@ -106,8 +104,6 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                     if (error.message) {
                         errorMessage = error.message;
                     }
-
-                    console.log('DEBUG: Final error message for toast:', errorMessage);
 
                     toast({
                         title: 'Error',
@@ -215,34 +211,6 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
 
                                 {/* Secondary Action Row */}
                                 <div className="flex gap-2 flex-wrap">
-                                    {/* Sign Out - only enabled when approved */}
-                                    {!!onSignOut && (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="flex-1 min-w-[100px] disabled:opacity-50 disabled:cursor-not-allowed"
-                                            onClick={() => onSignOut(r.id)}
-                                            disabled={r.status !== 'approved'}
-                                        >
-                                            <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
-                                            <span className="truncate">Sign Out</span>
-                                        </Button>
-                                    )}
-
-                                    {/* Sign In - only enabled when signed_out */}
-                                    {!!onSignIn && (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="flex-1 min-w-[100px] disabled:opacity-50 disabled:cursor-not-allowed"
-                                            onClick={() => onSignIn(r.id)}
-                                            disabled={r.status !== 'signed_out'}
-                                        >
-                                            <LogIn className="h-4 w-4 mr-1 sm:mr-2" />
-                                            <span className="truncate">Sign In</span>
-                                        </Button>
-                                    )}
-
                                     {/* See Me - disabled for final statuses */}
                                     {!!onSendComment && (
                                         <Button
