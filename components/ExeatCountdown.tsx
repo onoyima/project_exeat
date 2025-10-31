@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
-import { format, differenceInMinutes, differenceInHours, differenceInDays, differenceInSeconds, endOfDay, startOfDay } from 'date-fns';
+import { format, differenceInMinutes, differenceInSeconds, endOfDay, startOfDay } from 'date-fns';
 import { AlertCircle, Timer, MapPinned } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

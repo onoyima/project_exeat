@@ -615,8 +615,8 @@ export default function ExeatRequestDetailPage() {
                     </Card>
                 </div>
 
-                {/* Countdown Timer - Show for active exeats */}
-                {(request.status === 'security_signin' || request.status === 'approved' || request.status === 'signed_out') && (
+                {/* Countdown Timer - Show only when student has left the school (after security sign out) */}
+                {request.status === 'security_signout' && (
                     <div className="mb-4 sm:mb-6">
                         <ExeatCountdown
                             departureDate={request.departure_date}

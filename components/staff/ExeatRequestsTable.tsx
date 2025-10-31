@@ -15,7 +15,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { FileText, LogOut, LogIn, CheckCircle, XCircle, MessageSquare, RefreshCw, Phone, Mail } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, MessageSquare, RefreshCw, Phone, Mail } from 'lucide-react';
 import type { StaffExeatRequest } from '@/lib/services/staffApi';
 import { ExeatCountdown } from '@/components/ExeatCountdown';
 import { getApprovalConfirmationText, getRejectionConfirmationText } from '@/lib/utils/exeat-ui';
@@ -157,8 +157,8 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                 </div>
                             </div>
 
-                            {/* Countdown Timer - Always show if dates exist */}
-                            {r.departure_date && r.return_date && (
+                            {/* Countdown Timer - Show only when student has left (security_signout) */}
+                            {r.status === 'security_signout' && r.departure_date && r.return_date && (
                                 <div className="mb-3">
                                     <ExeatCountdown
                                         departureDate={r.departure_date}
@@ -283,8 +283,8 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                                         )}
                                                     </div>
                                                 </div>
-                                                {/* Countdown Timer - Always show if dates exist */}
-                                                {r.departure_date && r.return_date && (
+                                                {/* Countdown Timer - Show only when student has left (security_signout) */}
+                                                {r.status === 'security_signout' && r.departure_date && r.return_date && (
                                                     <div className="mt-2 max-w-full">
                                                         <ExeatCountdown
                                                             departureDate={r.departure_date}
@@ -324,34 +324,6 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                                 <XCircle className="h-4 w-4 mr-2" />
                                                 <span className="hidden sm:inline">Reject</span>
                                             </Button>
-
-                                            {/* Sign Out - Only enabled when approved */}
-                                            {!!onSignOut && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="h-8 px-3 text-[13px] md:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                                    onClick={() => onSignOut(r.id)}
-                                                    disabled={r.status !== 'approved'}
-                                                >
-                                                    <LogOut className="h-4 w-4 mr-2" />
-                                                    <span className="hidden sm:inline">Sign Out</span>
-                                                </Button>
-                                            )}
-
-                                            {/* Sign In - Only enabled when signed_out */}
-                                            {!!onSignIn && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="h-8 px-3 text-[13px] md:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                                    onClick={() => onSignIn(r.id)}
-                                                    disabled={r.status !== 'signed_out'}
-                                                >
-                                                    <LogIn className="h-4 w-4 mr-2" />
-                                                    <span className="hidden sm:inline">Sign In</span>
-                                                </Button>
-                                            )}
 
                                             {/* See Me - Disabled for final statuses */}
                                             {!!onSendComment && (
