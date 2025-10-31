@@ -87,8 +87,8 @@ export default function StudentDashboard() {
         return false;
       }
 
-      // Show countdown when status is security_signout (student has left school)
-      if (r.status !== 'security_signout') {
+      // Show countdown when status is security_signin (student has left school)
+      if (r.status !== 'security_signin') {
         return false;
       }
 
@@ -100,7 +100,7 @@ export default function StudentDashboard() {
         return false;
       }
 
-      // Student has left (security_signout) - show countdown regardless of overdue status
+      // Student has left (security_signin) - show countdown regardless of overdue status
       // The countdown component will handle displaying overdue state
       return true;
     } catch (error) {
