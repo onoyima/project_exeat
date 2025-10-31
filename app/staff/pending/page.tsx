@@ -35,7 +35,6 @@ export default function PendingExeatRequestsPage() {
     const [dateFilter, setDateFilter] = useState<string>('all');
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-
     const {
         profile,
         allRoles,
@@ -196,8 +195,6 @@ export default function PendingExeatRequestsPage() {
             refetch();
         } catch (error) {
             console.error('Error sending comment:', error);
-            console.log('DEBUG: Error type:', typeof error);
-            console.log('DEBUG: Error message:', error instanceof Error ? error.message : 'No message');
             throw error;
         }
     };
@@ -225,8 +222,6 @@ export default function PendingExeatRequestsPage() {
         // Redirect to the dedicated exeat details page
         router.push(`/staff/exeat-requests/${request.id}`);
     };
-
-
 
     return (
         <ProtectedRoute requiredRole="staff">

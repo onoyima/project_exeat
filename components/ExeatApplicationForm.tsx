@@ -4,7 +4,7 @@ import { useEffect, useMemo, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { X } from 'lucide-react';
@@ -43,6 +43,16 @@ const exeatFormSchema = z.object({
   return_date: z.date({
     required_error: 'Please select a return date',
   }),
+}).refine((data) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const minDepartureDate = addDays(today, 3);
+  const departureDate = new Date(data.departure_date);
+  departureDate.setHours(0, 0, 0, 0);
+  return departureDate >= minDepartureDate;
+}, {
+  message: 'Departure date must be at least 3 days from today',
+  path: ['departure_date'],
 }).refine((data) => data.return_date >= data.departure_date, {
   message: 'Return date cannot be before departure date',
   path: ['return_date'],
@@ -79,9 +89,13 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Minimum departure date is 3 days from today
+    const minDepartureDate = addDays(today, 3);
+    minDepartureDate.setHours(0, 0, 0, 0);
+
     const threeMonthsFromNow = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate());
 
-    return { today, threeMonthsFromNow };
+    return { today, minDepartureDate, threeMonthsFromNow };
   }, []);
 
   // Memoize sorted categories
@@ -98,12 +112,13 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
 
   // Optimized departure date disabled function
   const isDepartureDateDisabled = useCallback((date: Date) => {
-    const { today, threeMonthsFromNow } = dateBoundaries;
+    const { minDepartureDate, threeMonthsFromNow } = dateBoundaries;
 
     const compareDate = new Date(date);
     compareDate.setHours(0, 0, 0, 0);
 
-    return compareDate < today || compareDate > threeMonthsFromNow;
+    // Disable dates before minimum departure date (3 days from today) or after 3 months
+    return compareDate < minDepartureDate || compareDate > threeMonthsFromNow;
   }, [dateBoundaries]);
 
   // Optimized return date disabled function
@@ -357,6 +372,14 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
               />
             )}
           />
+          <p className="text-xs text-muted-foreground mt-2">
+            Note: Departure date must be at least 3 days from today.
+            {dateBoundaries?.minDepartureDate && (
+              <>
+                {' '}Earliest allowed date: {format(dateBoundaries.minDepartureDate, 'MMM d, yyyy')}
+              </>
+            )}
+          </p>
         </FormField>
 
         <FormField

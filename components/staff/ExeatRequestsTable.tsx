@@ -161,14 +161,14 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                 </div>
                             </div>
 
-                            {/* Countdown Timer for Active Requests */}
-                            {(r.status === 'approved' || r.status === 'security_signin') && (
+                            {/* Countdown Timer - Always show if dates exist */}
+                            {r.departure_date && r.return_date && (
                                 <div className="mb-3">
                                     <ExeatCountdown
                                         departureDate={r.departure_date}
                                         returnDate={r.return_date}
                                         variant="staff"
-                                        className="text-xs"
+                                        className="w-full"
                                     />
                                 </div>
                             )}
@@ -188,92 +188,69 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                 </div>
                             </div>
 
-                            {/* Action Buttons */}
+                            {/* Action Buttons - Always show all actions */}
                             <div className="space-y-2">
                                 {/* Primary Action Row */}
-                                <div className="flex gap-2">
-                                    {/* Show approve/reject for pending and review statuses */}
-                                    {(r.status === 'pending' || r.status === 'cmd_review' || r.status === 'secretary_review') && (
-                                        <>
-                                            <Button
-                                                size="sm"
-                                                className="flex-1 min-w-0 bg-green-600 hover:bg-green-700 text-white"
-                                                onClick={() => handleAction('approve', r.id)}
-                                            >
-                                                <CheckCircle className="h-4 w-4 mr-1 sm:mr-2" />
-                                                <span className="truncate">Approve</span>
-                                            </Button>
-                                            <Button
-                                                variant="destructive"
-                                                size="sm"
-                                                className="flex-1 min-w-0"
-                                                onClick={() => handleAction('reject', r.id)}
-                                            >
-                                                <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
-                                                <span className="truncate">Reject</span>
-                                            </Button>
-                                        </>
-                                    )}
-
-                                    {/* Show action buttons for other actionable statuses */}
-                                    {r.status === 'dean_review' && (
-                                        <>
-                                            <Button
-                                                size="sm"
-                                                className="flex-1 min-w-0 bg-green-600 hover:bg-green-700 text-white"
-                                                onClick={() => handleAction('approve', r.id)}
-                                            >
-                                                <CheckCircle className="h-4 w-4 mr-1 sm:mr-2" />
-                                                <span className="truncate">Approve</span>
-                                            </Button>
-                                            <Button
-                                                variant="destructive"
-                                                size="sm"
-                                                className="flex-1 min-w-0"
-                                                onClick={() => handleAction('reject', r.id)}
-                                            >
-                                                <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
-                                                <span className="truncate">Reject</span>
-                                            </Button>
-                                        </>
-                                    )}
+                                <div className="flex gap-2 flex-wrap">
+                                    <Button
+                                        size="sm"
+                                        className="flex-1 min-w-[100px] bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                        onClick={() => handleAction('approve', r.id)}
+                                        disabled={['rejected', 'completed'].includes(r.status)}
+                                    >
+                                        <CheckCircle className="h-4 w-4 mr-1 sm:mr-2" />
+                                        <span className="truncate">Approve</span>
+                                    </Button>
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        className="flex-1 min-w-[100px] disabled:opacity-50 disabled:cursor-not-allowed"
+                                        onClick={() => handleAction('reject', r.id)}
+                                        disabled={['rejected', 'completed'].includes(r.status)}
+                                    >
+                                        <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
+                                        <span className="truncate">Reject</span>
+                                    </Button>
                                 </div>
 
                                 {/* Secondary Action Row */}
-                                <div className="flex gap-2">
-                                    {/* Show sign out for approved requests */}
-                                    {!!onSignOut && r.status === 'approved' && (
+                                <div className="flex gap-2 flex-wrap">
+                                    {/* Sign Out - only enabled when approved */}
+                                    {!!onSignOut && (
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="flex-1 min-w-0"
+                                            className="flex-1 min-w-[100px] disabled:opacity-50 disabled:cursor-not-allowed"
                                             onClick={() => onSignOut(r.id)}
+                                            disabled={r.status !== 'approved'}
                                         >
                                             <LogOut className="h-4 w-4 mr-1 sm:mr-2" />
                                             <span className="truncate">Sign Out</span>
                                         </Button>
                                     )}
 
-                                    {/* Show sign in for signed out requests */}
-                                    {!!onSignIn && r.status === 'signed_out' && (
+                                    {/* Sign In - only enabled when signed_out */}
+                                    {!!onSignIn && (
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="flex-1 min-w-0"
+                                            className="flex-1 min-w-[100px] disabled:opacity-50 disabled:cursor-not-allowed"
                                             onClick={() => onSignIn(r.id)}
+                                            disabled={r.status !== 'signed_out'}
                                         >
                                             <LogIn className="h-4 w-4 mr-1 sm:mr-2" />
                                             <span className="truncate">Sign In</span>
                                         </Button>
                                     )}
 
-                                    {/* Show See Me button for eligible requests */}
-                                    {!!onSendComment && !['hostel_signout', 'hostel_signin', 'security_signout', 'security_signin', 'completed'].includes(r.status) && (
+                                    {/* See Me - disabled for final statuses */}
+                                    {!!onSendComment && (
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="flex-1 min-w-0"
+                                            className="flex-1 min-w-[100px] disabled:opacity-50 disabled:cursor-not-allowed"
                                             onClick={() => handleAction('see_me', r.id)}
+                                            disabled={['hostel_signout', 'hostel_signin', 'security_signout', 'security_signin', 'completed'].includes(r.status)}
                                         >
                                             <MessageSquare className="h-4 w-4 mr-1 sm:mr-2" />
                                             <span className="truncate">See Me</span>
@@ -283,11 +260,11 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="flex-1 min-w-0"
+                                        className="flex-1 min-w-[100px]"
                                         onClick={() => onViewDetails(r)}
                                     >
                                         <FileText className="h-4 w-4 mr-1 sm:mr-2" />
-                                        <span className="truncate">View Details</span>
+                                        <span className="truncate">Details</span>
                                     </Button>
                                 </div>
                             </div>
@@ -338,14 +315,14 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                                         )}
                                                     </div>
                                                 </div>
-                                                {/* Countdown Timer for Active Requests */}
-                                                {(r.status === 'approved' || r.status === 'security_signin') && (
-                                                    <div className="mt-1">
+                                                {/* Countdown Timer - Always show if dates exist */}
+                                                {r.departure_date && r.return_date && (
+                                                    <div className="mt-2 max-w-full">
                                                         <ExeatCountdown
                                                             departureDate={r.departure_date}
                                                             returnDate={r.return_date}
                                                             variant="staff"
-                                                            className="text-xs scale-90 origin-left"
+                                                            className="w-full max-w-md"
                                                         />
                                                     </div>
                                                 )}
@@ -356,92 +333,73 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                         <StatusPill status={r.status} size="sm" />
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
-                                            {/* Show approve/reject for pending and review statuses */}
-                                            {(r.status === 'pending' || r.status === 'cmd_review' || r.status === 'secretary_review') && (
-                                                <>
-                                                    <Button
-                                                        size="sm"
-                                                        className="h-8 px-3 text-[13px] md:text-sm bg-green-600 hover:bg-green-700"
-                                                        onClick={() => handleAction('approve', r.id)}
-                                                    >
-                                                        <CheckCircle className="h-4 w-4 mr-2" />
-                                                        Approve
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        className="h-8 px-3 text-[13px] md:text-sm"
-                                                        onClick={() => handleAction('reject', r.id)}
-                                                    >
-                                                        <XCircle className="h-4 w-4 mr-2" />
-                                                        Reject
-                                                    </Button>
-                                                </>
-                                            )}
+                                        <div className="flex flex-wrap justify-end gap-2">
+                                            {/* Approve - Always visible, disabled for rejected/completed */}
+                                            <Button
+                                                size="sm"
+                                                className="h-8 px-3 text-[13px] md:text-sm bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                onClick={() => handleAction('approve', r.id)}
+                                                disabled={['rejected', 'completed'].includes(r.status)}
+                                            >
+                                                <CheckCircle className="h-4 w-4 mr-2" />
+                                                <span className="hidden sm:inline">Approve</span>
+                                            </Button>
 
-                                            {/* Show action buttons for other actionable statuses */}
-                                            {r.status === 'dean_review' && (
-                                                <>
-                                                    <Button
-                                                        size="sm"
-                                                        className="h-8 px-3 text-[13px] md:text-sm bg-green-600 hover:bg-green-700"
-                                                        onClick={() => handleAction('approve', r.id)}
-                                                    >
-                                                        <CheckCircle className="h-4 w-4 mr-2" />
-                                                        Approve
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        className="h-8 px-3 text-[13px] md:text-sm"
-                                                        onClick={() => handleAction('reject', r.id)}
-                                                    >
-                                                        <XCircle className="h-4 w-4 mr-2" />
-                                                        Reject
-                                                    </Button>
-                                                </>
-                                            )}
+                                            {/* Reject - Always visible, disabled for rejected/completed */}
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                className="h-8 px-3 text-[13px] md:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                                onClick={() => handleAction('reject', r.id)}
+                                                disabled={['rejected', 'completed'].includes(r.status)}
+                                            >
+                                                <XCircle className="h-4 w-4 mr-2" />
+                                                <span className="hidden sm:inline">Reject</span>
+                                            </Button>
 
-                                            {/* Show sign out for approved requests */}
-                                            {!!onSignOut && r.status === 'approved' && (
+                                            {/* Sign Out - Only enabled when approved */}
+                                            {!!onSignOut && (
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    className="h-8 px-3 text-[13px] md:text-sm"
+                                                    className="h-8 px-3 text-[13px] md:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                                     onClick={() => onSignOut(r.id)}
+                                                    disabled={r.status !== 'approved'}
                                                 >
                                                     <LogOut className="h-4 w-4 mr-2" />
-                                                    Sign Out
+                                                    <span className="hidden sm:inline">Sign Out</span>
                                                 </Button>
                                             )}
 
-                                            {/* Show sign in for signed out requests */}
-                                            {!!onSignIn && r.status === 'signed_out' && (
+                                            {/* Sign In - Only enabled when signed_out */}
+                                            {!!onSignIn && (
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    className="h-8 px-3 text-[13px] md:text-sm"
+                                                    className="h-8 px-3 text-[13px] md:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                                     onClick={() => onSignIn(r.id)}
+                                                    disabled={r.status !== 'signed_out'}
                                                 >
                                                     <LogIn className="h-4 w-4 mr-2" />
-                                                    Sign In
+                                                    <span className="hidden sm:inline">Sign In</span>
                                                 </Button>
                                             )}
 
-                                            {/* Show See Me button for eligible requests */}
-                                            {!!onSendComment && !['hostel_signout', 'hostel_signin', 'security_signout', 'security_signin', 'completed'].includes(r.status) && (
+                                            {/* See Me - Disabled for final statuses */}
+                                            {!!onSendComment && (
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    className="h-8 px-3 text-[13px] md:text-sm"
+                                                    className="h-8 px-3 text-[13px] md:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                                     onClick={() => handleAction('see_me', r.id)}
+                                                    disabled={['hostel_signout', 'hostel_signin', 'security_signout', 'security_signin', 'completed'].includes(r.status)}
                                                 >
                                                     <MessageSquare className="h-4 w-4 mr-2" />
-                                                    See Me
+                                                    <span className="hidden sm:inline">See Me</span>
                                                 </Button>
                                             )}
 
+                                            {/* View Details - Always enabled */}
                                             <Button
                                                 variant="outline"
                                                 size="sm"
@@ -449,9 +407,8 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                                 onClick={() => onViewDetails(r)}
                                             >
                                                 <FileText className="h-4 w-4 mr-2" />
-                                                View Details
+                                                <span className="hidden sm:inline">Details</span>
                                             </Button>
-
                                         </div>
                                     </TableCell>
                                 </TableRow>
