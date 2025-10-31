@@ -142,21 +142,21 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
 
                     return (
                         <Card key={r.id} className="p-4 hover:shadow-md transition-shadow duration-200">
-                            {/* Header with Avatar and Status */}
-                            <div className="flex items-start justify-between mb-3">
-                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                            {/* Header with Avatar, Name then Status (stacked for mobile) */}
+                            <div className="mb-3">
+                                <div className="flex items-center gap-3 min-w-0">
                                     <Avatar className="h-10 w-10 flex-shrink-0">
                                         <AvatarImage src={avatarUrl} alt={`${r.student.fname} ${r.student.lname}`} />
                                         <AvatarFallback className="text-xs">{getInitials(r.student.fname, r.student.lname)}</AvatarFallback>
                                     </Avatar>
-                                    <div className="flex-1 min-w-0">
+                                    <div className="min-w-0 flex-1">
                                         <h3 className="font-semibold text-base truncate">
                                             {r.student.fname} {r.student.lname}
                                         </h3>
                                         <p className="text-sm text-muted-foreground font-mono truncate">{r.matric_no}</p>
                                     </div>
                                 </div>
-                                <div className="flex-shrink-0">
+                                <div className="mt-2">
                                     <StatusPill status={r.status} size="sm" />
                                 </div>
                             </div>
