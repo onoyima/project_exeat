@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { 
-  Search, 
-  Filter, 
-  Download, 
-  Eye, 
+import {
+  Search,
+  Filter,
+  Download,
+  Eye,
   Calendar,
   MapPin,
   Clock,
@@ -65,11 +65,11 @@ export default function ExeatHistory({ applications }: ExeatHistoryProps) {
 
   const filteredApplications = applications.filter(app => {
     const matchesSearch = app.reason.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         app.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         app.id.toLowerCase().includes(searchTerm.toLowerCase());
+      app.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      app.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
     const matchesCategory = categoryFilter === 'all' || app.category.toLowerCase() === categoryFilter;
-    
+
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
@@ -115,7 +115,7 @@ export default function ExeatHistory({ applications }: ExeatHistoryProps) {
                 <SelectItem value="approved">Approved</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="rejected">Rejected</SelectItem>
-                <SelectItem value="dean-review">Dean Review</SelectItem>
+                <SelectItem value="dean-review">Dean/Deputy Dean Review</SelectItem>
               </SelectContent>
             </Select>
 
@@ -157,11 +157,10 @@ export default function ExeatHistory({ applications }: ExeatHistoryProps) {
                         {/* Header */}
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                           <div className="flex items-center gap-3">
-                            <StatusIcon className={`w-5 h-5 ${
-                              app.status === 'approved' ? 'text-green-600' :
-                              app.status === 'rejected' ? 'text-red-600' :
-                              'text-yellow-600'
-                            }`} />
+                            <StatusIcon className={`w-5 h-5 ${app.status === 'approved' ? 'text-green-600' :
+                                app.status === 'rejected' ? 'text-red-600' :
+                                  'text-yellow-600'
+                              }`} />
                             <span className="text-sm text-gray-600 font-mono">#{app.id}</span>
                             <Badge variant="outline" className="font-semibold">
                               {app.category}
@@ -202,8 +201,8 @@ export default function ExeatHistory({ applications }: ExeatHistoryProps) {
 
                       {/* Actions */}
                       <div className="flex flex-col sm:flex-row gap-2 lg:flex-col lg:w-auto">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => viewDetails(app)}
                           className="flex items-center gap-2"
@@ -211,7 +210,7 @@ export default function ExeatHistory({ applications }: ExeatHistoryProps) {
                           <Eye className="w-4 h-4" />
                           View Details
                         </Button>
-                        
+
                         {app.status === 'approved' && app.qrCode && (
                           <>
                             <Button size="sm" className="bg-university-primary hover:bg-university-secondary">

@@ -25,7 +25,7 @@ export const getDynamicActionTitle = (status: string) => {
         case 'secretary_review':
             return 'Secretary Review';
         case 'dean_review':
-            return 'Dean Review';
+            return 'Dean/Deputy Dean Review';
         case 'parent_consent':
             return 'Awaiting Parent Approval';
         case 'hostel_signin':

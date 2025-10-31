@@ -126,7 +126,7 @@ function ExeatTimeline({ approvals, auditLogs, exeatRequest }: TimelineProps) {
         },
         {
             key: 'dean_review',
-            label: 'Dean Review',
+            label: 'Dean/Deputy Dean Review',
             icon: Building,
             description: 'Dean final approval',
             roleMatch: 'dean'
