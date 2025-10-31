@@ -500,46 +500,43 @@ export default function ExeatRequestDetailPage() {
 
     return (
         <ProtectedRoute requiredRole="staff">
-            <div className="w-full px-4 sm:px-6 lg:px-8 h-full min-h-screen">
+            <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 h-full min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
                 {/* Header with Navigation */}
-                <div className="mb-8 pt-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => router.push('/staff/pending')}
-                                className="border-slate-300 hover:bg-slate-100 transition-all duration-200 hover:scale-105"
-                            >
-                                <ArrowLeft className="h-4 w-4 mr-2" />
-                                Back
-                            </Button>
-                        </div>
+                <div className="mb-4 sm:mb-6 lg:mb-8 pt-4 sm:pt-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.push('/staff/pending')}
+                            className="self-start border-slate-300 hover:bg-slate-100 transition-all duration-200"
+                        >
+                            <ArrowLeft className="h-4 w-4 mr-2" />
+                            <span className="hidden sm:inline">Back</span>
+                        </Button>
 
                         {/* Edit Button - Only show for eligible users and pending exeats */}
                         {canEdit && (
-                            <div>
+                            <div className="flex items-center gap-2">
                                 {isEditing ? (
-                                    <div className="flex items-center gap-2">
+                                    <>
                                         <Button
                                             variant="outline"
                                             size="sm"
                                             onClick={toggleEditMode}
                                             className="border-slate-300 hover:bg-slate-100"
                                         >
-                                            <XCircle className="h-4 w-4 mr-2" />
-                                            Cancel
+                                            <XCircle className="h-4 w-4 sm:mr-2" />
+                                            <span className="hidden sm:inline">Cancel</span>
                                         </Button>
                                         <Button
                                             variant="default"
                                             size="sm"
                                             onClick={showSaveConfirmation}
-                                            className="bg-green-600 hover:bg-green-700"
                                         >
-                                            <Save className="h-4 w-4 mr-2" />
-                                            Save Changes
+                                            <Save className="h-4 w-4 sm:mr-2" />
+                                            <span className="hidden sm:inline">Save</span>
                                         </Button>
-                                    </div>
+                                    </>
                                 ) : (
                                     <Button
                                         variant="outline"
@@ -547,66 +544,68 @@ export default function ExeatRequestDetailPage() {
                                         onClick={toggleEditMode}
                                         className="border-slate-300 hover:bg-slate-100"
                                     >
-                                        <PenLine className="h-4 w-4 mr-2" />
-                                        Edit Request
+                                        <PenLine className="h-4 w-4 sm:mr-2" />
+                                        <span className="hidden sm:inline">Edit</span>
                                     </Button>
                                 )}
                             </div>
                         )}
                     </div>
 
-                    <div className="mt-6">
-                        <div className="flex items-center gap-3 mb-2">
-                            <span className="text-4xl">
-                                {getCategoryIcon(request.category_id || 0, Boolean(request.is_medical))}
-                            </span>
-                            <div>
-                                <h1 className="text-3xl font-bold text-slate-800">
-                                    Exeat Request Review
-                                </h1>
-                                <div className="flex items-center gap-3 mt-1">
-                                    <StatusPill status={request.status} size="lg" />
-                                    <Badge variant="outline" className="text-sm">
-                                        {getCategoryName(request.category_id || 0, Boolean(request.is_medical))}
-                                    </Badge>
+                    <div className="mt-4 sm:mt-6">
+                        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                                <span className="text-3xl sm:text-4xl">
+                                    {getCategoryIcon(request.category_id || 0, Boolean(request.is_medical))}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-800 leading-tight">
+                                        Exeat Request Review
+                                    </h1>
+                                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                                        <StatusPill status={request.status} size="sm" />
+                                        <Badge variant="outline" className="text-xs sm:text-sm">
+                                            {getCategoryName(request.category_id || 0, Boolean(request.is_medical))}
+                                        </Badge>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <p className="text-slate-600 mt-2">
-                            Review and take action on this exeat request from {request.student.fname} {request.student.lname}
+                        <p className="text-sm sm:text-base text-slate-600 mt-3 leading-relaxed">
+                            Review and take action on this exeat request from <span className="font-semibold">{request.student.fname} {request.student.lname}</span>
                         </p>
                     </div>
                 </div>
 
                 {/* Request Summary - Quick Overview */}
-                <div className="mb-6">
-                    <Card className="bg-white/95 backdrop-blur-sm border-slate-200 shadow-sm">
-                        <CardContent className="p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="mb-4 sm:mb-6">
+                    <Card className="bg-white/95 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                        <CardContent className="p-4 sm:p-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                                 {/* Reason & Destination */}
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-slate-600">Reason</Label>
-                                    <p className="text-slate-800 font-medium text-lg">{request.reason}</p>
+                                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Reason</Label>
+                                    <p className="text-slate-800 font-medium text-base sm:text-lg break-words">{request.reason}</p>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-slate-600">Destination</Label>
-                                    <div className="flex items-center gap-2">
-                                        <MapPin className="h-4 w-4 text-slate-400" />
-                                        <p className="text-slate-800 font-medium text-lg">{request.destination}</p>
+                                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Destination</Label>
+                                    <div className="flex items-start gap-2">
+                                        <MapPin className="h-4 w-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                                        <p className="text-slate-800 font-medium text-base sm:text-lg break-words">{request.destination}</p>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-slate-600">Duration</Label>
+                                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Duration</Label>
                                     <div className="flex items-center gap-2">
-                                        <Clock className="h-4 w-4 text-slate-400" />
-                                        <p className="text-slate-800 font-medium text-lg">{duration} day{duration !== 1 ? 's' : ''}</p>
+                                        <Clock className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                                        <p className="text-slate-800 font-medium text-base sm:text-lg">{duration} day{duration !== 1 ? 's' : ''}</p>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-medium text-slate-600">Dates</Label>
+                                    <Label className="text-xs sm:text-sm font-medium text-slate-600">Dates</Label>
                                     <div className="flex items-center gap-2">
-                                        <Calendar className="h-4 w-4 text-slate-400" />
-                                        <p className="text-slate-800 font-medium text-sm">
+                                        <Calendar className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                                        <p className="text-slate-800 font-medium text-xs sm:text-sm">
                                             {format(new Date(request.departure_date), 'MMM d')} - {format(new Date(request.return_date), 'MMM d, yyyy')}
                                         </p>
                                     </div>
@@ -617,8 +616,8 @@ export default function ExeatRequestDetailPage() {
                 </div>
 
                 {/* Countdown Timer - Show for active exeats */}
-                {(request.status === 'security_signin' || request.status === 'approved') && (
-                    <div className="mb-6">
+                {(request.status === 'security_signin' || request.status === 'approved' || request.status === 'signed_out') && (
+                    <div className="mb-4 sm:mb-6">
                         <ExeatCountdown
                             departureDate={request.departure_date}
                             returnDate={request.return_date}
@@ -628,14 +627,14 @@ export default function ExeatRequestDetailPage() {
                 )}
 
                 {/* Priority Action Section - Prominently Displayed */}
-                <div className="mb-8">
-                    <Card className="shadow-lg">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="flex items-center gap-2">
-                                <AlertCircle className="h-5 w-5" />
+                <div className="mb-6 sm:mb-8">
+                    <Card className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 border-blue-200/50 shadow-lg hover:shadow-xl transition-shadow">
+                        <CardHeader className="pb-3 sm:pb-4">
+                            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                                 {getDynamicActionTitle(request.status)}
                             </CardTitle>
-                            <CardDescription>
+                            <CardDescription className="text-xs sm:text-sm">
                                 {getDynamicActionDescription(request.status)}
                             </CardDescription>
                         </CardHeader>
@@ -643,10 +642,10 @@ export default function ExeatRequestDetailPage() {
                             {/* Comment Input - Show for actionable statuses */}
                             {canTakeAction(request.status) && (
                                 <div className="space-y-2">
-                                    <Label htmlFor="comment" className="font-medium">
-                                        <MessageSquare className="h-4 w-4 inline mr-2" />
-                                        {getDynamicCommentLabel(request.status)}
-                                        <span className="text-sm font-normal ml-2">
+                                    <Label htmlFor="comment" className="font-medium text-sm sm:text-base flex items-center gap-2 flex-wrap">
+                                        <MessageSquare className="h-4 w-4" />
+                                        <span>{getDynamicCommentLabel(request.status)}</span>
+                                        <span className="text-xs sm:text-sm font-normal text-muted-foreground">
                                             {getDynamicCommentRequirement(request.status)}
                                         </span>
                                     </Label>
@@ -655,20 +654,20 @@ export default function ExeatRequestDetailPage() {
                                         placeholder={getDynamicCommentPlaceholder(request.status)}
                                         value={comment}
                                         onChange={(e) => setComment(e.target.value)}
-                                        className="min-h-[100px] transition-all duration-200"
+                                        className="min-h-[100px] text-sm sm:text-base resize-none"
                                     />
                                 </div>
                             )}
 
                             {/* Action Buttons - Always show approve, conditional reject, and see me */}
-                            <div className={`grid gap-4 pt-2 ${canTakeAction(request.status) ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1'}`}>
+                            <div className={`grid gap-3 sm:gap-4 pt-2 ${canTakeAction(request.status) ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
                                 <Button
                                     onClick={() => handleActionClick('approve')}
-                                    disabled={isLoading}
-                                    className="w-full h-12 text-lg font-semibold transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
+                                    disabled={isLoading || ['rejected', 'completed'].includes(request.status)}
+                                    className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold disabled:opacity-50"
                                 >
-                                    <CheckCircle className="h-5 w-5 mr-2" />
-                                    Approve Request
+                                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                                    <span className="truncate">Approve Request</span>
                                 </Button>
                                 {/* See Me Button - for eligible exeats */}
                                 {!['hostel_signout', 'hostel_signin', 'security_signout', 'security_signin', 'completed'].includes(request.status) && (
@@ -676,29 +675,29 @@ export default function ExeatRequestDetailPage() {
                                         variant="outline"
                                         onClick={() => handleActionClick('see_me')}
                                         disabled={isLoading}
-                                        className="w-full h-12 text-lg font-semibold transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
+                                        className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold border-2 transition-all duration-200 shadow-md hover:shadow-lg"
                                     >
-                                        <MessageSquare className="h-5 w-5 mr-2" />
-                                        See Me
+                                        <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                                        <span className="truncate">See Me</span>
                                     </Button>
                                 )}
                                 {canTakeAction(request.status) && (
                                     <Button
                                         variant="destructive"
                                         onClick={() => handleActionClick('reject')}
-                                        disabled={isLoading}
-                                        className="w-full h-12 text-lg font-semibold transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
+                                        disabled={isLoading || ['rejected', 'completed'].includes(request.status)}
+                                        className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50"
                                     >
-                                        <XCircle className="h-5 w-5 mr-2" />
-                                        Reject Request
+                                        <XCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                                        <span className="truncate">Reject Request</span>
                                     </Button>
                                 )}
                             </div>
 
                             {/* Status-specific content for non-actionable statuses */}
                             {!canTakeAction(request.status) && (
-                                <div className="text-center py-4">
-                                    <div className="text-sm">
+                                <div className="text-center py-4 sm:py-6">
+                                    <div className="text-sm sm:text-base text-muted-foreground">
                                         {request.status === 'security_signin' && 'Student is currently away from campus.'}
                                         {request.status === 'approved' && 'This request has been approved and is active.'}
                                         {request.status === 'rejected' && 'This request has been rejected.'}
@@ -712,38 +711,38 @@ export default function ExeatRequestDetailPage() {
                     </Card>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
                     {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="lg:col-span-2 space-y-4 sm:space-y-6">
                         {/* Student Information */}
                         <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-slate-800">
-                                    <UserIcon className="h-5 w-5" />
+                            <CardHeader className="pb-3 sm:pb-4">
+                                <CardTitle className="flex items-center gap-2 text-slate-800 text-base sm:text-lg">
+                                    <UserIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                                     Student Information
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Full Name</Label>
-                                        <p className="text-slate-800 font-medium">{request.student.fname} {request.student.lname}</p>
+                                        <Label className="text-xs sm:text-sm font-medium text-slate-600">Full Name</Label>
+                                        <p className="text-slate-800 font-medium text-sm sm:text-base break-words">{request.student.fname} {request.student.lname}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Matric Number</Label>
-                                        <p className="text-slate-800 font-mono font-medium">{request.matric_no}</p>
+                                        <Label className="text-xs sm:text-sm font-medium text-slate-600">Matric Number</Label>
+                                        <p className="text-slate-800 font-mono font-medium text-sm sm:text-base">{request.matric_no}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Student ID</Label>
-                                        <p className="text-slate-800 font-medium">{request.student_id}</p>
+                                        <Label className="text-xs sm:text-sm font-medium text-slate-600">Student ID</Label>
+                                        <p className="text-slate-800 font-medium text-sm sm:text-base">{request.student_id}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Accommodation</Label>
-                                        <p className="text-slate-800">{request.student_accommodation || 'Not specified'}</p>
+                                        <Label className="text-xs sm:text-sm font-medium text-slate-600">Accommodation</Label>
+                                        <p className="text-slate-800 text-sm sm:text-base">{request.student_accommodation || 'Not specified'}</p>
                                     </div>
-                                    <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Phone</Label>
-                                        <p className="text-slate-800">{request.student.phone || 'Not provided'}</p>
+                                    <div className="space-y-1 sm:col-span-2">
+                                        <Label className="text-xs sm:text-sm font-medium text-slate-600">Phone</Label>
+                                        <p className="text-slate-800 text-sm sm:text-base">{request.student.phone || 'Not provided'}</p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -751,86 +750,87 @@ export default function ExeatRequestDetailPage() {
 
                         {/* Request Details */}
                         <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-slate-800">
-                                    <FileText className="h-5 w-5" />
+                            <CardHeader className="pb-3 sm:pb-4">
+                                <CardTitle className="flex items-center gap-2 text-slate-800 text-base sm:text-lg">
+                                    <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
                                     Request Details
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Reason</Label>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                    <div className="space-y-1 sm:col-span-2">
+                                        <Label className="text-xs sm:text-sm font-medium text-slate-600">Reason</Label>
                                         {isEditing ? (
                                             <Textarea
                                                 value={editedFields.reason || ''}
                                                 onChange={(e) => handleFieldChange('reason', e.target.value)}
-                                                className="mt-1"
+                                                className="mt-1 text-sm sm:text-base"
+                                                rows={3}
                                             />
                                         ) : (
-                                            <p className="text-slate-800 font-medium">{request.reason}</p>
+                                            <p className="text-slate-800 font-medium text-sm sm:text-base break-words">{request.reason}</p>
                                         )}
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Destination</Label>
+                                        <Label className="text-xs sm:text-sm font-medium text-slate-600">Destination</Label>
                                         {isEditing ? (
                                             <div className="flex items-center gap-2">
-                                                <MapPin className="h-4 w-4 text-slate-400" />
+                                                <MapPin className="h-4 w-4 text-slate-400 flex-shrink-0" />
                                                 <Input
                                                     value={editedFields.destination || ''}
                                                     onChange={(e) => handleFieldChange('destination', e.target.value)}
-                                                    className="mt-1"
+                                                    className="mt-1 text-sm sm:text-base"
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="flex items-center gap-2">
-                                                <MapPin className="h-4 w-4 text-slate-400" />
-                                                <p className="text-slate-800 font-medium">{request.destination}</p>
+                                            <div className="flex items-start gap-2">
+                                                <MapPin className="h-4 w-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                                                <p className="text-slate-800 font-medium text-sm sm:text-base break-words">{request.destination}</p>
                                             </div>
                                         )}
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Departure Date</Label>
+                                        <Label className="text-xs sm:text-sm font-medium text-slate-600">Preferred Contact</Label>
+                                        <p className="text-slate-800 text-sm sm:text-base capitalize">{request.preferred_mode_of_contact?.replace('_', ' ') || 'Not specified'}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs sm:text-sm font-medium text-slate-600">Departure Date</Label>
                                         <div className="flex items-center gap-2">
-                                            <Calendar className="h-4 w-4 text-slate-400" />
+                                            <Calendar className="h-4 w-4 text-slate-400 flex-shrink-0" />
                                             {isEditing ? (
                                                 <Input
                                                     type="date"
                                                     value={editedFields.departure_date?.split('T')[0] || ''}
                                                     onChange={(e) => handleFieldChange('departure_date', e.target.value)}
-                                                    className="mt-1"
+                                                    className="mt-1 text-sm sm:text-base"
                                                 />
                                             ) : (
-                                                <p className="text-slate-800 font-medium">{format(new Date(request.departure_date), 'PPP')}</p>
+                                                <p className="text-slate-800 font-medium text-sm sm:text-base">{format(new Date(request.departure_date), 'PPP')}</p>
                                             )}
                                         </div>
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Return Date</Label>
+                                        <Label className="text-xs sm:text-sm font-medium text-slate-600">Return Date</Label>
                                         <div className="flex items-center gap-2">
-                                            <Calendar className="h-4 w-4 text-slate-400" />
+                                            <Calendar className="h-4 w-4 text-slate-400 flex-shrink-0" />
                                             {isEditing ? (
                                                 <Input
                                                     type="date"
                                                     value={editedFields.return_date?.split('T')[0] || ''}
                                                     onChange={(e) => handleFieldChange('return_date', e.target.value)}
-                                                    className="mt-1"
+                                                    className="mt-1 text-sm sm:text-base"
                                                 />
                                             ) : (
-                                                <p className="text-slate-800 font-medium">{format(new Date(request.return_date), 'PPP')}</p>
+                                                <p className="text-slate-800 font-medium text-sm sm:text-base">{format(new Date(request.return_date), 'PPP')}</p>
                                             )}
                                         </div>
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Duration</Label>
+                                        <Label className="text-xs sm:text-sm font-medium text-slate-600">Duration</Label>
                                         <div className="flex items-center gap-2">
-                                            <Clock className="h-4 w-4 text-slate-400" />
-                                            <p className="text-slate-800 font-medium">{duration} day{duration !== 1 ? 's' : ''}</p>
+                                            <Clock className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                                            <p className="text-slate-800 font-medium text-sm sm:text-base">{duration} day{duration !== 1 ? 's' : ''}</p>
                                         </div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Preferred Parent Contact Method</Label>
-                                        <p className="text-slate-800">{request.preferred_mode_of_contact}</p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -838,29 +838,45 @@ export default function ExeatRequestDetailPage() {
 
                         {/* Parent Information */}
                         <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 text-slate-800">
-                                    <UserCheck className="h-5 w-5" />
+                            <CardHeader className="pb-3 sm:pb-4">
+                                <CardTitle className="flex items-center gap-2 text-slate-800 text-base sm:text-lg">
+                                    <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
                                     Parent/Guardian Information
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Parent Name</Label>
-                                        <p className="text-slate-800 font-medium">{request.parent_surname} {request.parent_othernames}</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                    <div className="space-y-1 sm:col-span-2">
+                                        <Label className="text-xs sm:text-sm font-medium text-slate-600">Parent Name</Label>
+                                        <p className="text-slate-800 font-medium text-sm sm:text-base break-words">{request.parent_surname} {request.parent_othernames}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Primary Phone</Label>
-                                        <p className="text-slate-800 font-medium">{request.parent_phone_no}</p>
+                                        <Label className="text-xs sm:text-sm font-medium text-slate-600">Primary Phone</Label>
+                                        <div className="flex items-center gap-2">
+                                            <Phone className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                                            <a href={`tel:${request.parent_phone_no}`} className="text-slate-800 font-medium text-sm sm:text-base hover:text-blue-600 transition-colors">
+                                                {request.parent_phone_no}
+                                            </a>
+                                        </div>
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Secondary Phone</Label>
-                                        <p className="text-slate-800">{request.parent_phone_no_two || 'Not provided'}</p>
+                                        <Label className="text-xs sm:text-sm font-medium text-slate-600">Secondary Phone</Label>
+                                        <div className="flex items-center gap-2">
+                                            <Phone className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                                            {request.parent_phone_no_two ? (
+                                                <a href={`tel:${request.parent_phone_no_two}`} className="text-slate-800 text-sm sm:text-base hover:text-blue-600 transition-colors">
+                                                    {request.parent_phone_no_two}
+                                                </a>
+                                            ) : (
+                                                <p className="text-slate-800 text-sm sm:text-base">Not provided</p>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className="space-y-1">
-                                        <Label className="text-sm font-medium text-slate-600">Email</Label>
-                                        <p className="text-slate-800">{request.parent_email}</p>
+                                    <div className="space-y-1 sm:col-span-2">
+                                        <Label className="text-xs sm:text-sm font-medium text-slate-600">Email</Label>
+                                        <a href={`mailto:${request.parent_email}`} className="text-slate-800 text-sm sm:text-base hover:text-blue-600 transition-colors break-all">
+                                            {request.parent_email}
+                                        </a>
                                     </div>
                                 </div>
                             </CardContent>
@@ -868,50 +884,56 @@ export default function ExeatRequestDetailPage() {
                     </div>
 
                     {/* Sidebar */}
-                    <div className="space-y-6">
+                    <div className="space-y-4 sm:space-y-6">
                         {/* Student Photo */}
                         <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-                            <CardHeader>
-                                <CardTitle className="text-center text-slate-800">Student Photo</CardTitle>
+                            <CardHeader className="pb-3 sm:pb-4">
+                                <CardTitle className="text-center text-slate-800 text-sm sm:text-base">Student Photo</CardTitle>
                             </CardHeader>
-                            <CardContent className="flex justify-center">
-                                <div className="relative group">
-                                    <Avatar className="size-48 border-4 border-slate-200 group-hover:border-blue-300 transition-all duration-300">
+                            <CardContent className="space-y-4">
+                                <div className="relative group flex justify-center">
+                                    <Avatar className="size-32 sm:size-40 lg:size-48 border-4 border-slate-200 group-hover:border-blue-300 transition-all duration-300">
                                         <AvatarImage
                                             src={avatarUrl}
                                             alt={`${request.student.fname} ${request.student.lname}`}
                                             className="object-cover"
                                         />
-                                        <AvatarFallback className="text-4xl font-bold">
+                                        <AvatarFallback className="text-2xl sm:text-3xl lg:text-4xl font-bold">
                                             {request.student.fname?.[0] || request.student.lname?.[0] || 'S'}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <div className="absolute inset-0 rounded-full border-4 border-transparent group-hover:border-blue-200/50 transition-all duration-300"></div>
                                 </div>
-                                {/* Add student phone number */}
-                                <div className="flex items-center justify-center">
-                                    <Button variant="outline" size="icon" onClick={() => window.open(`tel:${request.student.phone || ''}`, '_blank')}>
-                                        <Phone className="h-4 w-4" />
-                                        Student Phone
-                                    </Button>
-                                </div>
+                                {/* Student phone number */}
+                                {request.student.phone && (
+                                    <div className="flex items-center justify-center">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => window.open(`tel:${request.student.phone}`, '_blank')}
+                                            className="w-full sm:w-auto"
+                                        >
+                                            <Phone className="h-4 w-4 mr-2" />
+                                            <span className="text-xs sm:text-sm">Call Student</span>
+                                        </Button>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
 
                         {/* Request Metadata */}
                         <Card className="bg-white/90 backdrop-blur-sm border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-                            <CardHeader>
-                                <CardTitle className="text-lg text-slate-800">Request Timeline</CardTitle>
+                            <CardHeader className="pb-3 sm:pb-4">
+                                <CardTitle className="text-sm sm:text-base lg:text-lg text-slate-800">Request Timeline</CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                                        <span className="text-sm text-slate-600">Created:</span>
-                                        <span className="text-sm text-slate-800 font-medium">{format(new Date(request.created_at), 'PPp')}</span>
+                            <CardContent className="space-y-3 sm:space-y-4">
+                                <div className="space-y-2 sm:space-y-3">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2 p-3 bg-slate-50 rounded-lg">
+                                        <span className="text-xs sm:text-sm text-slate-600">Created:</span>
+                                        <span className="text-xs sm:text-sm text-slate-800 font-medium">{format(new Date(request.created_at), 'PPp')}</span>
                                     </div>
-                                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                                        <span className="text-sm text-slate-600">Last Updated:</span>
-                                        <span className="text-sm text-slate-800 font-medium">{format(new Date(request.updated_at), 'PPp')}</span>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2 p-3 bg-slate-50 rounded-lg">
+                                        <span className="text-xs sm:text-sm text-slate-600">Last Updated:</span>
+                                        <span className="text-xs sm:text-sm text-slate-800 font-medium">{format(new Date(request.updated_at), 'PPp')}</span>
                                     </div>
                                 </div>
                             </CardContent>
@@ -1078,7 +1100,6 @@ export default function ExeatRequestDetailPage() {
                         <Button
                             onClick={handleSaveChanges}
                             disabled={isLoading}
-                            className="bg-green-600 hover:bg-green-700 transition-all duration-200 hover:scale-105"
                         >
                             {isLoading ? (
                                 <>
