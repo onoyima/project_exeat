@@ -40,7 +40,7 @@ export const getStatusText = (status: string) => {
         case 'parent_consent':
             return 'Awaiting Parent Approval';
         case 'dean_review':
-            return 'Dean Review';
+            return 'Dean/Deputy Dean Review';
         case 'hostel_signin':
             return 'Ready for Hostel Sign-In';
         case 'hostel_signout':

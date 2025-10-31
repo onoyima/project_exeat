@@ -20,7 +20,7 @@ const statuses = [
     { value: "cmd_review", label: "CMD Review" },
     { value: "secretary_review", label: "Secretary Review" },
     { value: "parent_consent", label: "Parent Consent" },
-    { value: "dean_review", label: "Dean Review" },
+    { value: "dean_review", label: "Dean/Deputy Dean Review" },
     { value: "hostel_signin", label: "Hostel Sign In" },
     { value: "hostel_signout", label: "Hostel Sign Out" },
     { value: "approved", label: "Approved" },
