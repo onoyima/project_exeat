@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -209,7 +209,6 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
 
   // Handle API errors
   if (categoriesError) {
-    console.error('API Errors:', { categoriesError });
     return (
       <div className="space-y-4">
         <div className="p-4 bg-destructive/10 text-destructive rounded-md">
@@ -222,7 +221,6 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
 
   // Verify data is available
   if (!categoriesData?.categories) {
-    console.error('Missing required data:', { categoriesData });
     return (
       <div className="p-4 bg-destructive/10 text-destructive rounded-md">
         <p>Unable to load required data. Please refresh the page and try again.</p>
