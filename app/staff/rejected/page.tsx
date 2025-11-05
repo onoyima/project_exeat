@@ -83,7 +83,7 @@ export default function StaffRejectedPage() {
     return (
         <ProtectedRoute requiredRole="staff">
             <div className="min-h-screen">
-                <div className="w-full px-4 py-8 sm:px-6 lg:px-8">
+                <div className="w-full p-4">
                     {/* Header */}
                     <div className="mb-8">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">

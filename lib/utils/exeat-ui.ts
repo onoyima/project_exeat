@@ -286,3 +286,34 @@ export const getRejectionConfirmationText = (
     }
 };
 
+/**
+ * Get dynamic approve button text based on exeat status
+ * @param status - The exeat request status
+ * @returns Appropriate text for the approve button
+ */
+export const getApproveButtonText = (status: string) => {
+    switch (status) {
+        case 'pending':
+            return 'Approve Request';
+        case 'cmd_review':
+            return 'Approve Medical Review';
+        case 'secretary_review':
+            return 'Approve Secretary Review';
+        case 'dean_review':
+            return 'Approve Dean Review';
+        case 'hostel_signout':
+            return 'Approve Hostel Sign Out';
+        case 'hostel_signin':
+            return 'Approve Hostel Sign In';
+        case 'security_signout':
+            return 'Approve Security Sign Out';
+        case 'security_signin':
+            return 'Approve Security Sign In';
+        case 'recommendation1':
+        case 'recommendation2':
+            return 'Approve Recommendation';
+        default:
+            return 'Approve Request';
+    }
+};
+

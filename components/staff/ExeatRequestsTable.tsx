@@ -18,7 +18,7 @@ import {
 import { FileText, CheckCircle, XCircle, MessageSquare, RefreshCw, Phone, Mail } from 'lucide-react';
 import type { StaffExeatRequest } from '@/lib/services/staffApi';
 import { ExeatCountdown } from '@/components/ExeatCountdown';
-import { getApprovalConfirmationText, getRejectionConfirmationText } from '@/lib/utils/exeat-ui';
+import { getApprovalConfirmationText, getRejectionConfirmationText, getApproveButtonText } from '@/lib/utils/exeat-ui';
 import { useToast } from '@/hooks/use-toast';
 
 interface ExeatRequestsTableProps {
@@ -157,8 +157,8 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                 </div>
                             </div>
 
-                            {/* Countdown Timer - Show only when student has left (security_signout) */}
-                            {r.status === 'security_signout' && r.departure_date && r.return_date && (
+                            {/* Countdown Timer - Show only when student has left (security_signin) */}
+                            {r.status === 'security_signin' && r.departure_date && r.return_date && (
                                 <div className="mb-3">
                                     <ExeatCountdown
                                         departureDate={r.departure_date}
@@ -195,23 +195,34 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                         disabled={['rejected', 'completed'].includes(r.status)}
                                     >
                                         <CheckCircle className="h-4 w-4 mr-1 sm:mr-2" />
-                                        <span className="truncate">Approve</span>
+                                        <span className="truncate">{getApproveButtonText(r.status)}</span>
                                     </Button>
+                                    {!['hostel_signout', 'hostel_signin', 'security_signout', 'security_signin', 'completed', 'rejected'].includes(r.status) && (
                                     <Button
                                         variant="destructive"
                                         size="sm"
-                                        className="flex-1 min-w-[100px] disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="flex-1 min-w-[100px]"
                                         onClick={() => handleAction('reject', r.id)}
-                                        disabled={['rejected', 'completed'].includes(r.status)}
                                     >
                                         <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
                                         <span className="truncate">Reject</span>
                                     </Button>
+                                    )}
                                 </div>
 
                                 {/* Secondary Action Row */}
                                 <div className="flex gap-2 flex-wrap">
                                     {/* See Me - disabled for final statuses */}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 min-w-[100px]"
+                                        onClick={() => onViewDetails(r)}
+                                    >
+                                        <FileText className="h-4 w-4 mr-1 sm:mr-2" />
+                                        <span className="truncate">Details</span>
+                                    </Button>
+
                                     {!!onSendComment && (
                                         <Button
                                             variant="outline"
@@ -224,16 +235,6 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                             <span className="truncate">See Me</span>
                                         </Button>
                                     )}
-
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="flex-1 min-w-[100px]"
-                                        onClick={() => onViewDetails(r)}
-                                    >
-                                        <FileText className="h-4 w-4 mr-1 sm:mr-2" />
-                                        <span className="truncate">Details</span>
-                                    </Button>
                                 </div>
                             </div>
                         </Card>
@@ -310,20 +311,21 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                                 disabled={['rejected', 'completed'].includes(r.status)}
                                             >
                                                 <CheckCircle className="h-4 w-4 mr-2" />
-                                                <span className="hidden sm:inline">Approve</span>
+                                                <span className="hidden sm:inline">{getApproveButtonText(r.status)}</span>
                                             </Button>
 
-                                            {/* Reject - Always visible, disabled for rejected/completed */}
+                                            {/* Reject - Hidden for sign-in/out statuses, completed, and rejected */}
+                                            {!['hostel_signout', 'hostel_signin', 'security_signout', 'security_signin', 'completed', 'rejected'].includes(r.status) && (
                                             <Button
                                                 variant="destructive"
                                                 size="sm"
-                                                className="h-8 px-3 text-[13px] md:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="h-8 px-3 text-[13px] md:text-sm"
                                                 onClick={() => handleAction('reject', r.id)}
-                                                disabled={['rejected', 'completed'].includes(r.status)}
                                             >
                                                 <XCircle className="h-4 w-4 mr-2" />
                                                 <span className="hidden sm:inline">Reject</span>
                                             </Button>
+                                            )}
 
                                             {/* See Me - Disabled for final statuses */}
                                             {!!onSendComment && (
