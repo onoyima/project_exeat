@@ -166,7 +166,7 @@ const StaffDashboard = () => {
     }
 
     return (
-        <div className="space-y-6 p-4 sm:p-6">
+        <div className="space-y-6">
             {/* Welcome Section */}
             <div className="flex flex-col gap-2">
                 <h1 className="text-2xl sm:text-3xl font-bold">Staff Dashboard</h1>

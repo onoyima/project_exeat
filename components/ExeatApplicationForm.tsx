@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -56,6 +56,14 @@ const exeatFormSchema = z.object({
 }).refine((data) => data.return_date >= data.departure_date, {
   message: 'Return date cannot be before departure date',
   path: ['return_date'],
+}).refine((data) => {
+  // Check if category is exigency - we need to check this dynamically
+  // The validation will be handled in the disabled function for the date picker
+  // and here for form submission
+  return true;
+}, {
+  message: 'Exigency category allows maximum of 4 days',
+  path: ['return_date'],
 });
 
 type ExeatFormValues = z.infer<typeof exeatFormSchema>;
@@ -110,6 +118,27 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
     return sortedCategories.find(cat => String(cat.id) === watchedCategoryId);
   }, [sortedCategories, watchedCategoryId]);
 
+  // Handle category change - validate return date for exigency
+  useEffect(() => {
+    const isExigency = selectedCategory?.name?.toLowerCase() === 'exigency';
+    if (isExigency && watchedDepartureDate && watchedReturnDate) {
+      const departureDateOnly = new Date(watchedDepartureDate);
+      departureDateOnly.setHours(0, 0, 0, 0);
+      const maxReturnDate = addDays(departureDateOnly, 4);
+      maxReturnDate.setHours(0, 0, 0, 0);
+      const returnDateOnly = new Date(watchedReturnDate);
+      returnDateOnly.setHours(0, 0, 0, 0);
+
+      if (returnDateOnly > maxReturnDate) {
+        form.setValue('return_date', null as any);
+        form.setError('return_date', {
+          type: 'manual',
+          message: 'Exigency category allows maximum of 4 days from departure date'
+        });
+      }
+    }
+  }, [selectedCategory, watchedDepartureDate, watchedReturnDate, form]);
+
   // Optimized departure date disabled function
   const isDepartureDateDisabled = useCallback((date: Date) => {
     const { minDepartureDate, threeMonthsFromNow } = dateBoundaries;
@@ -136,10 +165,18 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
       const departureDateOnly = new Date(watchedDepartureDate);
       departureDateOnly.setHours(0, 0, 0, 0);
       if (compareDate < departureDateOnly) return true;
+
+      // Check if category is exigency - limit to 4 days maximum
+      const isExigency = selectedCategory?.name?.toLowerCase() === 'exigency';
+      if (isExigency) {
+        const maxReturnDate = addDays(departureDateOnly, 4);
+        maxReturnDate.setHours(0, 0, 0, 0);
+        if (compareDate > maxReturnDate) return true;
+      }
     }
 
     return false;
-  }, [dateBoundaries, watchedDepartureDate]);
+  }, [dateBoundaries, watchedDepartureDate, selectedCategory]);
 
   // Optimized departure date change handler
   const handleDepartureDateChange = useCallback((date: Date | undefined, field: any) => {
@@ -149,11 +186,53 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
     if (date && watchedReturnDate && watchedReturnDate < date) {
       form.setValue('return_date', null as any);
     }
-  }, [watchedReturnDate, form]);
+
+    // Clear return date if it exceeds 4 days for exigency category
+    if (date && watchedReturnDate) {
+      const isExigency = selectedCategory?.name?.toLowerCase() === 'exigency';
+      if (isExigency) {
+        const departureDateOnly = new Date(date);
+        departureDateOnly.setHours(0, 0, 0, 0);
+        const maxReturnDate = addDays(departureDateOnly, 4);
+        maxReturnDate.setHours(0, 0, 0, 0);
+        const returnDateOnly = new Date(watchedReturnDate);
+        returnDateOnly.setHours(0, 0, 0, 0);
+
+        if (returnDateOnly > maxReturnDate) {
+          form.setValue('return_date', null as any);
+        }
+      }
+    }
+  }, [watchedReturnDate, form, selectedCategory]);
 
   // Optimized form submission
   const onSubmit = useCallback(async (values: ExeatFormValues) => {
     try {
+      // Validate exigency category 4-day limit
+      const isExigency = selectedCategory?.name?.toLowerCase() === 'exigency';
+      if (isExigency && values.departure_date && values.return_date) {
+        const departureDateOnly = new Date(values.departure_date);
+        departureDateOnly.setHours(0, 0, 0, 0);
+        const returnDateOnly = new Date(values.return_date);
+        returnDateOnly.setHours(0, 0, 0, 0);
+        const maxReturnDate = addDays(departureDateOnly, 4);
+        maxReturnDate.setHours(0, 0, 0, 0);
+
+        if (returnDateOnly > maxReturnDate) {
+          form.setError('return_date', {
+            type: 'manual',
+            message: 'Exigency category allows maximum of 4 days from departure date'
+          });
+          toast({
+            variant: "destructive",
+            title: "Validation Error",
+            description: "Exigency category allows maximum of 4 days from departure date",
+            duration: 5000,
+          });
+          return;
+        }
+      }
+
       const payload = {
         ...values,
         category_id: Number(values.category_id),
@@ -193,7 +272,7 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
         duration: 5000,
       });
     }
-  }, [createExeatRequest, form, onSuccess]);
+  }, [createExeatRequest, form, onSuccess, selectedCategory]);
 
   // Handle loading states
   if (loadingCategories) {
@@ -243,7 +322,7 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <FormField
           label="Exeat Category"
           error={form.formState.errors.category_id?.message}
@@ -292,9 +371,6 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
             </p>
           )}
         </FormField>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
         <FormField
           label="Preferred Contact Method (How can we contact your parent/guardian?)"
@@ -395,6 +471,16 @@ export default function ExeatApplicationForm({ onSuccess }: ExeatApplicationForm
               />
             )}
           />
+          {selectedCategory?.name?.toLowerCase() === 'exigency' && watchedDepartureDate && (
+            <p className="text-xs text-muted-foreground mt-2">
+              Note: Exigency category allows maximum of 4 days from departure date.
+              {watchedDepartureDate && (
+                <>
+                  {' '}Latest allowed return date: {format(addDays(watchedDepartureDate, 4), 'MMM d, yyyy')}
+                </>
+              )}
+            </p>
+          )}
         </FormField>
       </div>
 
