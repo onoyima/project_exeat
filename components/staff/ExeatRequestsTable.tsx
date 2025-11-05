@@ -198,15 +198,15 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
                                         <span className="truncate">{getApproveButtonText(r.status)}</span>
                                     </Button>
                                     {!['hostel_signout', 'hostel_signin', 'security_signout', 'security_signin', 'completed', 'rejected'].includes(r.status) && (
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
                                             className="flex-1 min-w-[100px]"
-                                        onClick={() => handleAction('reject', r.id)}
-                                    >
-                                        <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
-                                        <span className="truncate">Reject</span>
-                                    </Button>
+                                            onClick={() => handleAction('reject', r.id)}
+                                        >
+                                            <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
+                                            <span className="truncate">Reject</span>
+                                        </Button>
                                     )}
                                 </div>
 
@@ -316,15 +316,15 @@ export const ExeatRequestsTable: React.FC<ExeatRequestsTableProps> = ({
 
                                             {/* Reject - Hidden for sign-in/out statuses, completed, and rejected */}
                                             {!['hostel_signout', 'hostel_signin', 'security_signout', 'security_signin', 'completed', 'rejected'].includes(r.status) && (
-                                            <Button
-                                                variant="destructive"
-                                                size="sm"
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
                                                     className="h-8 px-3 text-[13px] md:text-sm"
-                                                onClick={() => handleAction('reject', r.id)}
-                                            >
-                                                <XCircle className="h-4 w-4 mr-2" />
-                                                <span className="hidden sm:inline">Reject</span>
-                                            </Button>
+                                                    onClick={() => handleAction('reject', r.id)}
+                                                >
+                                                    <XCircle className="h-4 w-4 mr-2" />
+                                                    <span className="hidden sm:inline">Reject</span>
+                                                </Button>
                                             )}
 
                                             {/* See Me - Disabled for final statuses */}
