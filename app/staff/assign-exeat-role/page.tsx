@@ -98,6 +98,8 @@ export default function AssignExeatRolePage() {
   const [selectedRole, setSelectedRole] = useState("");
   const [staffSearch, setStaffSearch] = useState("");
   const [roleSearch, setRoleSearch] = useState("");
+  const [staffSelectOpen, setStaffSelectOpen] = useState(false);
+  const [roleSelectOpen, setRoleSelectOpen] = useState(false);
 
   // Confirmation dialog state
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -113,6 +115,27 @@ export default function AssignExeatRolePage() {
   // Use debounced values to prevent focus loss during typing (300ms delay)
   const debouncedStaffSearch = useDebouncedValue(staffSearch, 300);
   const debouncedRoleSearch = useDebouncedValue(roleSearch, 300);
+
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (staffSelectOpen && staffSearchRef.current) {
+      // Small delay to ensure dropdown is fully rendered
+      const timer = setTimeout(() => {
+        staffSearchRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [staffSelectOpen]);
+
+  useEffect(() => {
+    if (roleSelectOpen && roleSearchRef.current) {
+      // Small delay to ensure dropdown is fully rendered
+      const timer = setTimeout(() => {
+        roleSearchRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [roleSelectOpen]);
 
   // Combined loading state
   const loading = assignmentsLoading || rolesLoading || staffListLoading;
@@ -367,7 +390,17 @@ export default function AssignExeatRolePage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Select Staff Member</label>
               <div className="relative">
-                <Select value={selectedStaff} onValueChange={setSelectedStaff} disabled={assigning}>
+                <Select
+                  value={selectedStaff}
+                  onValueChange={(value) => {
+                    setSelectedStaff(value);
+                    setStaffSearch(''); // Clear search when selection is made
+                    setStaffSelectOpen(false);
+                  }}
+                  disabled={assigning}
+                  open={staffSelectOpen}
+                  onOpenChange={setStaffSelectOpen}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Choose staff member" />
                   </SelectTrigger>
@@ -376,27 +409,79 @@ export default function AssignExeatRolePage() {
                     onPointerDownOutside={(e) => {
                       // Prevent closing when clicking on the search input
                       const target = e.target as HTMLElement;
-                      if (target.closest('input') || target.closest('button')) {
+                      if (target.closest('input') || target.closest('button') || target.closest('[data-radix-select-content]')) {
                         e.preventDefault();
                       }
                     }}
+                    onEscapeKeyDown={(e) => {
+                      // Allow escape to close, but clear search first
+                      if (staffSearchRef.current === document.activeElement && staffSearch) {
+                        e.preventDefault();
+                        setStaffSearch('');
+                        staffSearchRef.current?.blur();
+                      }
+                    }}
                   >
-                    <div className="px-3 py-2" onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+                    <div
+                      className="px-3 py-2"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onTouchStart={(e) => e.stopPropagation()}
+                    >
                       <div className="relative">
                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                           ref={staffSearchRef}
                           key="staff-search-input"
+                          type="text"
                           placeholder="Search staff..."
                           value={staffSearch}
                           onChange={(e) => {
-                            setStaffSearch(e.target.value);
-                            // Maintain focus after state update
-                            setTimeout(() => staffSearchRef.current?.focus(), 0);
+                            const newValue = e.target.value;
+                            setStaffSearch(newValue);
+                            // Ensure input maintains focus and cursor position
+                            requestAnimationFrame(() => {
+                              if (staffSearchRef.current) {
+                                const cursorPosition = e.target.selectionStart || newValue.length;
+                                staffSearchRef.current.focus();
+                                staffSearchRef.current.setSelectionRange(cursorPosition, cursorPosition);
+                              }
+                            });
                           }}
-                          onPointerDown={(e) => e.stopPropagation()}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          onClick={(e) => e.stopPropagation()}
+                          onPointerDown={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            staffSearchRef.current?.focus();
+                          }}
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            staffSearchRef.current?.focus();
+                          }}
+                          onTouchStart={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            staffSearchRef.current?.focus();
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            staffSearchRef.current?.focus();
+                          }}
+                          onFocus={(e) => {
+                            e.stopPropagation();
+                            // Prevent any blur events
+                            e.target.focus();
+                          }}
+                          onBlur={(e) => {
+                            // Only blur if clicking outside the dropdown
+                            const relatedTarget = e.relatedTarget as HTMLElement;
+                            if (!relatedTarget || !relatedTarget.closest('[data-radix-select-content]')) {
+                              // Allow blur only if not clicking inside dropdown
+                            } else {
+                              e.preventDefault();
+                              e.target.focus();
+                            }
+                          }}
                           className={`pl-8 pr-8 ${staffSearch !== debouncedStaffSearch ? 'border-blue-400' : ''}`}
                           disabled={assigning}
                         />
@@ -449,7 +534,17 @@ export default function AssignExeatRolePage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Select Exeat Role</label>
               <div className="relative">
-                <Select value={selectedRole} onValueChange={setSelectedRole} disabled={assigning}>
+                <Select
+                  value={selectedRole}
+                  onValueChange={(value) => {
+                    setSelectedRole(value);
+                    setRoleSearch(''); // Clear search when selection is made
+                    setRoleSelectOpen(false);
+                  }}
+                  disabled={assigning}
+                  open={roleSelectOpen}
+                  onOpenChange={setRoleSelectOpen}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Choose role" />
                   </SelectTrigger>
@@ -458,27 +553,79 @@ export default function AssignExeatRolePage() {
                     onPointerDownOutside={(e) => {
                       // Prevent closing when clicking on the search input
                       const target = e.target as HTMLElement;
-                      if (target.closest('input') || target.closest('button')) {
+                      if (target.closest('input') || target.closest('button') || target.closest('[data-radix-select-content]')) {
                         e.preventDefault();
                       }
                     }}
+                    onEscapeKeyDown={(e) => {
+                      // Allow escape to close, but clear search first
+                      if (roleSearchRef.current === document.activeElement && roleSearch) {
+                        e.preventDefault();
+                        setRoleSearch('');
+                        roleSearchRef.current?.blur();
+                      }
+                    }}
                   >
-                    <div className="px-3 py-2" onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+                    <div
+                      className="px-3 py-2"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onTouchStart={(e) => e.stopPropagation()}
+                    >
                       <div className="relative">
                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                           ref={roleSearchRef}
                           key="role-search-input"
+                          type="text"
                           placeholder="Search roles..."
                           value={roleSearch}
                           onChange={(e) => {
-                            setRoleSearch(e.target.value);
-                            // Maintain focus after state update
-                            setTimeout(() => roleSearchRef.current?.focus(), 0);
+                            const newValue = e.target.value;
+                            setRoleSearch(newValue);
+                            // Ensure input maintains focus and cursor position
+                            requestAnimationFrame(() => {
+                              if (roleSearchRef.current) {
+                                const cursorPosition = e.target.selectionStart || newValue.length;
+                                roleSearchRef.current.focus();
+                                roleSearchRef.current.setSelectionRange(cursorPosition, cursorPosition);
+                              }
+                            });
                           }}
-                          onPointerDown={(e) => e.stopPropagation()}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          onClick={(e) => e.stopPropagation()}
+                          onPointerDown={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            roleSearchRef.current?.focus();
+                          }}
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            roleSearchRef.current?.focus();
+                          }}
+                          onTouchStart={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            roleSearchRef.current?.focus();
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            roleSearchRef.current?.focus();
+                          }}
+                          onFocus={(e) => {
+                            e.stopPropagation();
+                            // Prevent any blur events
+                            e.target.focus();
+                          }}
+                          onBlur={(e) => {
+                            // Only blur if clicking outside the dropdown
+                            const relatedTarget = e.relatedTarget as HTMLElement;
+                            if (!relatedTarget || !relatedTarget.closest('[data-radix-select-content]')) {
+                              // Allow blur only if not clicking inside dropdown
+                            } else {
+                              e.preventDefault();
+                              e.target.focus();
+                            }
+                          }}
                           className={`pl-8 pr-8 ${roleSearch !== debouncedRoleSearch ? 'border-blue-400' : ''}`}
                           disabled={assigning}
                         />
