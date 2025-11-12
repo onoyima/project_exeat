@@ -119,7 +119,7 @@ export default function StaffSidebar({
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-14 left-0 z-40 w-[280px] h-[calc(100vh-3.5rem)]",
+          "fixed top-[116px] md:top-14 left-0 z-40 w-[280px] h-[calc(100vh-6.5rem)] md:h-[calc(100vh-3rem)]",
           "bg-white border-r border-border",
           "transition-all duration-300 ease-in-out",
           !open && "-translate-x-full",
