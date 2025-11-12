@@ -119,21 +119,23 @@ export default function AssignExeatRolePage() {
   // Focus search input when dropdown opens
   useEffect(() => {
     if (staffSelectOpen && staffSearchRef.current) {
-      // Small delay to ensure dropdown is fully rendered
-      const timer = setTimeout(() => {
-        staffSearchRef.current?.focus();
-      }, 100);
-      return () => clearTimeout(timer);
+      // Use requestAnimationFrame for better mobile support
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          staffSearchRef.current?.focus();
+        });
+      });
     }
   }, [staffSelectOpen]);
 
   useEffect(() => {
     if (roleSelectOpen && roleSearchRef.current) {
-      // Small delay to ensure dropdown is fully rendered
-      const timer = setTimeout(() => {
-        roleSearchRef.current?.focus();
-      }, 100);
-      return () => clearTimeout(timer);
+      // Use requestAnimationFrame for better mobile support
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          roleSearchRef.current?.focus();
+        });
+      });
     }
   }, [roleSelectOpen]);
 
@@ -399,7 +401,13 @@ export default function AssignExeatRolePage() {
                   }}
                   disabled={assigning}
                   open={staffSelectOpen}
-                  onOpenChange={setStaffSelectOpen}
+                  onOpenChange={(open) => {
+                    // Prevent closing if input is focused (user is typing)
+                    if (!open && staffSearchRef.current === document.activeElement) {
+                      return; // Don't close if user is typing
+                    }
+                    setStaffSelectOpen(open);
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Choose staff member" />
@@ -407,9 +415,14 @@ export default function AssignExeatRolePage() {
                   <SelectContent
                     key="staff-select-content"
                     onPointerDownOutside={(e) => {
-                      // Prevent closing when clicking on the search input
+                      // Prevent closing when clicking on the search input or inside dropdown
                       const target = e.target as HTMLElement;
-                      if (target.closest('input') || target.closest('button') || target.closest('[data-radix-select-content]')) {
+                      if (
+                        target.closest('input') ||
+                        target.closest('button') ||
+                        target.closest('[data-radix-select-content]') ||
+                        target.closest('[data-radix-select-viewport]')
+                      ) {
                         e.preventDefault();
                       }
                     }}
@@ -434,53 +447,26 @@ export default function AssignExeatRolePage() {
                           ref={staffSearchRef}
                           key="staff-search-input"
                           type="text"
+                          inputMode="text"
                           placeholder="Search staff..."
                           value={staffSearch}
                           onChange={(e) => {
-                            const newValue = e.target.value;
-                            setStaffSearch(newValue);
-                            // Ensure input maintains focus and cursor position
-                            requestAnimationFrame(() => {
-                              if (staffSearchRef.current) {
-                                const cursorPosition = e.target.selectionStart || newValue.length;
-                                staffSearchRef.current.focus();
-                                staffSearchRef.current.setSelectionRange(cursorPosition, cursorPosition);
-                              }
-                            });
+                            setStaffSearch(e.target.value);
                           }}
                           onPointerDown={(e) => {
                             e.stopPropagation();
-                            e.preventDefault();
-                            staffSearchRef.current?.focus();
                           }}
                           onMouseDown={(e) => {
                             e.stopPropagation();
-                            e.preventDefault();
-                            staffSearchRef.current?.focus();
                           }}
                           onTouchStart={(e) => {
                             e.stopPropagation();
-                            e.preventDefault();
-                            staffSearchRef.current?.focus();
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            staffSearchRef.current?.focus();
                           }}
                           onFocus={(e) => {
                             e.stopPropagation();
-                            // Prevent any blur events
-                            e.target.focus();
-                          }}
-                          onBlur={(e) => {
-                            // Only blur if clicking outside the dropdown
-                            const relatedTarget = e.relatedTarget as HTMLElement;
-                            if (!relatedTarget || !relatedTarget.closest('[data-radix-select-content]')) {
-                              // Allow blur only if not clicking inside dropdown
-                            } else {
-                              e.preventDefault();
-                              e.target.focus();
-                            }
                           }}
                           className={`pl-8 pr-8 ${staffSearch !== debouncedStaffSearch ? 'border-blue-400' : ''}`}
                           disabled={assigning}
@@ -543,7 +529,13 @@ export default function AssignExeatRolePage() {
                   }}
                   disabled={assigning}
                   open={roleSelectOpen}
-                  onOpenChange={setRoleSelectOpen}
+                  onOpenChange={(open) => {
+                    // Prevent closing if input is focused (user is typing)
+                    if (!open && roleSearchRef.current === document.activeElement) {
+                      return; // Don't close if user is typing
+                    }
+                    setRoleSelectOpen(open);
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Choose role" />
@@ -551,9 +543,14 @@ export default function AssignExeatRolePage() {
                   <SelectContent
                     key="role-select-content"
                     onPointerDownOutside={(e) => {
-                      // Prevent closing when clicking on the search input
+                      // Prevent closing when clicking on the search input or inside dropdown
                       const target = e.target as HTMLElement;
-                      if (target.closest('input') || target.closest('button') || target.closest('[data-radix-select-content]')) {
+                      if (
+                        target.closest('input') ||
+                        target.closest('button') ||
+                        target.closest('[data-radix-select-content]') ||
+                        target.closest('[data-radix-select-viewport]')
+                      ) {
                         e.preventDefault();
                       }
                     }}
@@ -578,53 +575,26 @@ export default function AssignExeatRolePage() {
                           ref={roleSearchRef}
                           key="role-search-input"
                           type="text"
+                          inputMode="text"
                           placeholder="Search roles..."
                           value={roleSearch}
                           onChange={(e) => {
-                            const newValue = e.target.value;
-                            setRoleSearch(newValue);
-                            // Ensure input maintains focus and cursor position
-                            requestAnimationFrame(() => {
-                              if (roleSearchRef.current) {
-                                const cursorPosition = e.target.selectionStart || newValue.length;
-                                roleSearchRef.current.focus();
-                                roleSearchRef.current.setSelectionRange(cursorPosition, cursorPosition);
-                              }
-                            });
+                            setRoleSearch(e.target.value);
                           }}
                           onPointerDown={(e) => {
                             e.stopPropagation();
-                            e.preventDefault();
-                            roleSearchRef.current?.focus();
                           }}
                           onMouseDown={(e) => {
                             e.stopPropagation();
-                            e.preventDefault();
-                            roleSearchRef.current?.focus();
                           }}
                           onTouchStart={(e) => {
                             e.stopPropagation();
-                            e.preventDefault();
-                            roleSearchRef.current?.focus();
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            roleSearchRef.current?.focus();
                           }}
                           onFocus={(e) => {
                             e.stopPropagation();
-                            // Prevent any blur events
-                            e.target.focus();
-                          }}
-                          onBlur={(e) => {
-                            // Only blur if clicking outside the dropdown
-                            const relatedTarget = e.relatedTarget as HTMLElement;
-                            if (!relatedTarget || !relatedTarget.closest('[data-radix-select-content]')) {
-                              // Allow blur only if not clicking inside dropdown
-                            } else {
-                              e.preventDefault();
-                              e.target.focus();
-                            }
                           }}
                           className={`pl-8 pr-8 ${roleSearch !== debouncedRoleSearch ? 'border-blue-400' : ''}`}
                           disabled={assigning}
