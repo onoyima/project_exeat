@@ -1,9 +1,8 @@
 "use client";
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -14,13 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue
-} from "@/components/ui/select";
+import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/searchable-select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AlertCircle, Search, UserPlus, Trash2, Loader2, X, Users, Shield } from "lucide-react";
+import { AlertCircle, UserPlus, Trash2, Loader2, Users, Shield } from "lucide-react";
 import {
   useGetStaffAssignmentsQuery,
   useAssignExeatRoleMutation,
@@ -42,23 +35,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { extractRoleName } from "@/lib/utils/csrf";
 import AssignExeatRoleSkeleton from "@/components/skeletons/assign-exeat-role-skeleton";
-
-// Custom debounced hook
-function useDebouncedValue<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
 
 export default function AssignExeatRolePage() {
   // RTK Query hooks
@@ -96,48 +72,13 @@ export default function AssignExeatRolePage() {
   // Local state
   const [selectedStaff, setSelectedStaff] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
-  const [staffSearch, setStaffSearch] = useState("");
-  const [roleSearch, setRoleSearch] = useState("");
-  const [staffSelectOpen, setStaffSelectOpen] = useState(false);
-  const [roleSelectOpen, setRoleSelectOpen] = useState(false);
 
   // Confirmation dialog state
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [roleToUnassign, setRoleToUnassign] = useState<{ staffEmail: string; roleName: string; staffName: string; staffId: number; roleId: number } | null>(null);
 
-  // Refs for managing focus
-  const staffSearchRef = useRef<HTMLInputElement>(null);
-  const roleSearchRef = useRef<HTMLInputElement>(null);
-
   // Toast hook
   const { toast } = useToast();
-
-  // Use debounced values to prevent focus loss during typing (300ms delay)
-  const debouncedStaffSearch = useDebouncedValue(staffSearch, 300);
-  const debouncedRoleSearch = useDebouncedValue(roleSearch, 300);
-
-  // Focus search input when dropdown opens
-  useEffect(() => {
-    if (staffSelectOpen && staffSearchRef.current) {
-      // Use requestAnimationFrame for better mobile support
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          staffSearchRef.current?.focus();
-        });
-      });
-    }
-  }, [staffSelectOpen]);
-
-  useEffect(() => {
-    if (roleSelectOpen && roleSearchRef.current) {
-      // Use requestAnimationFrame for better mobile support
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          roleSearchRef.current?.focus();
-        });
-      });
-    }
-  }, [roleSelectOpen]);
 
   // Combined loading state
   const loading = assignmentsLoading || rolesLoading || staffListLoading;
@@ -157,29 +98,46 @@ export default function AssignExeatRolePage() {
     return 'An unexpected error occurred';
   };
 
-  // Use staff list from RTK Query
+  // Convert staff list to searchable options
+  const staffOptions: SearchableSelectOption[] = useMemo(() => {
+    if (!staffList) return [];
+    return staffList.map(staff => ({
+      value: String(staff.id),
+      label: `${staff.fname}${staff.middle_name ? ' ' + staff.middle_name : ''} ${staff.lname}`,
+      description: staff.email
+    }));
+  }, [staffList]);
+
+  // Convert roles to searchable options
+  const roleOptions: SearchableSelectOption[] = useMemo(() => {
+    if (!roles) return [];
+    return roles.map(role => ({
+      value: String(role.id),
+      label: role.display_name || role.name,
+      description: role.description
+    }));
+  }, [roles]);
+
+  // Keep original data for other uses
   const staffMembers = useMemo(() => {
     if (!staffList) return [];
-    const processed = staffList.map(staff => ({
+    return staffList.map(staff => ({
       id: staff.id,
       fname: staff.fname,
       lname: staff.lname,
       middle_name: staff.middle_name,
       email: staff.email
     }));
-    return processed;
   }, [staffList]);
 
-  // Convert roles data to expected format
   const exeatRoles = useMemo(() => {
     if (!roles) return [];
-    const processed = roles.map(role => ({
+    return roles.map(role => ({
       id: role.id,
       name: role.name,
       display_name: role.display_name,
       description: role.description
     }));
-    return processed;
   }, [roles]);
 
   // Handle assignment success
@@ -187,8 +145,6 @@ export default function AssignExeatRolePage() {
     if (assignSuccess) {
       setSelectedStaff("");
       setSelectedRole("");
-      setStaffSearch("");
-      setRoleSearch("");
       refetchAssignments();
       toast({
         title: "Role Assigned Successfully",
@@ -391,249 +347,29 @@ export default function AssignExeatRolePage() {
             {/* Staff Selection */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Select Staff Member</label>
-              <div className="relative">
-                <Select
-                  value={selectedStaff}
-                  onValueChange={(value) => {
-                    setSelectedStaff(value);
-                    setStaffSearch(''); // Clear search when selection is made
-                    setStaffSelectOpen(false);
-                  }}
-                  disabled={assigning}
-                  open={staffSelectOpen}
-                  onOpenChange={(open) => {
-                    // Prevent closing if input is focused (user is typing)
-                    if (!open && staffSearchRef.current === document.activeElement) {
-                      return; // Don't close if user is typing
-                    }
-                    setStaffSelectOpen(open);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose staff member" />
-                  </SelectTrigger>
-                  <SelectContent
-                    key="staff-select-content"
-                    onPointerDownOutside={(e) => {
-                      // Prevent closing when clicking on the search input or inside dropdown
-                      const target = e.target as HTMLElement;
-                      if (
-                        target.closest('input') ||
-                        target.closest('button') ||
-                        target.closest('[data-radix-select-content]') ||
-                        target.closest('[data-radix-select-viewport]')
-                      ) {
-                        e.preventDefault();
-                      }
-                    }}
-                    onEscapeKeyDown={(e) => {
-                      // Allow escape to close, but clear search first
-                      if (staffSearchRef.current === document.activeElement && staffSearch) {
-                        e.preventDefault();
-                        setStaffSearch('');
-                        staffSearchRef.current?.blur();
-                      }
-                    }}
-                  >
-                    <div
-                      className="px-3 py-2"
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => e.stopPropagation()}
-                    >
-                      <div className="relative">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          ref={staffSearchRef}
-                          key="staff-search-input"
-                          type="text"
-                          inputMode="text"
-                          placeholder="Search staff..."
-                          value={staffSearch}
-                          onChange={(e) => {
-                            setStaffSearch(e.target.value);
-                          }}
-                          onPointerDown={(e) => {
-                            e.stopPropagation();
-                          }}
-                          onMouseDown={(e) => {
-                            e.stopPropagation();
-                          }}
-                          onTouchStart={(e) => {
-                            e.stopPropagation();
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                          onFocus={(e) => {
-                            e.stopPropagation();
-                          }}
-                          className={`pl-8 pr-8 ${staffSearch !== debouncedStaffSearch ? 'border-blue-400' : ''}`}
-                          disabled={assigning}
-                        />
-                        {debouncedStaffSearch && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-1 top-1 h-6 w-6 p-0 hover:bg-muted"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setStaffSearch('');
-                            }}
-                            onPointerDown={(e) => e.stopPropagation()}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            disabled={assigning}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    <div className="max-h-60 overflow-y-auto">
-                      {staffMembers
-                        .filter((staff: any) => {
-                          const search = debouncedStaffSearch.toLowerCase();
-                          return (
-                            (staff.fname && staff.fname.toLowerCase().includes(search)) ||
-                            (staff.lname && staff.lname.toLowerCase().includes(search)) ||
-                            (staff.email && staff.email.toLowerCase().includes(search)) ||
-                            (`${staff.fname} ${staff.lname}`.toLowerCase().includes(search))
-                          );
-                        })
-                        .map((staff: any) => (
-                          <SelectItem key={staff.id} value={String(staff.id)}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">
-                                {staff.fname} {staff.middle_name ? staff.middle_name + ' ' : ''}{staff.lname}
-                              </span>
-                              <span className="text-xs text-muted-foreground">{staff.email}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                    </div>
-                  </SelectContent>
-                </Select>
-              </div>
+              <SearchableSelect
+                options={staffOptions}
+                value={selectedStaff}
+                onValueChange={setSelectedStaff}
+                placeholder="Choose staff member"
+                searchPlaceholder="Search staff by name or email..."
+                emptyMessage="No staff members found"
+                disabled={assigning}
+              />
             </div>
 
             {/* Role Selection */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Select Exeat Role</label>
-              <div className="relative">
-                <Select
-                  value={selectedRole}
-                  onValueChange={(value) => {
-                    setSelectedRole(value);
-                    setRoleSearch(''); // Clear search when selection is made
-                    setRoleSelectOpen(false);
-                  }}
-                  disabled={assigning}
-                  open={roleSelectOpen}
-                  onOpenChange={(open) => {
-                    // Prevent closing if input is focused (user is typing)
-                    if (!open && roleSearchRef.current === document.activeElement) {
-                      return; // Don't close if user is typing
-                    }
-                    setRoleSelectOpen(open);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose role" />
-                  </SelectTrigger>
-                  <SelectContent
-                    key="role-select-content"
-                    onPointerDownOutside={(e) => {
-                      // Prevent closing when clicking on the search input or inside dropdown
-                      const target = e.target as HTMLElement;
-                      if (
-                        target.closest('input') ||
-                        target.closest('button') ||
-                        target.closest('[data-radix-select-content]') ||
-                        target.closest('[data-radix-select-viewport]')
-                      ) {
-                        e.preventDefault();
-                      }
-                    }}
-                    onEscapeKeyDown={(e) => {
-                      // Allow escape to close, but clear search first
-                      if (roleSearchRef.current === document.activeElement && roleSearch) {
-                        e.preventDefault();
-                        setRoleSearch('');
-                        roleSearchRef.current?.blur();
-                      }
-                    }}
-                  >
-                    <div
-                      className="px-3 py-2"
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => e.stopPropagation()}
-                    >
-                      <div className="relative">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          ref={roleSearchRef}
-                          key="role-search-input"
-                          type="text"
-                          inputMode="text"
-                          placeholder="Search roles..."
-                          value={roleSearch}
-                          onChange={(e) => {
-                            setRoleSearch(e.target.value);
-                          }}
-                          onPointerDown={(e) => {
-                            e.stopPropagation();
-                          }}
-                          onMouseDown={(e) => {
-                            e.stopPropagation();
-                          }}
-                          onTouchStart={(e) => {
-                            e.stopPropagation();
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                          onFocus={(e) => {
-                            e.stopPropagation();
-                          }}
-                          className={`pl-8 pr-8 ${roleSearch !== debouncedRoleSearch ? 'border-blue-400' : ''}`}
-                          disabled={assigning}
-                        />
-                        {debouncedRoleSearch && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-1 top-1 h-6 w-6 p-0 hover:bg-muted"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setRoleSearch('');
-                            }}
-                            onPointerDown={(e) => e.stopPropagation()}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            disabled={assigning}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    <div className="max-h-60 overflow-y-auto">
-                      {exeatRoles
-                        .filter((role: any) =>
-                          extractRoleName(role).toLowerCase().includes(debouncedRoleSearch.toLowerCase())
-                        )
-                        .map((role: any) => (
-                          <SelectItem key={role.id} value={String(role.id)}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{extractRoleName(role)}</span>
-                              <span className="text-xs text-muted-foreground">{role.description}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                    </div>
-                  </SelectContent>
-                </Select>
-              </div>
+              <SearchableSelect
+                options={roleOptions}
+                value={selectedRole}
+                onValueChange={setSelectedRole}
+                placeholder="Choose role"
+                searchPlaceholder="Search roles..."
+                emptyMessage="No roles found"
+                disabled={assigning}
+              />
             </div>
 
             {/* Assign Button */}
