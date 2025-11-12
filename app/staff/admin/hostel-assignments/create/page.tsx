@@ -1,36 +1,17 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useGetHostelAssignmentOptionsQuery, useCreateHostelAssignmentMutation, useGetStaffListQuery } from '@/lib/services/adminApi';
-import { Building2, User, ArrowLeft, Save, Loader2, Search, X } from 'lucide-react';
+import { Building2, User, ArrowLeft, Save, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
-
-// Custom debounced hook
-function useDebouncedValue<T>(value: T, delay: number): T {
-    const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedValue(value);
-        }, delay);
-
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [value, delay]);
-
-    return debouncedValue;
-}
 
 export default function CreateHostelAssignmentPage() {
     const router = useRouter();
@@ -41,18 +22,6 @@ export default function CreateHostelAssignmentPage() {
         notes: '',
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // Search states
-    const [hostelSearch, setHostelSearch] = useState('');
-    const [staffSearch, setStaffSearch] = useState('');
-
-    // Refs for managing focus
-    const hostelSearchRef = useRef<HTMLInputElement>(null);
-    const staffSearchRef = useRef<HTMLInputElement>(null);
-
-    // Use debounced values to prevent focus loss during typing (300ms delay)
-    const debouncedHostelSearch = useDebouncedValue(hostelSearch, 300);
-    const debouncedStaffSearch = useDebouncedValue(staffSearch, 300);
 
     const { data: options, isLoading: optionsLoading } = useGetHostelAssignmentOptionsQuery({
         per_page: 100,
@@ -65,7 +34,27 @@ export default function CreateHostelAssignmentPage() {
 
     const hostels = options?.hostels?.data || [];
 
-    // Process staff list from the same endpoint as assign-exeat-role
+    // Convert hostels to searchable options
+    const hostelOptions: SearchableSelectOption[] = useMemo(() => {
+        if (!hostels) return [];
+        return hostels.map(hostel => ({
+            value: hostel.id.toString(),
+            label: hostel.name,
+            description: `${hostel.gender} hostel`
+        }));
+    }, [hostels]);
+
+    // Convert staff list to searchable options
+    const staffOptions: SearchableSelectOption[] = useMemo(() => {
+        if (!staffList) return [];
+        return staffList.map(staff => ({
+            value: String(staff.id),
+            label: `${staff.fname}${staff.middle_name ? ' ' + staff.middle_name : ''} ${staff.lname}`,
+            description: staff.email
+        }));
+    }, [staffList]);
+
+    // Keep original data for preview
     const staff = staffList ? staffList.map(staff => ({
         id: staff.id,
         fname: staff.fname,
@@ -156,67 +145,15 @@ export default function CreateHostelAssignmentPage() {
                             {/* Hostel Selection */}
                             <div className="space-y-2">
                                 <Label htmlFor="hostel">Hostel *</Label>
-                                <Select
+                                <SearchableSelect
+                                    options={hostelOptions}
                                     value={formData.vuna_accomodation_id}
                                     onValueChange={(value) => handleInputChange('vuna_accomodation_id', value)}
+                                    placeholder="Select a hostel"
+                                    searchPlaceholder="Search hostels by name or gender..."
+                                    emptyMessage="No hostels found"
                                     disabled={optionsLoading}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a hostel" />
-                                    </SelectTrigger>
-                                    <SelectContent key="hostel-select-content">
-                                        <div className="px-3 py-2">
-                                            <div className="relative">
-                                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                                <Input
-                                                    ref={hostelSearchRef}
-                                                    key="hostel-search-input"
-                                                    placeholder="Search hostels..."
-                                                    value={hostelSearch}
-                                                    onChange={(e) => {
-                                                        setHostelSearch(e.target.value);
-                                                        // Maintain focus after state update
-                                                        setTimeout(() => hostelSearchRef.current?.focus(), 0);
-                                                    }}
-                                                    className={`pl-8 pr-8 ${hostelSearch !== debouncedHostelSearch ? 'border-primary' : ''}`}
-                                                    disabled={optionsLoading}
-                                                />
-                                                {debouncedHostelSearch && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="absolute right-1 top-1 h-6 w-6 p-0 hover:bg-muted"
-                                                        onClick={() => setHostelSearch('')}
-                                                        disabled={optionsLoading}
-                                                    >
-                                                        <X className="h-3 w-3" />
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="max-h-60 overflow-y-auto">
-                                            {hostels
-                                                .filter((hostel) => {
-                                                    const search = debouncedHostelSearch.toLowerCase();
-                                                    return (
-                                                        hostel.name.toLowerCase().includes(search) ||
-                                                        hostel.gender.toLowerCase().includes(search)
-                                                    );
-                                                })
-                                                .map((hostel) => (
-                                                    <SelectItem key={hostel.id} value={hostel.id.toString()}>
-                                                        <div className="flex items-center gap-2">
-                                                            <Building2 className="h-4 w-4" />
-                                                            <span>{hostel.name}</span>
-                                                            <span className="text-xs text-muted-foreground">
-                                                                ({hostel.gender})
-                                                            </span>
-                                                        </div>
-                                                    </SelectItem>
-                                                ))}
-                                        </div>
-                                    </SelectContent>
-                                </Select>
+                                />
                                 {optionsLoading && (
                                     <p className="text-sm text-muted-foreground">Loading hostels...</p>
                                 )}
@@ -225,70 +162,15 @@ export default function CreateHostelAssignmentPage() {
                             {/* Staff Selection */}
                             <div className="space-y-2">
                                 <Label htmlFor="staff">Staff Member *</Label>
-                                <Select
+                                <SearchableSelect
+                                    options={staffOptions}
                                     value={formData.staff_id}
                                     onValueChange={(value) => handleInputChange('staff_id', value)}
+                                    placeholder="Select a staff member"
+                                    searchPlaceholder="Search staff by name or email..."
+                                    emptyMessage="No staff members found"
                                     disabled={optionsLoading || staffListLoading}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a staff member" />
-                                    </SelectTrigger>
-                                    <SelectContent key="staff-select-content">
-                                        <div className="px-3 py-2">
-                                            <div className="relative">
-                                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                                <Input
-                                                    ref={staffSearchRef}
-                                                    key="staff-search-input"
-                                                    placeholder="Search staff..."
-                                                    value={staffSearch}
-                                                    onChange={(e) => {
-                                                        setStaffSearch(e.target.value);
-                                                        // Maintain focus after state update
-                                                        setTimeout(() => staffSearchRef.current?.focus(), 0);
-                                                    }}
-                                                    className={`pl-8 pr-8 ${staffSearch !== debouncedStaffSearch ? 'border-primary' : ''}`}
-                                                    disabled={optionsLoading || staffListLoading}
-                                                />
-                                                {debouncedStaffSearch && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="absolute right-1 top-1 h-6 w-6 p-0 hover:bg-muted"
-                                                        onClick={() => setStaffSearch('')}
-                                                        disabled={optionsLoading || staffListLoading}
-                                                    >
-                                                        <X className="h-3 w-3" />
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="max-h-60 overflow-y-auto">
-                                            {staff
-                                                .filter((staffMember) => {
-                                                    const search = debouncedStaffSearch.toLowerCase();
-                                                    return (
-                                                        staffMember.fname.toLowerCase().includes(search) ||
-                                                        staffMember.lname.toLowerCase().includes(search) ||
-                                                        staffMember.email.toLowerCase().includes(search) ||
-                                                        `${staffMember.fname} ${staffMember.lname}`.toLowerCase().includes(search)
-                                                    );
-                                                })
-                                                .map((staffMember) => (
-                                                    <SelectItem key={staffMember.id} value={staffMember.id.toString()}>
-                                                        <div className="flex flex-col">
-                                                            <span className="font-medium">
-                                                                {staffMember.fname} {staffMember.lname}
-                                                            </span>
-                                                            <span className="text-xs text-muted-foreground">
-                                                                {staffMember.email}
-                                                            </span>
-                                                        </div>
-                                                    </SelectItem>
-                                                ))}
-                                        </div>
-                                    </SelectContent>
-                                </Select>
+                                />
                                 {(optionsLoading || staffListLoading) && (
                                     <p className="text-sm text-muted-foreground">Loading staff...</p>
                                 )}
