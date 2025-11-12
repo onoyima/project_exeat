@@ -371,8 +371,14 @@ export default function AssignExeatRolePage() {
                   <SelectTrigger>
                     <SelectValue placeholder="Choose staff member" />
                   </SelectTrigger>
-                  <SelectContent key="staff-select-content">
-                    <div className="px-3 py-2">
+                  <SelectContent key="staff-select-content" onInteractOutside={(e) => {
+                    // Prevent closing when clicking on the search input
+                    const target = e.target as HTMLElement;
+                    if (target.closest('input') || target.closest('button')) {
+                      e.preventDefault();
+                    }
+                  }}>
+                    <div className="px-3 py-2" onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
                       <div className="relative">
                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -385,6 +391,9 @@ export default function AssignExeatRolePage() {
                             // Maintain focus after state update
                             setTimeout(() => staffSearchRef.current?.focus(), 0);
                           }}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => e.stopPropagation()}
                           className={`pl-8 pr-8 ${staffSearch !== debouncedStaffSearch ? 'border-blue-400' : ''}`}
                           disabled={assigning}
                         />
@@ -393,7 +402,12 @@ export default function AssignExeatRolePage() {
                             variant="ghost"
                             size="sm"
                             className="absolute right-1 top-1 h-6 w-6 p-0 hover:bg-muted"
-                            onClick={() => setStaffSearch('')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setStaffSearch('');
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
                             disabled={assigning}
                           >
                             <X className="h-3 w-3" />
@@ -436,8 +450,14 @@ export default function AssignExeatRolePage() {
                   <SelectTrigger>
                     <SelectValue placeholder="Choose role" />
                   </SelectTrigger>
-                  <SelectContent key="role-select-content">
-                    <div className="px-3 py-2">
+                  <SelectContent key="role-select-content" onInteractOutside={(e) => {
+                    // Prevent closing when clicking on the search input
+                    const target = e.target as HTMLElement;
+                    if (target.closest('input') || target.closest('button')) {
+                      e.preventDefault();
+                    }
+                  }}>
+                    <div className="px-3 py-2" onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
                       <div className="relative">
                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -450,6 +470,9 @@ export default function AssignExeatRolePage() {
                             // Maintain focus after state update
                             setTimeout(() => roleSearchRef.current?.focus(), 0);
                           }}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => e.stopPropagation()}
                           className={`pl-8 pr-8 ${roleSearch !== debouncedRoleSearch ? 'border-blue-400' : ''}`}
                           disabled={assigning}
                         />
@@ -458,7 +481,12 @@ export default function AssignExeatRolePage() {
                             variant="ghost"
                             size="sm"
                             className="absolute right-1 top-1 h-6 w-6 p-0 hover:bg-muted"
-                            onClick={() => setRoleSearch('')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRoleSearch('');
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
                             disabled={assigning}
                           >
                             <X className="h-3 w-3" />
