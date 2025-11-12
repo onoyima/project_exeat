@@ -87,16 +87,16 @@ export function SearchableSelect({
 
   // Render option list
   const OptionList = () => (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full min-h-0">
       {/* Search Input */}
-      <div className="p-3 border-b sticky top-0 bg-white z-10">
+      <div className="p-3 border-b flex-shrink-0 bg-white">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 pr-9"
+            className="pl-9 pr-9 h-10"
             autoFocus
           />
           {search && (
@@ -113,10 +113,10 @@ export function SearchableSelect({
       </div>
 
       {/* Options List */}
-      <ScrollArea className="flex-1 max-h-[300px] md:max-h-[400px]">
+      <div className="flex-1 overflow-y-auto min-h-0">
         <div className="p-2">
           {filteredOptions.length === 0 ? (
-            <div className="py-6 text-center text-sm text-muted-foreground">
+            <div className="py-8 text-center text-sm text-muted-foreground">
               {emptyMessage}
             </div>
           ) : (
@@ -125,7 +125,7 @@ export function SearchableSelect({
                 key={option.value}
                 onClick={() => handleSelect(option.value)}
                 className={cn(
-                  'w-full flex items-center gap-2 px-3 py-2.5 text-sm rounded-md hover:bg-accent transition-colors text-left',
+                  'w-full flex items-center gap-3 px-3 py-3 text-sm rounded-md hover:bg-accent transition-colors text-left',
                   value === option.value && 'bg-accent'
                 )}
               >
@@ -136,9 +136,9 @@ export function SearchableSelect({
                   )}
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium">{option.label}</div>
+                  <div className="font-medium leading-tight">{option.label}</div>
                   {option.description && (
-                    <div className="text-xs text-muted-foreground truncate">
+                    <div className="text-xs text-muted-foreground truncate mt-0.5">
                       {option.description}
                     </div>
                   )}
@@ -147,7 +147,7 @@ export function SearchableSelect({
             ))
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 
@@ -170,11 +170,13 @@ export function SearchableSelect({
         </Button>
 
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="sm:max-w-[425px] p-0 gap-0">
-            <DialogHeader className="px-6 py-4 border-b">
-              <DialogTitle>{placeholder}</DialogTitle>
+          <DialogContent className="max-w-[95vw] w-full max-h-[85vh] h-auto p-0 gap-0 flex flex-col">
+            <DialogHeader className="px-4 py-3 border-b flex-shrink-0">
+              <DialogTitle className="text-base">{placeholder}</DialogTitle>
             </DialogHeader>
-            <OptionList />
+            <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+              <OptionList />
+            </div>
           </DialogContent>
         </Dialog>
       </>
@@ -198,7 +200,7 @@ export function SearchableSelect({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 max-h-[400px] flex flex-col" align="start">
         <OptionList />
       </PopoverContent>
     </Popover>
