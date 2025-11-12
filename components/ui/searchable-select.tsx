@@ -16,7 +16,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 export interface SearchableSelectOption {
   value: string;
@@ -76,6 +75,14 @@ export function SearchableSelect({
     onValueChange(selectedValue);
     setOpen(false);
     setSearch('');
+  };
+
+  // Handle close
+  const handleClose = (open: boolean) => {
+    setOpen(open);
+    if (!open) {
+      setSearch('');
+    }
   };
 
   // Clear search when closed
@@ -169,9 +176,25 @@ export function SearchableSelect({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
 
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="max-w-[95vw] w-full max-h-[85vh] h-auto p-0 gap-0 flex flex-col">
-            <DialogHeader className="px-4 py-3 border-b flex-shrink-0">
+        <Dialog open={open} onOpenChange={handleClose}>
+          <DialogContent
+            className="max-w-[95vw] w-full p-0 gap-0 flex flex-col !top-4 !translate-y-0 !bottom-auto data-[state=open]:slide-in-from-top-4 data-[state=closed]:slide-out-to-top-4 rounded-b-lg rounded-t-lg"
+            style={{
+              maxHeight: '55vh',
+              minHeight: '300px',
+            }}
+            onInteractOutside={(e) => {
+              // Allow closing by clicking outside
+              setOpen(false);
+              setSearch('');
+            }}
+            onEscapeKeyDown={(e) => {
+              // Allow closing with Escape key
+              setOpen(false);
+              setSearch('');
+            }}
+          >
+            <DialogHeader className="px-4 py-3 border-b flex-shrink-0 bg-white rounded-t-lg">
               <DialogTitle className="text-base">{placeholder}</DialogTitle>
             </DialogHeader>
             <div className="flex-1 overflow-hidden flex flex-col min-h-0">
@@ -185,7 +208,7 @@ export function SearchableSelect({
 
   // Desktop: Use Popover
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleClose}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
