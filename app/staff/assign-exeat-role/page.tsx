@@ -371,13 +371,16 @@ export default function AssignExeatRolePage() {
                   <SelectTrigger>
                     <SelectValue placeholder="Choose staff member" />
                   </SelectTrigger>
-                  <SelectContent key="staff-select-content" onInteractOutside={(e) => {
-                    // Prevent closing when clicking on the search input
-                    const target = e.target as HTMLElement;
-                    if (target.closest('input') || target.closest('button')) {
-                      e.preventDefault();
-                    }
-                  }}>
+                  <SelectContent
+                    key="staff-select-content"
+                    onPointerDownOutside={(e) => {
+                      // Prevent closing when clicking on the search input
+                      const target = e.target as HTMLElement;
+                      if (target.closest('input') || target.closest('button')) {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
                     <div className="px-3 py-2" onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
                       <div className="relative">
                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -450,13 +453,16 @@ export default function AssignExeatRolePage() {
                   <SelectTrigger>
                     <SelectValue placeholder="Choose role" />
                   </SelectTrigger>
-                  <SelectContent key="role-select-content" onInteractOutside={(e) => {
-                    // Prevent closing when clicking on the search input
-                    const target = e.target as HTMLElement;
-                    if (target.closest('input') || target.closest('button')) {
-                      e.preventDefault();
-                    }
-                  }}>
+                  <SelectContent
+                    key="role-select-content"
+                    onPointerDownOutside={(e) => {
+                      // Prevent closing when clicking on the search input
+                      const target = e.target as HTMLElement;
+                      if (target.closest('input') || target.closest('button')) {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
                     <div className="px-3 py-2" onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
                       <div className="relative">
                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
