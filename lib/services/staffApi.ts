@@ -159,9 +159,15 @@ export const staffApi = api.injectEndpoints({
             providesTags: ['Staff'],
         }),
 
-        getCompletedExeatRequests: builder.query<CompletedExeatRequestsResponse, void>({
-            query: () => '/exeats/by-status/completed',
-            transformResponse: (response: CompletedExeatRequestsResponse) => response,
+        getCompletedExeatRequests: builder.query<CompletedExeatRequestsResponse, { page?: number; per_page?: number }>({
+            query: ({ page = 1, per_page = 50 } = {}) => ({
+                url: '/exeats/by-status/completed',
+                params: { page, per_page },
+            }),
+            transformResponse: (response: CompletedExeatRequestsResponse) => {
+                // The response structure is already correct, just pass it through
+                return response;
+            },
             providesTags: ['ExeatRequests'],
         }),
         getCompletedExeatRequestDetails: builder.query<{ exeat_request: StaffExeatRequest }, number>({
@@ -174,9 +180,15 @@ export const staffApi = api.injectEndpoints({
             transformResponse: (response: StaffDashboardStats) => response,
             providesTags: ['DashboardStats'],
         }),
-        getRejectedExeatRequests: builder.query<RejectedExeatRequestsResponse, void>({
-            query: () => '/exeats/by-status/rejected',
-            transformResponse: (response: RejectedExeatRequestsResponse) => response,
+        getRejectedExeatRequests: builder.query<RejectedExeatRequestsResponse, { page?: number; per_page?: number }>({
+            query: ({ page = 1, per_page = 50 } = {}) => ({
+                url: '/exeats/by-status/rejected',
+                params: { page, per_page },
+            }),
+            transformResponse: (response: RejectedExeatRequestsResponse) => {
+                // The response structure is already correct, just pass it through
+                return response;
+            },
             providesTags: ['ExeatRequests'],
         }),
         getRejectedExeatRequestDetails: builder.query<{ exeat_request: StaffExeatRequest }, number>({

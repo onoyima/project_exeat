@@ -42,14 +42,14 @@ const StaffDashboard = () => {
             roles: ['dean', 'secretary', 'hostel_admin', 'security', 'admin'],
             color: 'border-l-yellow-500'
         },
-        {
-            title: 'Exeat Requests',
-            description: 'View all exeat requests assigned to you',
-            icon: FileText,
-            href: '/staff/exeat-requests',
-            roles: ['dean', 'secretary', 'hostel_admin', 'security', 'admin'],
-            color: 'border-l-blue-500'
-        },
+        // {
+        //     title: 'Exeat Requests',
+        //     description: 'View all exeat requests assigned to you',
+        //     icon: FileText,
+        //     href: '/staff/exeat-requests',
+        //     roles: ['dean', 'secretary', 'hostel_admin', 'security', 'admin'],
+        //     color: 'border-l-blue-500'
+        // },
         {
             title: 'Request History',
             description: 'View completed and processed requests',
