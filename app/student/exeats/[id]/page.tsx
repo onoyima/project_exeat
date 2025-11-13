@@ -2,13 +2,14 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, MapPin, User, FileText, Clock, CheckCircle2, XCircle, AlertCircle, Stethoscope, UserCheck, Shield, Building, Home, Activity, LogOut, LogIn } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, User, FileText, Clock, CheckCircle2, XCircle, AlertCircle, Stethoscope, UserCheck, Shield, Building, Home, Activity, LogOut, LogIn, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useGetExeatRequestDetailsQuery, useGetExeatRequestHistoryQuery } from '@/lib/services/exeatApi';
+import { useGetExeatCommentsQuery } from '@/lib/services/studentApi';
 import { getStatusColor, getStatusText } from '@/lib/utils/exeat';
 import { format } from 'date-fns';
 
@@ -734,6 +735,9 @@ export default function ExeatDetailsPage() {
         skip: !requestId || isNaN(requestId)
     });
 
+    // Fetch comments from staff
+    const { data: commentsData, isLoading: commentsLoading } = useGetExeatCommentsQuery();
+
     // Handle invalid ID
     if (!id || isNaN(requestId)) {
         return (
@@ -950,6 +954,42 @@ export default function ExeatDetailsPage() {
                     </CardContent>
                 </Card>
             </motion.div>
+
+            {/* Staff Comments */}
+            {commentsData && commentsData.comments && commentsData.comments.length > 0 && (
+                <motion.div variants={fadeIn} className="mt-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <MessageSquare className="h-5 w-5" />
+                                Messages from Staff
+                            </CardTitle>
+                            <CardDescription>
+                                Comments and messages sent to you by staff members
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                {commentsData.comments.map((comment, index) => (
+                                    <div
+                                        key={index}
+                                        className="p-4 border rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                                    >
+                                        <div className="flex items-start justify-between gap-4 mb-2">
+                                            <Badge variant="outline" className="capitalize">
+                                                {getStatusText(comment.status)}
+                                            </Badge>
+                                        </div>
+                                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                                            {comment.raw_comment}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+            )}
         </motion.div>
     );
 }

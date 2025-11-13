@@ -8,7 +8,8 @@ import type {
     StudentDebtListResponse,
     PaymentInitRequest,
     PaymentInitResponse,
-    PaymentVerificationResponse
+    PaymentVerificationResponse,
+    ExeatCommentsResponse
 } from '@/types/student';
 
 export const studentApi = api.injectEndpoints({
@@ -71,6 +72,15 @@ export const studentApi = api.injectEndpoints({
             transformResponse: (response: PaymentVerificationResponse) => response,
             providesTags: ['StudentDebts'],
         }),
+
+        // ===== EXEAT COMMENTS ENDPOINT =====
+
+        // Get comments sent to student by staff
+        getExeatComments: builder.query<ExeatCommentsResponse, void>({
+            query: () => '/student/exeat-requests/comments',
+            transformResponse: (response: ExeatCommentsResponse) => response,
+            providesTags: ['ExeatRequests'],
+        }),
     }),
 });
 
@@ -82,4 +92,5 @@ export const {
     useGetStudentDebtsQuery,
     useInitializePaymentMutation,
     useVerifyPaymentQuery,
+    useGetExeatCommentsQuery,
 } = studentApi; 
