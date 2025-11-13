@@ -191,8 +191,8 @@ export interface CompletedExeatRequestsPagination {
     last_page: number;
     per_page: number;
     total: number;
-    from: number;
-    to: number;
+    from: number | null;
+    to: number | null;
 }
 
 /**
@@ -206,11 +206,34 @@ export interface CompletedExeatRequestsStatusSummary {
 }
 
 /**
+ * Paginated data wrapper for completed exeat requests
+ */
+export interface CompletedExeatRequestsData {
+    current_page: number;
+    data: CompletedExeatRequest[];
+    first_page_url: string;
+    from: number | null;
+    last_page: number;
+    last_page_url: string;
+    links: Array<{
+        url: string | null;
+        label: string;
+        active: boolean;
+    }>;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number | null;
+    total: number;
+}
+
+/**
  * Full response for completed exeat requests query
  */
 export interface CompletedExeatRequestsResponse {
     success: boolean;
-    data: CompletedExeatRequest[];
+    data: CompletedExeatRequestsData;
     pagination: CompletedExeatRequestsPagination;
     status_summary: CompletedExeatRequestsStatusSummary;
 }
@@ -254,6 +277,29 @@ export interface RejectedExeatRequest {
 }
 
 /**
+ * Paginated data wrapper for rejected exeat requests
+ */
+export interface RejectedExeatRequestsData {
+    current_page: number;
+    data: RejectedExeatRequest[];
+    first_page_url: string;
+    from: number | null;
+    last_page: number;
+    last_page_url: string;
+    links: Array<{
+        url: string | null;
+        label: string;
+        active: boolean;
+    }>;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number | null;
+    total: number;
+}
+
+/**
  * Pagination information for rejected exeat requests
  */
 export interface RejectedExeatRequestsPagination {
@@ -261,8 +307,8 @@ export interface RejectedExeatRequestsPagination {
     last_page: number;
     per_page: number;
     total: number;
-    from: number;
-    to: number;
+    from: number | null;
+    to: number | null;
 }
 
 /**
@@ -280,7 +326,7 @@ export interface RejectedExeatRequestsStatusSummary {
  */
 export interface RejectedExeatRequestsResponse {
     success: boolean;
-    data: RejectedExeatRequest[];
+    data: RejectedExeatRequestsData;
     pagination: RejectedExeatRequestsPagination;
     status_summary: RejectedExeatRequestsStatusSummary;
 }

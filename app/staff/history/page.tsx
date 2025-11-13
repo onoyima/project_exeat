@@ -15,22 +15,39 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationEllipsis,
+} from '@/components/ui/pagination';
 import { format } from 'date-fns';
-import { FileText, Search, Calendar, MapPin, CheckCircle2, Eye } from 'lucide-react';
+import { FileText, Search, Calendar, MapPin, CheckCircle2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function StaffHistoryPage() {
-    const { data: completedExeatRequests, isLoading: completedExeatRequestsLoading } = useGetCompletedExeatRequestsQuery();
+    const [page, setPage] = useState(1);
+    const [perPage] = useState(50);
     const [search, setSearch] = useState('');
     const router = useRouter();
+
+    const { data: completedExeatRequests, isLoading: completedExeatRequestsLoading } = useGetCompletedExeatRequestsQuery({
+        page,
+        per_page: perPage,
+    });
 
     const handleViewDetails = (requestId: number) => {
         router.push(`/staff/exeat-requests/completed/${requestId}`);
     };
 
-    // Filter requests based on search
-    const filteredRequests = completedExeatRequests?.data?.filter(request => {
+    // The data array is nested in data.data according to the new API structure
+    const requests = completedExeatRequests?.data?.data || [];
+    const paginationData = completedExeatRequests?.data;
+    const pagination = completedExeatRequests?.pagination;
+
+    // Filter requests based on search (client-side filtering on current page)
+    const filteredRequests = requests.filter(request => {
         const searchLower = search.toLowerCase();
         return (
             request.student.name.toLowerCase().includes(searchLower) ||
@@ -38,7 +55,46 @@ export default function StaffHistoryPage() {
             request.reason.toLowerCase().includes(searchLower) ||
             request.destination.toLowerCase().includes(searchLower)
         );
-    }) || [];
+    });
+
+    // Generate pagination page numbers
+    const generatePageNumbers = () => {
+        if (!pagination) return [];
+        const pages: (number | 'ellipsis')[] = [];
+        const totalPages = pagination.last_page;
+        const currentPage = pagination.current_page;
+
+        if (totalPages <= 7) {
+            // Show all pages if 7 or fewer
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else {
+            // Always show first page
+            pages.push(1);
+
+            if (currentPage > 3) {
+                pages.push('ellipsis');
+            }
+
+            // Show pages around current page
+            const start = Math.max(2, currentPage - 1);
+            const end = Math.min(totalPages - 1, currentPage + 1);
+
+            for (let i = start; i <= end; i++) {
+                pages.push(i);
+            }
+
+            if (currentPage < totalPages - 2) {
+                pages.push('ellipsis');
+            }
+
+            // Always show last page
+            pages.push(totalPages);
+        }
+
+        return pages;
+    };
 
     const getInitials = (name: string) => {
         return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase();
@@ -138,7 +194,13 @@ export default function StaffHistoryPage() {
                         <Input
                             placeholder="Search by student name, email, reason, or destination..."
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => {
+                                setSearch(e.target.value);
+                                // Reset to first page when searching
+                                if (page !== 1) {
+                                    setPage(1);
+                                }
+                            }}
                             className="pl-10"
                         />
                     </div>
@@ -149,7 +211,14 @@ export default function StaffHistoryPage() {
                     <CardHeader>
                         <CardTitle>Completed Exeat Requests</CardTitle>
                         <CardDescription>
-                            {filteredRequests.length} of {completedExeatRequests?.data?.length || 0} requests
+                            {pagination ? (
+                                    <>
+                                        Showing {pagination.from ?? 0} to {pagination.to ?? 0} of {pagination.total} completed requests
+                                        {search && ` (${filteredRequests.length} match${filteredRequests.length !== 1 ? 'es' : ''} on this page)`}
+                                    </>
+                            ) : (
+                                `${filteredRequests.length} of ${requests.length} requests`
+                            )}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -300,6 +369,61 @@ export default function StaffHistoryPage() {
                                     </Table>
                                 </div>
                             </>
+                        )}
+
+                        {/* Pagination */}
+                        {pagination && pagination.last_page > 1 && (
+                            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="text-sm text-muted-foreground">
+                                    Page {pagination.current_page} of {pagination.last_page}
+                                </div>
+                                <Pagination>
+                                    <PaginationContent>
+                                        <PaginationItem>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setPage(Math.max(1, page - 1))}
+                                                disabled={page === 1}
+                                                className="gap-1"
+                                            >
+                                                <ChevronLeft className="h-4 w-4" />
+                                                Previous
+                                            </Button>
+                                        </PaginationItem>
+
+                                        {generatePageNumbers().map((pageNum, index) => (
+                                            <PaginationItem key={index}>
+                                                {pageNum === 'ellipsis' ? (
+                                                    <PaginationEllipsis />
+                                                ) : (
+                                                    <Button
+                                                        variant={pageNum === pagination.current_page ? 'outline' : 'ghost'}
+                                                        size="sm"
+                                                        onClick={() => setPage(pageNum)}
+                                                        className="min-w-[40px]"
+                                                    >
+                                                        {pageNum}
+                                                    </Button>
+                                                )}
+                                            </PaginationItem>
+                                        ))}
+
+                                        <PaginationItem>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setPage(Math.min(pagination.last_page, page + 1))}
+                                                disabled={page === pagination.last_page}
+                                                className="gap-1"
+                                            >
+                                                Next
+                                                <ChevronRight className="h-4 w-4" />
+                                            </Button>
+                                        </PaginationItem>
+                                    </PaginationContent>
+                                </Pagination>
+                            </div>
                         )}
                     </CardContent>
                 </Card>
