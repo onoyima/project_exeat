@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useGetCurrentUser } from '@/hooks/use-current-user';
 import { format } from 'date-fns';
 import {
@@ -17,9 +18,11 @@ import {
   Phone,
   FileText,
   History,
+  MessageSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useGetExeatRequestsQuery, useGetCategoriesQuery } from '@/lib/services/exeatApi';
+import { useGetExeatCommentsQuery } from '@/lib/services/studentApi';
 import { DashboardSkeleton } from '@/components/student/DashboardSkeletons';
 import { useRouter } from 'next/navigation';
 import { StatusPill } from '@/components/ui/status-pill';
@@ -27,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { ActionableInsights } from '@/components/student/ActionableInsights';
 import { extractMatricFromEmail, formatMatricNumber } from '@/lib/utils/student';
 import { ExeatCountdown } from '@/components/ExeatCountdown';
+import { getStatusText } from '@/lib/utils/exeat';
 
 export default function StudentDashboard() {
   const { user, isLoading: userLoading } = useGetCurrentUser();
@@ -35,6 +39,8 @@ export default function StudentDashboard() {
   const { data: exeatData, isLoading: loadingExeats } = useGetExeatRequestsQuery();
   const exeatRequests = exeatData?.exeat_requests || [];
   const { data: categoriesData } = useGetCategoriesQuery();
+  const { data: commentsData } = useGetExeatCommentsQuery();
+  const comments = commentsData?.comments || [];
   const categoryNameById: Record<number, string> = Object.fromEntries(
     (categoriesData?.categories || []).map((c) => [c.id, c.name.charAt(0).toUpperCase() + c.name.slice(1)])
   );
@@ -232,6 +238,63 @@ export default function StudentDashboard() {
 
       {/* Actionable Insights */}
       <ActionableInsights exeatRequests={exeatRequests} isLoading={loadingExeats} />
+
+      {/* Staff Messages/Comments */}
+      {comments.length > 0 && (
+        <Card className="p-4 md:p-6">
+          <CardHeader className="pb-2 md:pb-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <CardTitle className="text-lg md:text-xl font-semibold flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Messages from Staff
+                </CardTitle>
+                <CardDescription className="text-base md:text-lg">
+                  {comments.length} new message{comments.length !== 1 ? 's' : ''} from staff members
+                </CardDescription>
+              </div>
+              <Link href="/student/comments">
+                <Button variant="outline" size="sm" className="whitespace-nowrap">
+                  View All
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y rounded-md border border-border/50 overflow-hidden">
+              {comments.slice(0, 3).map((comment, index) => (
+                <Link
+                  href="/student/comments"
+                  key={index}
+                  className={cn(
+                    "block p-4 sm:p-5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 hover:bg-muted/50 transition-colors"
+                  )}
+                >
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <Badge variant="outline" className="capitalize">
+                        {getStatusText(comment.status)}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 break-words">
+                      {comment.raw_comment}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            {comments.length > 3 && (
+              <div className="p-4 text-center border-t">
+                <Link href="/student/comments">
+                  <Button variant="ghost" size="sm">
+                    View {comments.length - 3} more message{comments.length - 3 !== 1 ? 's' : ''}
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Countdown & Student Info - Enhanced Mobile-First Layout */}
       <div className="grid gap-4 md:gap-6 grid-cols-1 lg:grid-cols-7">

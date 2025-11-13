@@ -13,7 +13,8 @@ import {
   UserCircle,
   LogOut,
   X,
-  CreditCard
+  CreditCard,
+  MessageSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -147,6 +148,10 @@ export default function StudentSidebar({
 
             <NavLink href="/student/exeats" icon={History}>
               Exeat History
+            </NavLink>
+
+            <NavLink href="/student/comments" icon={MessageSquare}>
+              Staff Messages
             </NavLink>
 
             <NavLink href="/student/debts" icon={CreditCard}>

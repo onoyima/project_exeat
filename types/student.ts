@@ -424,4 +424,19 @@ export interface DebtCheckResponse {
         }>;
         payment_instructions: string;
     };
+}
+
+/**
+ * Exeat comment from staff
+ */
+export interface ExeatComment {
+    status: string;
+    raw_comment: string;
+}
+
+/**
+ * Exeat comments response
+ */
+export interface ExeatCommentsResponse {
+    comments: ExeatComment[];
 } 
